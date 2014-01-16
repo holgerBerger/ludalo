@@ -3,6 +3,7 @@
 # data collector for OSS
 #
 # tested with lustre 1.8.4
+# has to work with python 2.4 for redhat 5.x based OSS
 #
 # collect nr of IO requests and size of IO every SLEEP seconds
 # and write to a csv file.
