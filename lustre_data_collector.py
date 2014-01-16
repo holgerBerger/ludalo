@@ -17,8 +17,12 @@
 
 # Holger Berger 2014
 
+from SimpleXMLRPCServer import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
+import SocketServer
+import signal
+import os,time,sys,getopt
 
-# get new sampel after SLEEP seconds
+# get new sample after SLEEP seconds
 SLEEP = 60
 
 # update NID list after NIDTIMEOUT seconds, can be longer than SLEEP
@@ -26,12 +30,17 @@ SLEEP = 60
 # which is (#OSTS * #NIDS) and can be a factor in case of large #NIDS
 NIDTIMEOUT = 60
 
-import os,time,sys,getopt
 
-def get_osts():
+class OSS_RPCSERVER:
+
+  def __init__(self):
+    self.first = True
+    self.old = {}
+
+  def get_osts(self):
     return [ x for x in os.listdir("/proc/fs/lustre/obdfilter/") if 'OST' in x ]
 
-def get_ost_data(ost):
+  def __get_ost_data(self, ost):
     f=open("/proc/fs/lustre/obdfilter/"+ost+"/stats","r")
     rio=0; wio=0; rb=0; wb=0
     for l in f:
@@ -46,96 +55,116 @@ def get_ost_data(ost):
     f.close()
     return (rio,rb,wio,wb)
 
-def get_nid_data(ost, nid):
-  """get nid data, return 0 for non existing nid"""
-  rio=0; wio=0; rb=0; wb=0
-  try:
-    f=open("/proc/fs/lustre/obdfilter/"+ost+"/exports/"+nid+"/stats","r")
-    for l in f:
-      if l.startswith("read_bytes"):
-        s=l.split()
-        rb=int(s[6])
-        rio=int(s[1])
-      if l.startswith("write_bytes"):
-        s=l.split()
-        wb=int(s[6])
-        wio=int(s[1])
-    f.close()
-  except:
-    pass
-  return (rio,rb,wio,wb)
-  
-def dumptuple(data, old):
-  """write out a tuple, write delta and nothing if only zeros"""
-  l = [ str(data[i]-old[i]) for i in (0,1,2,3)] 
-  if l != ["0","0","0","0"]:
-    sys.stdout.write(",".join(l)+";")
-  else:
-    sys.stdout.write(";")
+  def __get_nid_data(self, ost, nid):
+    """get nid data, return 0 for non existing nid"""
+    rio=0; wio=0; rb=0; wb=0
+    try:
+      f=open("/proc/fs/lustre/obdfilter/"+ost+"/exports/"+nid+"/stats","r")
+      for l in f:
+        if l.startswith("read_bytes"):
+          s=l.split()
+          rb=int(s[6])
+          rio=int(s[1])
+        if l.startswith("write_bytes"):
+          s=l.split()
+          wb=int(s[6])
+          wio=int(s[1])
+      f.close()
+    except:
+      pass
+    return (rio,rb,wio,wb)
+    
+  def __dumptuple(self, data, old):
+    """write out a tuple, write delta and nothing if only zeros"""
+    l = [ str(data[i]-old[i]) for i in (0,1,2,3)] 
+    if l != ["0","0","0","0"]:
+      return l
+    else:
+      return ()
 
-def collect():
-  old = {} 
-  current = {}
-  nids = {}
 
-  oldosts = []
-  ostlist = []
+  def get_sample(self):
+    current = {}
+    nids = {}
 
-  allnids = set()
-  first = True
+    oldosts = []
+    ostlist = []
 
-  while True:
+    allnids = set()
 
-    stime = time.time()
-    if get_osts() != oldosts:
-      ostlist = get_osts()
-      # in case OST list changes (like failover), get nid list as well
-      nidtime = 0
+    result=[]
 
-    # if nid timeout is over, get nid list, nid list is union of all nid lists
-    # of OSTs, and has to be sorted when data is collected and written, to allow
-    # one legend for all OSTs
-    if nidtime+NIDTIMEOUT < time.time():
-      nidtime = time.time()
-      oldnids = allnids
-      allnids = set()
-      for ost in ostlist:
-        nids[ost] = [ x for x in os.listdir("/proc/fs/lustre/obdfilter/"+ost+"/exports") if 'o2ib' in x ]
-        allnids = allnids | set(nids[ost])
-      if sorted(oldnids) != sorted(allnids):
-        sys.stdout.write("#time;ost;rio;rb;wio;wb;")
-        for nid in sorted(allnids):
-          sys.stdout.write(nid+";")
-        print
+    ostlist = self.get_osts()
 
-    # this time is the time written to each OST sample line of that
-    # iteration. It is not the exact time, but makes it easyer to 
-    # recognize same sample interval.
-    sample = time.time()
+    # form explanation comment and return as first element in list of results
+    explanation=[]
+    allnids = set()
+    for ost in ostlist:
+      nids[ost] = [ x for x in os.listdir("/proc/fs/lustre/obdfilter/"+ost+"/exports") if 'o2ib' in x ]
+      allnids = allnids | set(nids[ost])
+    explanation.append("#time;ost;rio;rb;wio;wb;".split(";"))
+    for nid in sorted(allnids):
+      explanation.append(nid)
+    result.append(explanation)
+
+    anydata = False
+    # form ost statistics lines and append to results
     for ost in sorted(ostlist):
-      current[ost] = get_ost_data(ost)
+      current[ost] = self.__get_ost_data(ost)
+      ostline = []
       for nid in nids[ost]:
-        current[ost+"/"+nid] = get_nid_data(ost,nid)
-      if not first:
-        if current[ost][0]-old[ost][0]>0 or current[ost][2]-old[ost][2]>0:
-          print str(sample)+";"+ost+";",
-          dumptuple(current[ost],old[ost])
+        current[ost+"/"+nid] = self.__get_nid_data(ost,nid)
+      if not self.first:
+        if current[ost][0]-self.old[ost][0]>0 or current[ost][2]-self.old[ost][2]>0:
+          anydata = True
+          ostline.append(ost)
+          ostline.append(self.__dumptuple(current[ost],self.old[ost]))
           for nid in sorted(allnids):
-            dumptuple(current[ost+"/"+nid], old[ost+"/"+nid])
-          print
-    first = False
-    old = current
+            ostline.append(self.__dumptuple(current[ost+"/"+nid], self.old[ost+"/"+nid]))
+          result.append(ostline)
+    self.first = False
+    self.old = current
     current = {}
     oldosts = ostlist[:]
-    etime = time.time()
- 
-    # wait, skip the time it took to do the sample
-    time.sleep(SLEEP-(etime-stime))
 
-collect()
-    
+    if anydata:
+      return result
+    else:
+      return []
 
 
+# Threaded mix-in
+class AsyncXMLRPCServer(SocketServer.ThreadingMixIn, SimpleXMLRPCServer):
+  pass
+
+def signalhandler(signum, frame):
+  '''Signalhandler to exit broker'''
+  if (signum != signal.SIGUSR1):
+    sys.exit()
 
 
+def rpc_server():
+  '''main loop, provides XML-RPC server'''
+  signal.signal(signal.SIGTERM, signalhandler)
+  signal.signal(signal.SIGUSR1, signalhandler)
+  signal.signal(signal.SIGINT, signalhandler)
 
+  oss_rpcserver = OSS_RPCSERVER()
+
+  server = AsyncXMLRPCServer(('', 8000), logRequests=False)
+  server.register_introspection_functions()
+  server.register_instance(oss_rpcserver)
+
+  # we add a endless loop here to handle interrupts, we want to be able to quit, other signals should be resumed
+  while (True):
+    try:
+      print "serve_forever"
+      server.serve_forever()
+    except SystemExit:
+      break
+    except:
+      pass
+
+
+rpc_server()
+  
