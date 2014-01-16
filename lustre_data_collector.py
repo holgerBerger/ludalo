@@ -5,14 +5,13 @@
 # tested with lustre 1.8.4
 # has to work with python 2.4 for redhat 5.x based OSS
 #
-# collect nr of IO requests and size of IO every SLEEP seconds
-# and write to a csv file.
-# CSV contains in each sample the values for sample-last sample, to deltas
+# collect nr of IO requests and size of IO every when asked
+# and return as list via RPC, only if any data, otherwise empty list.
 # samples are tuples of 4 values #read io request,read bytes,#write io requests, written bytes
-# epoch;name of ost; sample for ost; sampel for 1. nid; sample for 2. nid; ...
+# name of ost; sample for ost; sampel for 1. nid; sample for 2. nid; ...
 # legend starts with # and can change over time, as nid list changes. The legend contains the names of the nids
 # sorted as the samples are.
-# nid list changes and ost number changes should be covered. Empty (no activity) nid samples are empty, and look like ;;
+# nid list changes and ost number changes should be covered. Empty (no activity) nid samples are empty
 # empty OST samples (= no IO) are left out
 
 # Holger Berger 2014
@@ -158,7 +157,6 @@ def rpc_server():
   # we add a endless loop here to handle interrupts, we want to be able to quit, other signals should be resumed
   while (True):
     try:
-      print "serve_forever"
       server.serve_forever()
     except SystemExit:
       break
