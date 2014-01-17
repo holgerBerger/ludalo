@@ -21,11 +21,110 @@ import SocketServer
 import signal
 import os,time,sys,getopt
 
+class MDS_RPCSERVER:
+
+  def __init__(self):
+    self.old = {}
+    self.current = {}
+
+  def get_type(self):
+    return "mds"
+
+  def get_hostname(self):
+    return socket.gethostname().split(".")[0]
+
+  def get_mdt(self):
+    return [ x for x in os.listdir("/proc/fs/lustre/mds/") if 'MDT' in x ]
+
+  def __get_mdt_data(self, mdt):
+    f=open("/proc/fs/lustre/mds/"+mdt+"/stats","r")
+    reqs = 0
+    for l in f:
+      if "samples" in l:
+        reqs += int(l.split()[1])
+    f.close()
+    return reqs
+
+  def __get_nid_data(self, mdt, nid):
+    """get nid data, return 0 for non existing nid"""
+    reqs = 0
+    try:
+      f=open("/proc/fs/lustre/mds/"+mdt+"/exports/"+nid+"/stats","r")
+      for l in f:
+        if "samples" in l:
+          reqs += int(l.split()[1])
+      f.close()
+    except:
+      pass
+    return reqs
+    
+
+  def get_sample(self):
+    nids = {}
+    allnids = set()
+
+    result=[]
+
+    mdtlist = self.get_mdt()
+
+    # form explanation comment and return as first element in list of results
+    explanation=[]
+    allnids = set()
+    for mdt in mdtlist:
+      nids[mdt] = [ x for x in os.listdir("/proc/fs/lustre/mds/"+mdt+"/exports") if 'o2ib' in x ]
+      allnids = allnids | set(nids[mdt])
+    explanation.append("#time;mdt;reqs;".split(";"))
+    for nid in sorted(allnids):
+      explanation.append(nid)
+    result.append(explanation)
+
+    anydata = False
+    # form mdt statistics lines and append to results
+    for mdt in sorted(mdtlist):
+      self.current[mdt] = self.__get_mdt_data(mdt)
+      if not self.old.has_key(mdt) or self.current[mdt]-self.old[mdt]>0:
+        for nid in nids[mdt]:
+          key = mdt+"/"+nid
+          if self.current.has_key(key):
+            self.old[key] = self.current[key]
+          self.current[key] = self.__get_nid_data(mdt,nid)
+
+      mdtdata = []
+      if self.old.has_key(mdt):
+        if self.current[mdt]-self.old[mdt]>0:
+          anydata = True
+          mdtdata.append(mdt)
+          mdtdata.append(self.current[mdt]-self.old[mdt])
+          for nid in sorted(allnids):
+            if self.old.has_key(mdt+"/"+nid):
+              mdtdata.append(self.current[mdt+"/"+nid] - self.old[mdt+"/"+nid])
+            else:
+              mdtdata.append(self.current[mdt+"/"+nid])
+          result.append(mdtdata)
+          self.old[mdt]=self.current[mdt]
+      else:
+        self.old[mdt]=self.current[mdt]
+      
+    if anydata:
+      return result
+    else:
+      return []
+
+
+#######################################
+
+
 class OSS_RPCSERVER:
 
   def __init__(self):
     self.old = {}
     self.current = {}
+
+  def get_type(self):
+    return "ost"
+
+  def get_hostname(self):
+    return socket.gethostname().split(".")[0]
 
   def get_osts(self):
     return [ x for x in os.listdir("/proc/fs/lustre/obdfilter/") if 'OST' in x ]
@@ -64,7 +163,7 @@ class OSS_RPCSERVER:
       pass
     return (rio,rb,wio,wb)
     
-  def __dumptuple(self, data, old):
+  def __delta(self, data, old):
     """write out a tuple, write delta and nothing if only zeros"""
     l = [ data[i]-old[i] for i in (0,1,2,3)] 
     if l != [0,0,0,0]:
@@ -106,18 +205,18 @@ class OSS_RPCSERVER:
             self.old[key] = self.current[key]
           self.current[key] = self.__get_nid_data(ost,nid)
 
-      ostline = []
+      ostdata = []
       if self.old.has_key(ost):
         if self.current[ost][0]-self.old[ost][0]>0 or self.current[ost][2]-self.old[ost][2]>0:
           anydata = True
-          ostline.append(ost)
-          ostline.append(self.__dumptuple(self.current[ost],self.old[ost]))
+          ostdata.append(ost)
+          ostdata.append(self.__delta(self.current[ost],self.old[ost]))
           for nid in sorted(allnids):
             if self.old.has_key(ost+"/"+nid):
-              ostline.append(self.__dumptuple(self.current[ost+"/"+nid], self.old[ost+"/"+nid]))
+              ostdata.append(self.__delta(self.current[ost+"/"+nid], self.old[ost+"/"+nid]))
             else:
-              ostline.append(self.__dumptuple(self.current[ost+"/"+nid], (0,0,0,0)))
-          result.append(ostline)
+              ostdata.append(self.__delta(self.current[ost+"/"+nid], (0,0,0,0)))
+          result.append(ostdata)
           self.old[ost]=self.current[ost]
       else:
         self.old[ost]=self.current[ost]
@@ -138,17 +237,20 @@ def signalhandler(signum, frame):
     sys.exit()
 
 
-def rpc_server():
+def rpc_server(version, servertype):
   '''main loop, provides XML-RPC server'''
   signal.signal(signal.SIGTERM, signalhandler)
   signal.signal(signal.SIGUSR1, signalhandler)
   signal.signal(signal.SIGINT, signalhandler)
 
-  oss_rpcserver = OSS_RPCSERVER()
+  if servertype == 'oss':
+    rpcserver = OSS_RPCSERVER()
+  if servertype == 'mds':
+    rpcserver = MDS_RPCSERVER()
 
   server = AsyncXMLRPCServer(('', 8000), logRequests=False)
   server.register_introspection_functions()
-  server.register_instance(oss_rpcserver)
+  server.register_instance(rpcserver)
 
   # we add a endless loop here to handle interrupts, we want to be able to quit, other signals should be resumed
   while (True):
@@ -162,5 +264,17 @@ def rpc_server():
 
 
 if __name__ == "__main__":
-  rpc_server()
+  line = open("/proc/fs/lustre/version","r").readline()[:-1]
+  version = line.split()[1]
+
+  servertype = ""
+  if os.path.exists("/proc/fs/lustre/mds"): servertype="mds"
+  if os.path.exists("/proc/fs/lustre/ost"): servertype="oss"
+
+  if servertype == "":
+    print "unknown server type!"
+    sys.exit()
+
+  print "Running on %s of lustre version %s" % (servertype, version)
+  rpc_server(version, servertype)
   
