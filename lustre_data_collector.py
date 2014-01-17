@@ -21,20 +21,11 @@ import SocketServer
 import signal
 import os,time,sys,getopt
 
-# get new sample after SLEEP seconds
-SLEEP = 60
-
-# update NID list after NIDTIMEOUT seconds, can be longer than SLEEP
-# in case of short SLEEP, that reduces number of directory lookups
-# which is (#OSTS * #NIDS) and can be a factor in case of large #NIDS
-NIDTIMEOUT = 60
-
-
 class OSS_RPCSERVER:
 
   def __init__(self):
-    self.first = True
     self.old = {}
+    self.current = {}
 
   def get_osts(self):
     return [ x for x in os.listdir("/proc/fs/lustre/obdfilter/") if 'OST' in x ]
@@ -75,18 +66,16 @@ class OSS_RPCSERVER:
     
   def __dumptuple(self, data, old):
     """write out a tuple, write delta and nothing if only zeros"""
-    l = [ str(data[i]-old[i]) for i in (0,1,2,3)] 
-    if l != ["0","0","0","0"]:
+    l = [ data[i]-old[i] for i in (0,1,2,3)] 
+    if l != [0,0,0,0]:
       return l
     else:
       return ()
 
 
   def get_sample(self):
-    current = {}
     nids = {}
 
-    oldosts = []
     ostlist = []
 
     allnids = set()
@@ -109,23 +98,30 @@ class OSS_RPCSERVER:
     anydata = False
     # form ost statistics lines and append to results
     for ost in sorted(ostlist):
-      current[ost] = self.__get_ost_data(ost)
+      self.current[ost] = self.__get_ost_data(ost)
+      if not self.old.has_key(ost) or self.current[ost][0]-self.old[ost][0]>0 or self.current[ost][2]-self.old[ost][2]>0:
+        for nid in nids[ost]:
+          key = ost+"/"+nid
+          if self.current.has_key(key):
+            self.old[key] = self.current[key]
+          self.current[key] = self.__get_nid_data(ost,nid)
+
       ostline = []
-      for nid in nids[ost]:
-        current[ost+"/"+nid] = self.__get_nid_data(ost,nid)
-      if not self.first:
-        if current[ost][0]-self.old[ost][0]>0 or current[ost][2]-self.old[ost][2]>0:
+      if self.old.has_key(ost):
+        if self.current[ost][0]-self.old[ost][0]>0 or self.current[ost][2]-self.old[ost][2]>0:
           anydata = True
           ostline.append(ost)
-          ostline.append(self.__dumptuple(current[ost],self.old[ost]))
+          ostline.append(self.__dumptuple(self.current[ost],self.old[ost]))
           for nid in sorted(allnids):
-            ostline.append(self.__dumptuple(current[ost+"/"+nid], self.old[ost+"/"+nid]))
+            if self.old.has_key(ost+"/"+nid):
+              ostline.append(self.__dumptuple(self.current[ost+"/"+nid], self.old[ost+"/"+nid]))
+            else:
+              ostline.append(self.__dumptuple(self.current[ost+"/"+nid], (0,0,0,0)))
           result.append(ostline)
-    self.first = False
-    self.old = current
-    current = {}
-    oldosts = ostlist[:]
-
+          self.old[ost]=self.current[ost]
+      else:
+        self.old[ost]=self.current[ost]
+      
     if anydata:
       return result
     else:
@@ -159,10 +155,12 @@ def rpc_server():
     try:
       server.serve_forever()
     except SystemExit:
+      server.server_close()
       break
     except:
       pass
 
 
-rpc_server()
+if __name__ == "__main__":
+  rpc_server()
   
