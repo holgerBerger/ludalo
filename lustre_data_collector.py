@@ -17,9 +17,15 @@
 # Holger Berger 2014
 
 from SimpleXMLRPCServer import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
-import SocketServer
+import SocketServer,socket
 import signal
 import os,time,sys,getopt
+
+def mystr(i):
+  if i == 0:
+    return ''
+  else:
+    return str(i)
 
 class MDS_RPCSERVER:
 
@@ -94,12 +100,12 @@ class MDS_RPCSERVER:
         if self.current[mdt]-self.old[mdt]>0:
           anydata = True
           mdtdata.append(mdt)
-          mdtdata.append(self.current[mdt]-self.old[mdt])
+          mdtdata.append(mystr(self.current[mdt]-self.old[mdt]))
           for nid in sorted(allnids):
             if self.old.has_key(mdt+"/"+nid):
-              mdtdata.append(self.current[mdt+"/"+nid] - self.old[mdt+"/"+nid])
+              mdtdata.append(mystr(self.current[mdt+"/"+nid] - self.old[mdt+"/"+nid]))
             else:
-              mdtdata.append(self.current[mdt+"/"+nid])
+              mdtdata.append(mystr(self.current[mdt+"/"+nid]))
           result.append(mdtdata)
           self.old[mdt]=self.current[mdt]
       else:
@@ -108,7 +114,7 @@ class MDS_RPCSERVER:
     if anydata:
       return result
     else:
-      return []
+      return ""
 
 
 #######################################
@@ -165,11 +171,11 @@ class OSS_RPCSERVER:
     
   def __delta(self, data, old):
     """write out a tuple, write delta and nothing if only zeros"""
-    l = [ data[i]-old[i] for i in (0,1,2,3)] 
-    if l != [0,0,0,0]:
+    l = [ str(data[i]-old[i]) for i in (0,1,2,3)] 
+    if l != ["0","0","0","0"]:
       return l
     else:
-      return ()
+      return ""
 
 
   def get_sample(self):
