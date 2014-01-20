@@ -35,13 +35,14 @@ while True:
       out.write(";".join(nids[srv][0]))
       out.write(";".join(nids[srv][1:10])+"\n")  # FIXME
     oldnids[srv] = nids[srv]
-    l = []
-    for i in r[1]:
-      if type(i) == list:
-        l.append(",".join(map(str,i)))
-      else:
-        l.append(i)
-    out.write(hostnames[srv]+";"+str(int(sample))+";"+";".join(map(str,l))+"\n")
+    for ost in r[1:]:
+      l = []
+      for i in ost:
+        if type(i) == list:
+          l.append(",".join(map(str,i)))
+        else:
+          l.append(i)
+      out.write(hostnames[srv]+";"+str(int(sample))+";"+";".join(map(str,l))+"\n")
   e=time.time()
   print "sample duraction",e-sample
   time.sleep(SLEEP-(e-sample))
