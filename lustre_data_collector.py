@@ -200,7 +200,7 @@ class OSS_RPCSERVER:
       explanation.append(nid)
     result.append(";".join(explanation))
 
-    anydata = False
+    anydata = True
     # form ost statistics lines and append to results
     for ost in sorted(ostlist):
       self.current[ost] = self.__get_ost_data(ost)
