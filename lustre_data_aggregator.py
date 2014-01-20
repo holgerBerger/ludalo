@@ -35,8 +35,8 @@ def worker(srv):
     if first or nids[srv] != oldnids[srv]:
       iolock.acquire()
       out.write("#;"+hostnames[srv]+";")
-      out.write(";".join(nids[srv][0]))
-      out.write(";".join(nids[srv][1:10])+"\n")  # FIXME
+      out.write(nids[srv][0]+";")
+      out.write(";".join(nids[srv][1:])+"\n") 
       iolock.release()
     oldnids[srv] = nids[srv]
     for ost in r[1:]:
