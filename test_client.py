@@ -31,7 +31,7 @@ def worker(srv):
     r=rpcs[srv].get_sample()
     if len(r)==0:
       return
-    nids[srv] = r[0]
+    nids[srv] = r[0].split(";")
     if first or nids[srv] != oldnids[srv]:
       iolock.acquire()
       out.write("#;"+hostnames[srv]+";")
@@ -41,7 +41,7 @@ def worker(srv):
     oldnids[srv] = nids[srv]
     for ost in r[1:]:
       l = []
-      for i in ost:
+      for i in ost.split(";"):
         if type(i) == list:
           l.append(",".join(map(str,i)))
         else:
@@ -69,6 +69,6 @@ while True:
     threads[srv].join()
 
   e=time.time()
-  print "sample duration",e-sample
+  print e-sample,"sec for sample collection"
   time.sleep(SLEEP-(e-sample))
   first = False

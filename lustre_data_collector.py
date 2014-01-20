@@ -79,12 +79,12 @@ class MDS_RPCSERVER:
     for mdt in mdtlist:
       nids[mdt] = [ x for x in os.listdir("/proc/fs/lustre/mds/"+mdt+"/exports") if 'o2ib' in x ]
       allnids = allnids | set(nids[mdt])
-    explanation.append("#time;mdt;reqs;".split(";"))
+    explanation.append("#time;mdt;reqs;")
     for nid in sorted(allnids):
       explanation.append(nid)
-    result.append(explanation)
+    result.append(";".join(explanation))
 
-    anydata = False
+    anydata = True
     # form mdt statistics lines and append to results
     for mdt in sorted(mdtlist):
       self.current[mdt] = self.__get_mdt_data(mdt)
@@ -106,7 +106,7 @@ class MDS_RPCSERVER:
               mdtdata.append(mystr(self.current[mdt+"/"+nid] - self.old[mdt+"/"+nid]))
             else:
               mdtdata.append(mystr(self.current[mdt+"/"+nid]))
-          result.append(mdtdata)
+          result.append(";".join(mdtdata))
           self.old[mdt]=self.current[mdt]
       else:
         self.old[mdt]=self.current[mdt]
@@ -173,7 +173,7 @@ class OSS_RPCSERVER:
     """write out a tuple, write delta and nothing if only zeros"""
     l = [ str(data[i]-old[i]) for i in (0,1,2,3)] 
     if l != ["0","0","0","0"]:
-      return l
+      return ",".join(l)
     else:
       return ""
 
@@ -195,10 +195,10 @@ class OSS_RPCSERVER:
     for ost in ostlist:
       nids[ost] = [ x for x in os.listdir("/proc/fs/lustre/obdfilter/"+ost+"/exports") if 'o2ib' in x ]
       allnids = allnids | set(nids[ost])
-    explanation.append("#time;ost;rio;rb;wio;wb;".split(";"))
+    explanation.append("#time;ost;rio;rb;wio;wb;")
     for nid in sorted(allnids):
       explanation.append(nid)
-    result.append(explanation)
+    result.append(";".join(explanation))
 
     anydata = False
     # form ost statistics lines and append to results
@@ -222,7 +222,7 @@ class OSS_RPCSERVER:
               ostdata.append(self.__delta(self.current[ost+"/"+nid], self.old[ost+"/"+nid]))
             else:
               ostdata.append(self.__delta(self.current[ost+"/"+nid], (0,0,0,0)))
-          result.append(ostdata)
+          result.append(";".join(ostdata))
           self.old[ost]=self.current[ost]
       else:
         self.old[ost]=self.current[ost]
