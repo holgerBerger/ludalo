@@ -10,6 +10,7 @@ import sys
 from threading import Thread,Lock
 
 SLEEP = 60
+FILEVERSION="1.0"
 
 servers = sys.argv[1:]
 
@@ -34,7 +35,7 @@ def worker(srv):
     nids[srv] = r[0].split(";")
     if first or nids[srv] != oldnids[srv]:
       iolock.acquire()
-      out.write("#;"+hostnames[srv]+";")
+      out.write("#"+FILEVERSION+";"+hostnames[srv]+";")
       out.write(nids[srv][0]+";")
       out.write(";".join(nids[srv][1:])+"\n") 
       iolock.release()
