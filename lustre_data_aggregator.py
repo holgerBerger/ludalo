@@ -6,7 +6,7 @@
 # Holger Berger 2014
 
 import xmlrpclib,time
-import sys
+import sys, signal, os
 from threading import Thread,Lock
 
 SLEEP = 60
@@ -27,8 +27,19 @@ iolock = Lock()
 
 first = True
 
+def signalhandler(signum, frame):
+  global out,first,iolock
+  if signum == signal.SIGUSR1:
+    iolock.acquire()
+    out.close()
+    print "switching file to","logfile"+str(int(time.time()))
+    os.rename("logfile", "logfile"+str(int(time.time())))
+    out = open("logfile","w")
+    iolock.release()
+    first=True
+
 def worker(srv):
-    global oldnids
+    global oldnids,first
     r=rpcs[srv].get_sample()
     if len(r)==0:
       return
@@ -58,6 +69,7 @@ for srv in servers:
   hostnames[srv] = rpcs[srv].get_hostname()
   print "connected to %s running a %s" % (hostnames[srv],types[srv])
 
+signal.signal(signal.SIGUSR1, signalhandler)
 
 while True:
   sample=time.time()
