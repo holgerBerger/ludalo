@@ -1,5 +1,27 @@
 #!/usr/bin/env python
 
+
+# small test if SQL is an option, inserts data into a sqlite database
+# Holger Berger 2014
+#
+# TODO
+#  - read old values for some hashes from database (to update a database)
+#  - insert OST and MDS values as well 
+#  - add job data/user mapping
+#  - MySQL/PSQL Support??
+
+# nice benchmark query is
+'''
+ SELECT nids.nid FROM samples
+   INNER JOIN timestamps
+   ON timestamps.time BETWEEN 1390912496 AND 1390912596
+    AND samples.time = timestamps.id
+ INNER JOIN nids
+ ON samples.nid = nids.id;
+'''
+
+
+
 import sys
 import time
 import sqlite3
@@ -36,6 +58,7 @@ class logfile:
     #self.read_globalnids()
     # FIXME read state from DB here
     
+  ########################
   def read(self):
     ''' action is HERE'''
     f = open(self.filename,"r")
@@ -56,6 +79,8 @@ class logfile:
         self.insert_timestamp(timestamp)
         self.insert_source(source)
         self.insert_nids(server, timestamp, source, sp[4:])
+
+  ########################
 
   def insert_timestamp(self, timestamp):
     if timestamp not in self.timestamps:
