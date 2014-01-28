@@ -5,7 +5,7 @@ import time
 import sqlite3
 
 def create_tables(c):
-  c.execute('''CREATE TABLE timestamps (id integer primary key asc, time text)''')
+  c.execute('''CREATE TABLE timestamps (id integer primary key asc, time integer)''')
   c.execute('''CREATE TABLE types (id integer primary key asc, type text)''')
   c.execute('''CREATE TABLE nids (id integer primary key asc, nid text)''')
   c.execute('''CREATE TABLE servers (id integer primary key asc, server text)''')
@@ -15,6 +15,8 @@ def create_tables(c):
   c.execute('''CREATE TABLE mdt_values (id integer primary key asc, reqs integer)''')
   c.execute('''CREATE TABLE mdt_nid_values (id integer primary key asc, reqs integer)''')
   c.execute('''CREATE TABLE samples (id integer primary key asc, time integer, type integer, source integer, nid integer, vals integer)''')
+  c.execute('''CREATE INDEX samples_time_index ON samples (time)''')
+  c.execute('''CREATE INDEX time_index ON timestamps (time)''')
 
 
 class logfile:
