@@ -77,7 +77,7 @@ class MDS_RPCSERVER:
     explanation=[]
     allnids = set()
     for mdt in mdtlist:
-      nids[mdt] = [ x for x in os.listdir("/proc/fs/lustre/mds/"+mdt+"/exports") if 'o2ib' in x ]
+      nids[mdt] = [ x for x in os.listdir("/proc/fs/lustre/mds/"+mdt+"/exports") if '@' in x ]
       allnids = allnids | set(nids[mdt])
     explanation.append("time;mdt;reqs")
     for nid in sorted(allnids):
@@ -193,7 +193,7 @@ class OSS_RPCSERVER:
     explanation=[]
     allnids = set()
     for ost in ostlist:
-      nids[ost] = [ x for x in os.listdir("/proc/fs/lustre/obdfilter/"+ost+"/exports") if 'o2ib' in x ]
+      nids[ost] = [ x for x in os.listdir("/proc/fs/lustre/obdfilter/"+ost+"/exports") if '@' in x ]
       allnids = allnids | set(nids[ost])
     explanation.append("time;ost;rio,rb,wio,wb")
     for nid in sorted(allnids):
