@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+
+# import apsscheduler logs data into database
+# first argument is logfile, second argument is passwd file to be able to map UIDs to usernames
+
+# parsed lines look like
 #2013-12-21 00:02:03: Bound apid 0 resId 4072 pagg 0xba600000680 batchId '1179908'
 #2013-12-21 00:02:04: Placed apid 3615838 resId 4072 pagg 0xba600000680 uid 15952 flags 0x22001 numCmds 1 cmd0 'tfs' nids: 3-5,12,26,38,52-53,56,78,87,94,105,118,1547,1572-1573,1576,1578,1581,1583,1589,1591-1592,1596-1597,1604,1618,1623,1738,1819-1820,1826-1830,1832-1835,1845-1846,1855-1860,2469,2472-2475,2477-2479,2513,2710,2853,2856,2858-2859,2880 (nid0 3)
 #2013-12-21 00:02:04: apid 3615838 pTag 125 nttGran/ents 1/64 cookie 0x4f230000
@@ -7,10 +12,11 @@
 #2013-12-21 00:09:08: Released apid 3615838 resId 4072 pagg 0xba600000680 claim
 
 
-
+# FIXME does not yet contain handling of jobs not having start AND end in the single file
 
 import sys
 import time
+import sqlite3
 
 import lustre_jobs_sqlite
 
@@ -33,6 +39,10 @@ f = open(sys.argv[1], "r")
 usermap = {}
 read_pw(sys.argv[2], usermap)
 
+conn = sqlite3.connect('sqlite.db')
+cursor = conn.cursor()
+
+lustre_jobs_sqlite.create_tables(cursor)
 
 restojob = {}
 jobs = {}
@@ -70,4 +80,7 @@ for l in f:
       print "job without start",resid
     else:
       #print jobs[restojob[resid]] 
-      lustre_jobs_sqlite.insert_job(None, **jobs[restojob[resid]])
+      lustre_jobs_sqlite.insert_job(cursor, **jobs[restojob[resid]])
+
+conn.commit()
+conn.close()

@@ -1,12 +1,19 @@
 #!/usr/bin/env python
 
-# 01/23/2014 00:53:29;S;566798.intern2;user=ifftgs group=iff12266 jobname=lack-200_fd300_f5_u10_t.cas.gz.sh queue=single ctime=1390434772 qtime=1390434772 etime=1390434772 start=1390434809 owner=ifftgs@cl3fr1 exec_host=n133501/0 Resource_List.ncpus=1 Resource_List.neednodes=1:mem256gb Resource_List.nodect=1 Resource_List.nodes=1:mem256gb Resource_List.walltime=12:00:00 01/23/2014 01:06:06;E;566796.intern2;user=hpcchris group=s17063 jobname=STDIN queue=smulti ctime=1390432092 qtime=1390432092 etime=1390432092 start=1390432137 owner=hpcchris@cl3fr2 exec_host=n081701/0+n081701/1+n081701/2+n081701/3+n081701/4+n081701/5+n081701/6+n081701/7+n081002/0+n081002/1+n081002/2+n081002/3+n081002/4+n081002/5+n081002/6+n081002/7 Resource_List.ncpus=1 Resource_List.neednodes=2:sb:ppn=8 Resource_List.nodect=2 Resource_List.nodes=2:sb:ppn=8 Resource_List.walltime=08:00:00 session=8899 end=1390435566 Exit_status=0 resources_used.cput=00:00:06 resources_used.mem=103024kb resources_used.vmem=439356kb resources_used.walltime=00:57:08
+# helper to import torque accounting data into DB
+
+# 01/23/2014 01:06:06;E;566796.intern2;user=XXXX group=XXXX jobname=STDIN queue=smulti ctime=1390432092 qtime=1390432092 etime=1390432092 start=1390432137 owner=XXXX exec_host=n081701/0+n081701/1+n081701/2+n081701/3+n081701/4+n081701/5+n081701/6+n081701/7+n081002/0+n081002/1+n081002/2+n081002/3+n081002/4+n081002/5+n081002/6+n081002/7 Resource_List.ncpus=1 Resource_List.neednodes=2:sb:ppn=8 Resource_List.nodect=2 Resource_List.nodes=2:sb:ppn=8 Resource_List.walltime=08:00:00 session=8899 end=1390435566 Exit_status=0 resources_used.cput=00:00:06 resources_used.mem=103024kb resources_used.vmem=439356kb resources_used.walltime=00:57:08
 
 import sys
-
+import sqlite3
 import lustre_jobs_sqlite
 
 f = open(sys.argv[1], "r")
+
+conn = sqlite3.connect('sqlite.db')
+cursor = conn.cursor()
+
+lustre_jobs_sqlite.create_tables(cursor)
 
 for l in f:
   sp = l[:-1].split(";")
@@ -26,5 +33,7 @@ for l in f:
           if n not in l:
             l.append(n)
         hosts=",".join(l)
-        #$print  jobid, start, end, owner, hosts
-        lustre_jobs_sqlite.insert_job(None, jobid, start, end, owner, hosts, "")
+        lustre_jobs_sqlite.insert_job(cursor, jobid, start, end, owner, hosts, "")
+
+conn.commit()
+conn.close()
