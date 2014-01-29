@@ -4,6 +4,8 @@
 
 import sys
 
+import lustre_jobs_sqlite
+
 f = open(sys.argv[1], "r")
 
 for l in f:
@@ -19,5 +21,10 @@ for l in f:
       if i.startswith("user"):
         owner=i.split('=')[1]
       if i.startswith("exec_host"):
-        hosts=",".join(list(set([x.split('/')[0] for x in  i.split('=')[1].split("+")])))
-        print  jobid, start, end, owner, hosts
+        l=[]
+        for n in [x.split('/')[0] for x in  i.split('=')[1].split("+")]:
+          if n not in l:
+            l.append(n)
+        hosts=",".join(l)
+        #$print  jobid, start, end, owner, hosts
+        lustre_jobs_sqlite.insert_job(None, jobid, start, end, owner, hosts, "")
