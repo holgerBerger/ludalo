@@ -25,6 +25,7 @@
 
 
 import sys
+import os.path
 import time
 import sqlite3
 
@@ -58,6 +59,8 @@ class logfile:
     self.servertype = {}
     self.hostfilemap = {}
 
+    self.filesize = os.path.getsize(filename)
+
     if hostfile:
       self.readhostfile(hostfile)
 
@@ -82,7 +85,7 @@ class logfile:
       else:
         counter+=1
         if counter%10 == 0:
-          print "inserted",counter,"records\r",
+          print "inserted %d records / %d%%\r"%(counter,int(float(f.tell())/float(self.filesize)*100.0)),
         server = sp[0]
         timestamp = sp[1]
         source = sp[2]
