@@ -10,6 +10,8 @@
 #  - add job data/user mapping
 #  - MySQL/PSQL Support??
 
+# second argument is hosts file for name mapping
+
 # nice benchmark query is
 '''
  SELECT nids.nid FROM samples
@@ -27,23 +29,23 @@ import time
 import sqlite3
 
 def create_tables(c):
-  c.execute('''CREATE TABLE timestamps (id integer primary key asc, time integer)''')
-  c.execute('''CREATE TABLE types (id integer primary key asc, type text)''')
-  c.execute('''CREATE TABLE nids (id integer primary key asc, nid text)''')
-  c.execute('''CREATE TABLE servers (id integer primary key asc, server text)''')
-  c.execute('''CREATE TABLE sources (id integer primary key asc, source text)''')
-  c.execute('''CREATE TABLE ost_values (id integer primary key asc, rio integer, rb integer, wio integer, wb integer)''')
-  c.execute('''CREATE TABLE ost_nid_values (id integer primary key asc, rio integer, rb integer, wio integer, wb integer)''')
-  c.execute('''CREATE TABLE mdt_values (id integer primary key asc, reqs integer)''')
-  c.execute('''CREATE TABLE mdt_nid_values (id integer primary key asc, reqs integer)''')
-  c.execute('''CREATE TABLE samples (id integer primary key asc, time integer, type integer, source integer, nid integer, vals integer)''')
-  c.execute('''CREATE INDEX samples_time_index ON samples (time)''')
-  c.execute('''CREATE INDEX time_index ON timestamps (time)''')
+  c.execute('''CREATE TABLE IF NOT EXISTS timestamps (id integer primary key asc, time integer)''')
+  c.execute('''CREATE TABLE IF NOT EXISTS types (id integer primary key asc, type text)''')
+  c.execute('''CREATE TABLE IF NOT EXISTS nids (id integer primary key asc, nid text)''')
+  c.execute('''CREATE TABLE IF NOT EXISTS servers (id integer primary key asc, server text)''')
+  c.execute('''CREATE TABLE IF NOT EXISTS sources (id integer primary key asc, source text)''')
+  c.execute('''CREATE TABLE IF NOT EXISTS ost_values (id integer primary key asc, rio integer, rb integer, wio integer, wb integer)''')
+  c.execute('''CREATE TABLE IF NOT EXISTS ost_nid_values (id integer primary key asc, rio integer, rb integer, wio integer, wb integer)''')
+  c.execute('''CREATE TABLE IF NOT EXISTS mdt_values (id integer primary key asc, reqs integer)''')
+  c.execute('''CREATE TABLE IF NOT EXISTS mdt_nid_values (id integer primary key asc, reqs integer)''')
+  c.execute('''CREATE TABLE IF NOT EXISTS samples (id integer primary key asc, time integer, type integer, source integer, nid integer, vals integer)''')
+  c.execute('''CREATE INDEX IF NOT EXISTS samples_time_index ON samples (time)''')
+  c.execute('''CREATE INDEX IF NOT EXISTS time_index ON timestamps (time)''')
 
 
 class logfile:
 
-  def __init__(self, cursor, filename):
+  def __init__(self, cursor, filename, hostfile=None):
 
     self.filename = filename
     self.cursor = cursor
@@ -54,6 +56,10 @@ class logfile:
     self.timestamps = {}
     self.sources = {}
     self.servertype = {}
+    self.hostfilemap = {}
+
+    if hostfile:
+      self.readhostfile(hostfile)
 
     #self.read_globalnids()
     # FIXME read state from DB here
@@ -62,6 +68,7 @@ class logfile:
   def read(self):
     ''' action is HERE'''
     f = open(self.filename,"r")
+    counter=0
 
     #1.0;hmds1;time;mdt;reqs;
     #1.0;hoss3;time;ost;rio,rb,wio,wb;
@@ -73,6 +80,9 @@ class logfile:
         self.insert_server(server, stype)
         self.insert_nids_server(server, sp[5:])
       else:
+        counter+=1
+        if counter%10 == 0:
+          print "inserted",counter,"records\r",
         server = sp[0]
         timestamp = sp[1]
         source = sp[2]
@@ -81,6 +91,21 @@ class logfile:
         self.insert_nids(server, timestamp, source, sp[4:])
 
   ########################
+
+  def readhostfile(self, hostfile):
+    try:
+      f = open(hostfile, "r")
+    except:
+      return
+    for l in f:
+      if not l.startswith('#'):
+        sp = l[:-1].split()
+        if len(sp)==0: continue
+        ip = sp[0]
+        name = sp[1]
+        self.hostfilemap[ip]=name
+    print "read",len(self.hostfilemap),"host mappings"
+    f.close()
 
   def insert_timestamp(self, timestamp):
     if timestamp not in self.timestamps:
@@ -101,7 +126,13 @@ class logfile:
       self.servertype[server]=stype
   
   def insert_nids_server(self, server, nids):
-    for nid in nids:
+    for rnid in nids:
+      nid = rnid.split('@')[0]
+      if self.hostfilemap:
+        try:
+          nid = self.hostfilemap[nid]
+        except KeyError:
+          pass
       if nid not in self.globalnidmap:
         self.cursor.execute('''INSERT INTO nids VALUES (NULL,?)''',(nid,))
         self.globalnidmap[nid]=self.cursor.lastrowid
@@ -133,7 +164,7 @@ cursor = conn.cursor()
 
 create_tables(conn)
 
-o = logfile(cursor, sys.argv[1])
+o = logfile(cursor, sys.argv[1], sys.argv[2])
 o.read()
 
 conn.commit()
