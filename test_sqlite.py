@@ -12,7 +12,7 @@
 
 # second argument is hosts file for name mapping
 
-# nice benchmark query is
+# nice benchmark query is lol
 '''
  SELECT nids.nid FROM samples
    INNER JOIN timestamps
