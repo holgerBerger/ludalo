@@ -12,7 +12,7 @@
 
 # second argument is hosts file for name mapping
 
-# nice benchmark query is     DAS WAR BASE
+# nice benchmark query is     select * from world where HumanID == 42
 '''
  SELECT nids.nid FROM samples
    INNER JOIN timestamps
