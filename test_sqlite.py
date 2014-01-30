@@ -66,6 +66,7 @@ class logfile:
 
     #self.read_globalnids()
     # FIXME read state from DB here
+    # we need timestamps, sources, server, globalnids
     
   ########################
   def read(self):
