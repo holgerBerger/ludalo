@@ -12,7 +12,7 @@
 
 # second argument is hosts file for name mapping
 
-# nice benchmark query is     halli hallo halloele schnickschnack
+# nice benchmark query is     DAS WAR BASE
 '''
  SELECT nids.nid FROM samples
    INNER JOIN timestamps
