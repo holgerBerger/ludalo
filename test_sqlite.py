@@ -12,7 +12,7 @@
 
 # second argument is hosts file for name mapping
 
-# nice benchmark query is     halli hallo halloele
+# nice benchmark query is     No one simply code with git.... 
 '''
  SELECT nids.nid FROM samples
    INNER JOIN timestamps
