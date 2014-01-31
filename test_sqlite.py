@@ -81,7 +81,10 @@ class logfile:
         server = sp[1]
         stype = sp[3]
         self.insert_server(server, stype)
-        self.insert_nids_server(server, sp[5:])
+        self.insert_nids_server_old(server, sp[5])
+        ''' -> 
+        for nid in sp[5:]:
+            self.insert_nids_server(server, one_nid)'''
       else:
         counter+=1
         if counter%10 == 0:
@@ -127,8 +130,12 @@ class logfile:
       self.cursor.execute('''INSERT INTO servers VALUES (NULL,?)''',(server,))
       self.servermap[server]=self.cursor.lastrowid
       self.servertype[server]=stype
+
+  def insert_nid_server(self, server, one_nid):
+      nid = one_nid.split('@')[0] #get only the name
+      self.myDB.add_nid_server(server, nid_name)
   
-  def insert_nids_server(self, server, nids):
+  def insert_nids_server_old(self, server, nids):
     for rnid in nids:
       nid = rnid.split('@')[0]
       if self.hostfilemap:
