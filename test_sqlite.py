@@ -31,9 +31,8 @@ import sqlite3
 
 def create_tables(c):
   c.execute('''CREATE TABLE IF NOT EXISTS timestamps (id integer primary key asc, time integer)''')
-  c.execute('''CREATE TABLE IF NOT EXISTS types (id integer primary key asc, type text)''')
   c.execute('''CREATE TABLE IF NOT EXISTS nids (id integer primary key asc, nid text)''')
-  c.execute('''CREATE TABLE IF NOT EXISTS servers (id integer primary key asc, server text)''')
+  c.execute('''CREATE TABLE IF NOT EXISTS servers (id integer primary key asc, server text, type text)''')
   c.execute('''CREATE TABLE IF NOT EXISTS sources (id integer primary key asc, source text)''')
   c.execute('''CREATE TABLE IF NOT EXISTS ost_values (id integer primary key asc, rio integer, rb integer, wio integer, wb integer)''')
   c.execute('''CREATE TABLE IF NOT EXISTS ost_nid_values (id integer primary key asc, rio integer, rb integer, wio integer, wb integer)''')
@@ -64,9 +63,10 @@ class logfile:
     if hostfile:
       self.readhostfile(hostfile)
 
-    #self.read_globalnids()
-    # FIXME read state from DB here
-    # we need timestamps, sources, server, globalnids
+    self.read_globalnids()
+    self.read_servers()
+    self.read_sources()
+    self.read_timestamps()
     
   ########################
   def read(self):
@@ -96,6 +96,38 @@ class logfile:
 
   ########################
 
+  def read_globalnids(self):
+    self.cursor.execute('''SELECT * FROM nids;''')
+    r = self.cursor.fetchall()
+    for (k,v) in r:
+      self.globalnidmap[str(v)]=k
+    print "read %s old nid mappings" % len(self.globalnidmap)
+
+  def read_sources(self):
+    self.cursor.execute('''SELECT * FROM sources;''')
+    r = self.cursor.fetchall()
+    for (k,v) in r:
+      self.sources[str(v)]=k
+    print "read %s old sources" % len(self.sources)
+
+  def read_servers(self):
+    self.cursor.execute('''SELECT * FROM servers;''')
+    r = self.cursor.fetchall()
+    for (k,v,t) in r:
+      self.servermap[str(v)]=k
+      self.per_server_nids[str(v)] = []
+      self.servertype[str(v)]=t
+      print "known server:",v,t
+
+  def read_timestamps(self):
+    self.cursor.execute('''SELECT * FROM timestamps;''')
+    r = self.cursor.fetchall()
+    for (k,v) in r:
+      self.timestamps[str(v)]=k
+    print "read %d old timestamps" % len(self.timestamps)
+
+
+
   def readhostfile(self, hostfile):
     try:
       f = open(hostfile, "r")
@@ -122,10 +154,11 @@ class logfile:
       self.sources[source]=self.cursor.lastrowid
 
   def insert_server(self, server, stype):
-    if server not in self.per_server_nids:
+    #if server not in self.per_server_nids: FIXME ???
+    if server not in self.servermap:
       print "new server:", server
       self.per_server_nids[server] = []
-      self.cursor.execute('''INSERT INTO servers VALUES (NULL,?)''',(server,))
+      self.cursor.execute('''INSERT INTO servers VALUES (NULL,?,?)''',(server,stype))
       self.servermap[server]=self.cursor.lastrowid
       self.servertype[server]=stype
   
