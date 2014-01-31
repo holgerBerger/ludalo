@@ -58,8 +58,9 @@ class DatabaseHelper(object):
         for db in self.databases:
             db.insert_nids(self, server, timestamp, source, nidvals)
 
-    def insert_nids_server(self, server, nids):
-        raise NotImplementedError()
+    def insert_nid_server(self, server, nid_name):
+        for db in self.databases:
+            db.insert_nids(self, server, timestamp, source, nidvals)
 #------------------------------------------------------------------------------
 
     def dateToTimeStamp(self, year, month, day, houer, minute):

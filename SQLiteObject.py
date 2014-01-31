@@ -25,6 +25,7 @@ class SQLiteObject(AbstractDB):
         self.sources = {}
         self.servertype = {}
         self.mdsmap = {}
+        self.hostfilemap = {}
 
 #------------------------------------------------------------------------------
 
@@ -199,14 +200,18 @@ class SQLiteObject(AbstractDB):
             self.servertype[server] = stype
 #------------------------------------------------------------------------------
 
-    def _insert_nids_server(self, server, nids):
-        for nid in nids:
-            if nid not in self.globalnidmap:
-                self.cursor.execute('''INSERT INTO nids VALUES (NULL,?)''',
-                                    (nid,))
-                self.globalnidmap[nid] = self.cursor.lastrowid
-            if nid not in self.per_server_nids[server]:
-                self.per_server_nids[server].append(nid)
+    def add_nid_server(self, server, nid_name):
+        nid = nid_name.split('@')[0]
+        if self.hostfilemap:
+            try:
+                nid = self.hostfilemap[nid]
+            except KeyError:
+                pass
+        if nid not in self.globalnidmap:
+            self.cursor.execute('''INSERT INTO nids VALUES (NULL,?)''',(nid,))
+            self.globalnidmap[nid]=self.cursor.lastrowid
+        if nid not in self.per_server_nids[server]:
+            self.per_server_nids[server].append(nid)
 #------------------------------------------------------------------------------
 
     def insert_nids(self, server, timestamp, source, nidvals):

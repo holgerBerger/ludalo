@@ -28,6 +28,7 @@ import sys
 import os.path
 import time
 import sqlite3
+from DatabaseHelper import DatabaseHelper
 
 def create_tables(c):
   c.execute('''CREATE TABLE IF NOT EXISTS timestamps (id integer primary key asc, time integer)''')
@@ -49,7 +50,10 @@ class logfile:
 
     self.filename = filename
     self.cursor = cursor
-
+    
+    myDB = DatabaseHelper()
+    myDB.addSQLite('sqlite_new.db')
+    
     self.globalnidmap = {}
     self.servermap = {}
     self.per_server_nids = {}
@@ -82,7 +86,10 @@ class logfile:
         server = sp[1]
         stype = sp[3]
         self.insert_server(server, stype)
-        self.insert_nids_server(server, sp[5:])
+        self.insert_nids_server_old(server, sp[5])
+        ''' -> preperation
+        for nid in sp[5:]:
+            self.insert_nids_server(server, one_nid)'''
       else:
         counter+=1
         if counter%10 == 0:
@@ -161,8 +168,12 @@ class logfile:
       self.cursor.execute('''INSERT INTO servers VALUES (NULL,?,?)''',(server,stype))
       self.servermap[server]=self.cursor.lastrowid
       self.servertype[server]=stype
+
+  def insert_nid_server(self, server, one_nid):
+      nid = one_nid.split('@')[0] #get only the name
+      self.myDB.add_nid_server(server, nid_name)
   
-  def insert_nids_server(self, server, nids):
+  def insert_nids_server_old(self, server, nids):
     for rnid in nids:
       nid = rnid.split('@')[0]
       if self.hostfilemap:
