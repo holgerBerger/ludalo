@@ -10,7 +10,7 @@
 #  - add job data/user mapping
 #  - MySQL/PSQL Support??
 
-# second argument is hosts file for name mapping
+# fist argument is hosts file for name mapping, following arguments is files
 
 # nice benchmark query is
 '''
@@ -86,7 +86,7 @@ class logfile:
         server = sp[1]
         stype = sp[3]
         self.insert_server(server, stype)
-        self.insert_nids_server_old(server, sp[5])
+        self.insert_nids_server_old(server, sp[5:])
         ''' -> preperation
         for nid in sp[5:]:
             self.insert_nids_server(server, one_nid)'''
@@ -206,14 +206,24 @@ class logfile:
           self.cursor.execute('''INSERT INTO samples VALUES (NULL,?,?,?,?,?)''',(timeid, 1, sourceid, nidid, id))
 
 
+   
 
-conn = sqlite3.connect('sqlite.db')
-cursor = conn.cursor()
 
-create_tables(conn)
+if __name__ == "__main__":
 
-o = logfile(cursor, sys.argv[1], sys.argv[2])
-o.read()
+  if len(sys.argv)<=2 or sys.argv[1] in ["-h", "--help"]:
+    print "usage: %s hostmapping logfile ..." % sys.argv[0]
+    sys.exit(0)
 
-conn.commit()
-conn.close()
+
+  conn = sqlite3.connect('sqlite.db')
+  cursor = conn.cursor()
+
+  create_tables(conn)
+
+  for filename in sys.argv[2:]:
+    o = logfile(cursor, filename, sys.argv[1])
+    o.read()
+
+  conn.commit()
+  conn.close()
