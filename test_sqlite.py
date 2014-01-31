@@ -28,6 +28,7 @@ import sys
 import os.path
 import time
 import sqlite3
+from DatabaseHelper import DatabaseHelper
 
 def create_tables(c):
   c.execute('''CREATE TABLE IF NOT EXISTS timestamps (id integer primary key asc, time integer)''')
@@ -50,7 +51,10 @@ class logfile:
 
     self.filename = filename
     self.cursor = cursor
-
+    
+    myDB = DatabaseHelper()
+    myDB.addSQLite('sqlite_new.db')
+    
     self.globalnidmap = {}
     self.servermap = {}
     self.per_server_nids = {}

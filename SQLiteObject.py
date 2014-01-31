@@ -200,7 +200,7 @@ class SQLiteObject(AbstractDB):
             self.servertype[server] = stype
 #------------------------------------------------------------------------------
 
-    def _insert_nid_server(self, server, nid_name):
+    def add_nid_server(self, server, nid_name):
         nid = nid_name.split('@')[0]
         if self.hostfilemap:
             try:
