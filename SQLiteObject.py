@@ -159,7 +159,7 @@ class SQLiteObject(AbstractDB):
                                 id integer primary key asc,
                                 reqs integer)''')
 
-        # verknüpfung
+        # verknuepfung
         self.c.execute('''CREATE TABLE IF NOT EXIST
                             samples (
                                 id integer primary key asc,
