@@ -82,7 +82,7 @@ class logfile:
         stype = sp[3]
         self.insert_server(server, stype)
         self.insert_nids_server_old(server, sp[5])
-        ''' -> 
+        ''' -> preperation
         for nid in sp[5:]:
             self.insert_nids_server(server, one_nid)'''
       else:
