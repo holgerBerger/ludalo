@@ -53,7 +53,7 @@ class logfile:
     self.cursor = cursor
     
     myDB = DatabaseHelper()
-    myDB.addSQLite('sqlite_new.db')
+    myDB.addSQLite('sqlite_new.db')  # change to db name if save...
     
     self.globalnidmap = {}
     self.servermap = {}
