@@ -104,12 +104,6 @@ class SQLiteObject(AbstractDB):
                                 id integer primary key asc,
                                 time text)''')
 
-        # mdt/ost
-        self.c.execute('''CREATE TABLE IF NOT EXIST
-                            types (
-                                id integer primary key asc,
-                                type text)''')
-
         # name vom clienten
         self.c.execute('''CREATE TABLE IF NOT EXIST
                             nids (
@@ -120,7 +114,8 @@ class SQLiteObject(AbstractDB):
         self.c.execute('''CREATE TABLE IF NOT EXIST
                             servers (
                                 id integer primary key asc,
-                                server text)''')
+                                server text,
+                                type text)''')
 
         # ost / mdt
         self.c.execute('''CREATE TABLE IF NOT EXIST
@@ -173,6 +168,12 @@ class SQLiteObject(AbstractDB):
                                 source integer, 
                                 nid integer,
                                 vals integer)''')
+        
+        self.c.execute('''CREATE INDEX IF NOT EXISTS 
+                            samples_time_index ON samples (time)''')
+        
+        self.c.execute('''CREATE INDEX IF NOT EXISTS 
+                            time_index ON timestamps (time)''')
 
 #------------------------------------------------------------------------------
 
