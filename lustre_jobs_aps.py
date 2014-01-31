@@ -2,7 +2,7 @@
 
 
 # import apsscheduler logs data into database
-# first argument is logfile, second argument is passwd file to be able to map UIDs to usernames
+# first argument is passwd file to be able to map UIDs to usernames, following arguments are logfiles
 
 # parsed lines look like
 #2013-12-21 00:02:03: Bound apid 0 resId 4072 pagg 0xba600000680 batchId '1179908'
@@ -15,6 +15,7 @@
 # FIXME does not yet contain handling of jobs not having start AND end in the single file
 
 import sys
+import os.path
 import time
 import sqlite3
 
@@ -34,53 +35,71 @@ def getvalue(l, key):
     return None
   return l[p+1]
 
-f = open(sys.argv[1], "r")
 
-usermap = {}
-read_pw(sys.argv[2], usermap)
 
-conn = sqlite3.connect('sqlite.db')
-cursor = conn.cursor()
 
-lustre_jobs_sqlite.create_tables(cursor)
+if __name__ == "__main__":
 
-restojob = {}
-jobs = {}
+  if len(sys.argv)<=2 or sys.argv[1] in ["-h", "--help"]:
+    print "usage: %s passwdfile apsschedlog ..." % sys.argv[0]
+    sys.exit(0)
 
-for l in f:
-  if "Bound apid" in l:
-    sp = l[:-1].split()
-    jobid=getvalue(sp, "batchId")[1:-1]
-    resid=getvalue(sp, "resId")
-    restojob[resid] = jobid
-    jobs[jobid] = {'jobid':jobid}
-  if "Placed apid" in l:
-    sp = l[:-1].split()
-    sstart=sp[0]+" "+sp[1][:-1]
-    start = int(time.mktime(time.strptime(sstart,"%Y-%m-%d %H:%M:%S")))
-    resid=getvalue(sp, "resId")
-    uid=getvalue(sp, "uid")
-    cmd=getvalue(sp, "cmd0")[1:-1]
-    nids=getvalue(sp, "nids:")
-    try:
-      jobs[restojob[resid]]['start'] = start
-      jobs[restojob[resid]]['cmd'] = cmd
-      jobs[restojob[resid]]['owner'] = usermap[uid]
-      jobs[restojob[resid]]['nids'] = nids
-    except KeyError:
-      print "job without binding",resid
-  if "Released apid" in l:   
-    sp = l[:-1].split()
-    send=sp[0]+" "+sp[1][:-1]
-    end = int(time.mktime(time.strptime(send,"%Y-%m-%d %H:%M:%S")))
-    resid=getvalue(sp, "resId")
-    try:
-      jobs[restojob[resid]]['end'] = end
-    except KeyError:
-      print "job without start",resid
-    else:
-      #print jobs[restojob[resid]] 
-      lustre_jobs_sqlite.insert_job(cursor, **jobs[restojob[resid]])
+  usermap = {}
+  read_pw(sys.argv[1], usermap)
 
-conn.commit()
-conn.close()
+  conn = sqlite3.connect('sqlite.db')
+  cursor = conn.cursor()
+
+  lustre_jobs_sqlite.create_tables(cursor)
+
+  for filename in sys.argv[2:]:
+    f = open(filename, "r")
+    filesize = os.path.getsize(filename)
+    counter=0
+
+    restojob = {}
+    jobs = {}
+
+    for l in f:
+      if "Bound apid" in l:
+        sp = l[:-1].split()
+        jobid=getvalue(sp, "batchId")[1:-1]
+        resid=getvalue(sp, "resId")
+        restojob[resid] = jobid
+        jobs[jobid] = {'jobid':jobid}
+      if "Placed apid" in l:
+        sp = l[:-1].split()
+        sstart=sp[0]+" "+sp[1][:-1]
+        start = int(time.mktime(time.strptime(sstart,"%Y-%m-%d %H:%M:%S")))
+        resid=getvalue(sp, "resId")
+        uid=getvalue(sp, "uid")
+        cmd=getvalue(sp, "cmd0")[1:-1]
+        nids=getvalue(sp, "nids:")
+        try:
+          jobs[restojob[resid]]['start'] = start
+          jobs[restojob[resid]]['cmd'] = cmd
+          jobs[restojob[resid]]['owner'] = usermap[uid]
+          jobs[restojob[resid]]['nids'] = nids
+        except KeyError:
+          print "job without binding",resid," "*30
+      if "Released apid" in l:   
+        sp = l[:-1].split()
+        send=sp[0]+" "+sp[1][:-1]
+        end = int(time.mktime(time.strptime(send,"%Y-%m-%d %H:%M:%S")))
+        resid=getvalue(sp, "resId")
+        try:
+          jobs[restojob[resid]]['end'] = end
+        except KeyError:
+          print "job without start",resid," "*30
+        else:
+          #print jobs[restojob[resid]] 
+          lustre_jobs_sqlite.insert_job(cursor, **jobs[restojob[resid]])
+          counter+=1
+          if counter%10 == 0:
+            print "read %d records / %d%% from %s\r"%(counter,int(float(f.tell())/float(filesize)*100.0), filename),
+
+    print "read %d records / %d%% from %s"%(counter,int(float(f.tell())/float(filesize)*100.0), filename)
+    f.close()
+
+  conn.commit()
+  conn.close()

@@ -30,7 +30,7 @@ def create_tables(c):
 
 
 def insert_job(c, jobid, start, end, owner, nids, cmd):
-  print jobid, start, end, owner, nids, cmd
+  #print jobid, start, end, owner, nids, cmd
   # check if job is already in DB
   c.execute('''SELECT jobid FROM jobs WHERE jobid = ?''',(jobid,))
   if not c.fetchone():
