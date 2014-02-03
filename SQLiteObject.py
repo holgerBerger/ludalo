@@ -177,21 +177,21 @@ class SQLiteObject(AbstractDB):
 
 #------------------------------------------------------------------------------
 
-    def _insert_timestamp(self, timestamp):
+    def insert_timestamp(self, timestamp):
         if timestamp not in self.timestamps:
             self.cursor.execute('''INSERT INTO timestamps VALUES (NULL,?)''',
                                 (timestamp,))
             self.timestamps[timestamp] = self.cursor.lastrowid
 #------------------------------------------------------------------------------
 
-    def _insert_source(self, source):
+    def insert_source(self, source):
         if source not in self.sources:
             self.cursor.execute('''INSERT INTO sources VALUES (NULL,?)''',
                                 (source,))
             self.sources[source] = self.cursor.lastrowid
 #------------------------------------------------------------------------------
 
-    def _insert_server(self, server, stype):
+    def insert_server(self, server, stype):
         if server not in self.per_server_nids:
             print "new server:", server
             self.per_server_nids[server] = []
@@ -215,36 +215,38 @@ class SQLiteObject(AbstractDB):
             self.per_server_nids[server].append(nid)
 #------------------------------------------------------------------------------
 
-    def insert_nids(self, server, timestamp, source, nidvals):
+    def getNidID(self, server, i):
+        return self.globalnidmap[self.per_server_nids[server][i]]
+#------------------------------------------------------------------------------
+    def insert_nid(self, server, timestamp, source, nidvals, nidid):
         stype = self.servertype[server]
-        for i in range(len(nidvals)):
-            nidid = self.globalnidmap[self.per_server_nids[server][i]]
-            timeid = self.timestamps[timestamp]
-            sourceid = self.sources[source]
+        nidid = nidid
+        timeid = self.timestamps[timestamp]
+        sourceid = self.sources[source]
 
-            if nidvals[i] != "":
-                if stype == 'ost':
-                    self.cursor.execute('''INSERT INTO ost_nid_values VALUES
-                                        (NULL,?,?,?,?)''',
-                                        nidvals[i].split(','))
+        if nidvals != "":
+            if stype == 'ost':
+                self.cursor.execute('''INSERT INTO ost_nid_values VALUES
+                                    (NULL,?,?,?,?)''',
+                                    nidvals.split(','))
 
-                    lastID = self.cursor.lastrowid
-                    self.cursor.execute('''INSERT INTO samples VALUES
-                                        (NULL,?,?,?,?,?)''',
-                                        (timeid, 0, sourceid, nidid, lastID))
+                lastID = self.cursor.lastrowid
+                self.cursor.execute('''INSERT INTO samples VALUES
+                                    (NULL,?,?,?,?,?)''',
+                                    (timeid, 0, sourceid, nidid, lastID))
 
-                if stype == 'mdt':
-                    self.cursor.execute('''INSERT INTO mdt_nid_values VALUES
-                                        (NULL,?)''',
-                                        (nidvals[i],))
+        if stype == 'mdt':
+            self.cursor.execute('''INSERT INTO mdt_nid_values VALUES
+                                (NULL,?)''',
+                                (nidvals,))
 
-                    lastID = self.cursor.lastrowid
-                    self.cursor.execute('''INSERT INTO samples VALUES
-                                        (NULL,?,?,?,?,?)''',
-                                        (timeid, 1, sourceid, nidid, lastID))
+            lastID = self.cursor.lastrowid
+            self.cursor.execute('''INSERT INTO samples VALUES
+                                (NULL,?,?,?,?,?)''',
+                                (timeid, 1, sourceid, nidid, lastID))
 #------------------------------------------------------------------------------
 
-    def _insert_SERVER_values(self, mds_name, REQS, timeStamp, type):
+    def insert_SERVER_values(self, mds_name, REQS, timeStamp, type):
         ''' type 0->ost 1->mdt 2->oss 3->mds '''
         c = self.c
         timeid = self.timestamps[timeStamp]

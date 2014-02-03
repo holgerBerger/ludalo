@@ -26,6 +26,10 @@ class DatabaseHelper(object):
     def addRRDB(self, folder):
         self.databases.add(RRDToolObject(folder))
 
+    def closeConnection(self):
+        for db in self.databases:
+            db.closeConnection
+
     def addUser(self, userName, timeStamp, WR_MB, RD_MB, REQS):
         for db in self.databases:
             db.addUser(userName, timeStamp, WR_MB, RD_MB, REQS)
@@ -53,10 +57,30 @@ class DatabaseHelper(object):
     def addOST(self, OST_name, timeStamp, WR_MB, RD_MB, REQS):
         for db in self.databases:
             db.addOSS(OST_name, timeStamp, WR_MB, RD_MB, REQS)
-
-    def insert_nids(self, server, timestamp, source, nidvals):
+            
+    def insert_timestamp(self, timestamp):
         for db in self.databases:
-            db.insert_nids(self, server, timestamp, source, nidvals)
+            db.insert_timestamp(self, timestamp)
+            
+    def insert_source(self, source):
+        for db in self.databases:
+            db.insert_source(self, source)
+
+    def insert_server(self, server, stype):
+        for db in self.databases:
+            db.insert_server(self, server, stype)
+            
+    def add_nid_server(self, server, nid_name):
+        for db in self.databases:
+            db.add_nid_server(self, server, nid_name)
+            
+    def getNidID(self, server, i):
+        for db in self.databases:
+            db.getNidID(self, server, i)
+
+    def insert_nid(self, server, timestamp, source, nidvals, nidid):
+        for db in self.databases:
+            db.insert_nids(self, server, timestamp, source, nidvals, nidid)
 
     def insert_nid_server(self, server, nid_name):
         for db in self.databases:

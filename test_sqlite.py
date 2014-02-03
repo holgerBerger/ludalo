@@ -51,7 +51,7 @@ class logfile:
     self.filename = filename
     self.cursor = cursor
     
-    myDB = DatabaseHelper()
+    self.myDB = DatabaseHelper()
     myDB.addSQLite('sqlite_new.db')  # change to db name if save...
     
     self.globalnidmap = {}
@@ -98,12 +98,17 @@ class logfile:
         timestamp = sp[1]
         source = sp[2]
         self.insert_timestamp(timestamp)
+        # self.myDB.insert_timestamp(timestamp) 
         self.insert_source(source)
+        # self.myDB.insert_source(source)
         #  server = sp[0] timestamp = sp[1] source = sp[2]
         self.insert_nids(server, timestamp, source, sp[4:])
         ''' -> preperation
-        for nid in sp[4:]
-            self.insert_nid(server, timeStamp, source, nid):
+        index = 0
+        for nid in sp[4:]:
+            nidID = getNidID(server, index)
+            self.insert_nid(server, timeStamp, source, nid, nidID):
+            index++
         '''
 
   ########################
@@ -192,9 +197,9 @@ class logfile:
       if nid not in self.per_server_nids[server]:
         self.per_server_nids[server].append(nid)
 
-  def insert_nid(self, server, timeStamp, source, nidvals_Tup):
+  def insert_nid(self, server, timeStamp, source, nidvals_Tup, nidID):
       ''' methode to insert only one nid value tuple '''
-      self.myDB.add_nid_values(server, timeStamp, source, nidvals_Tup)
+      self.myDB.add_nid_values(server, timeStamp, source, nidvals_Tup, nidID)
 
   def insert_nids(self, server, timestamp, source, nidvals):
     stype = self.servertype[server]

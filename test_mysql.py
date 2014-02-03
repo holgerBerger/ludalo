@@ -229,6 +229,8 @@ class logfile:
 
 
 
+conn = MySQLdb.connect(passwd='sqlsucks',db="lustre")
+cursor = conn.cursor()
 
 if __name__ == "__main__":
 
