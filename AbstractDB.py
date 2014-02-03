@@ -44,10 +44,30 @@ class AbstractDB(object):
         print self.__class__.__name__
         raise NotImplementedError()
 
-    def insert_nids(self, server, timestamp, source, nidvals):
+    def insert_timestamp(self, timestamp):
         print self.__class__.__name__
         raise NotImplementedError()
 
-    def insert_nids_server(self, server, nids):
+    def insert_source(self, source):
+        print self.__class__.__name__
+        raise NotImplementedError()
+
+    def insert_server(self, server, stype):
+        print self.__class__.__name__
+        raise NotImplementedError()
+
+    def add_nid_server(self, server, nid_name):
+        print self.__class__.__name__
+        raise NotImplementedError()
+
+    def getNidID(self, server, i):
+        print self.__class__.__name__
+        raise NotImplementedError()
+
+    def insert_nid(self, server, timestamp, source, nidvals, nidid):
+        print self.__class__.__name__
+        raise NotImplementedError()
+
+    def insert_nis_server(self, server, nid_name):
         print self.__class__.__name__
         raise NotImplementedError()
