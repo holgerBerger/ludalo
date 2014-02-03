@@ -97,8 +97,6 @@ class logfile:
 
     #1.0;hmds1;time;mdt;reqs;
     #1.0;hoss3;time;ost;rio,rb,wio,wb;
-    self.il_ost = []
-    self.il_mdt = []
     for line in f:
       sp = line[:-1].split(";") 
       if line.startswith("#"):
@@ -124,10 +122,6 @@ class logfile:
         for nid in sp[4:]
             self.insert_nid(server, timeStamp, source, nid):
         '''
-    print len(self.il_ost)
-    self.cursor.executemany('''INSERT INTO samples_ost VALUES (DEFAULT,%s,%s,%s,%s,%s,%s,%s)''',self.il_ost)
-    self.cursor.executemany('''INSERT INTO samples_mdt VALUES (DEFAULT,%s,%s,%s,%s)''',self.il_mdt)
-    print "inserted %d records / %d%%\r"%(counter,int(float(f.tell())/float(self.filesize)*100.0)),
 
   ########################
 
@@ -222,6 +216,8 @@ class logfile:
     stype = self.servertype[server]
     #print server, timestamp, source, stype
     # CREATE TABLE samples (id integer primary key asc, time integer, type integer, source integer, nid integer, vals integer)
+    il_ost = []
+    il_mdt = []
     for i in range(len(nidvals)):
       nidid = self.globalnidmap[self.per_server_nids[server][i]]
       timeid = self.timestamps[timestamp]
@@ -230,9 +226,11 @@ class logfile:
         if stype == 'ost':
           temp = [timeid, sourceid, nidid]
           temp.extend(nidvals[i].split(','))
-          self.il_ost.append(temp)
+          il_ost.append(temp)
         if stype == 'mdt':
-          self.il_mdt.append((timeid, sourceid, nidid, nidvals[i]))
+          il_mdt.append((timeid, sourceid, nidid, nidvals[i]))
+    self.cursor.executemany('''INSERT INTO samples_ost VALUES (DEFAULT,%s,%s,%s,%s,%s,%s,%s)''',il_ost)
+    self.cursor.executemany('''INSERT INTO samples_mdt VALUES (DEFAULT,%s,%s,%s,%s)''',il_mdt)
     
 
 

@@ -73,8 +73,6 @@ class logfile:
     self.read_servers()
     self.read_sources()
     self.read_timestamps()
-    self.il_ost = []
-    self.il_mdt = []
     
   ########################
   def read(self):
@@ -109,8 +107,6 @@ class logfile:
         for nid in sp[4:]
             self.insert_nid(server, timeStamp, source, nid):
         '''
-    self.cursor.executemany('''INSERT INTO samples_ost VALUES (DEFAULT,%s,%s,%s,%s,%s,%s,%s)''',self.il_ost)
-    self.cursor.executemany('''INSERT INTO samples_mdt VALUES (DEFAULT,%s,%s,%s,%s)''',self.il_mdt)
 
 
   ########################
@@ -207,23 +203,21 @@ class logfile:
     stype = self.servertype[server]
     #print server, timestamp, source, stype
     # CREATE TABLE samples (id integer primary key asc, time integer, type integer, source integer, nid integer, vals integer)
+    il_ost = []
+    il_mdt = []
     for i in range(len(nidvals)):
       nidid = self.globalnidmap[self.per_server_nids[server][i]]
       timeid = self.timestamps[timestamp]
       sourceid = self.sources[source]
       if nidvals[i]!="":
         if stype == 'ost':
-          #self.cursor.execute('''INSERT INTO ost_nid_values VALUES (NULL,?,?,?,?)''',nidvals[i].split(','))
-          #id = self.cursor.lastrowid
-          #self.cursor.execute('''INSERT INTO samples VALUES (NULL,?,?,?,?,?)''',(timeid, 0, sourceid, nidid, id))
           temp = [timeid, sourceid, nidid]
           temp.extend(nidvals[i].split(','))
-          self.il_ost.append(temp)
+          il_ost.append(temp)
         if stype == 'mdt':
-          #self.cursor.execute('''INSERT INTO mdt_nid_values VALUES (NULL,?)''',(nidvals[i],))
-          #id = self.cursor.lastrowid
-          #self.cursor.execute('''INSERT INTO samples VALUES (NULL,?,?,?,?,?)''',(timeid, 1, sourceid, nidid, id))
-          self.il_mdt.append((timeid, sourceid, nidid, nidvals[i]))
+          il_mdt.append((timeid, sourceid, nidid, nidvals[i]))
+    self.cursor.executemany('''INSERT INTO samples_ost VALUES (NULL,?,?,?,?,?,?,?)''',il_ost)
+    self.cursor.executemany('''INSERT INTO samples_mdt VALUES (NULL,?,?,?,?)''',il_mdt)
 
 
    
