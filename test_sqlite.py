@@ -40,6 +40,8 @@ def create_tables(c):
   c.execute('''CREATE TABLE IF NOT EXISTS mdt_values (id integer primary key asc, reqs integer)''')
   c.execute('''CREATE TABLE IF NOT EXISTS mdt_nid_values (id integer primary key asc, reqs integer)''')
   c.execute('''CREATE TABLE IF NOT EXISTS samples (id integer primary key asc, time integer, type integer, source integer, nid integer, vals integer)''')
+  c.execute('''CREATE TABLE IF NOT EXISTS samples_ost (id serial primary key, time integer, source integer, nid integer, rio integer, rb bigint, wio integer, wb bigint);''')
+  c.execute('''CREATE TABLE IF NOT EXISTS samples_mdt (id serial primary key, time integer, source integer, nid integer, reqs integer);''')
   c.execute('''CREATE INDEX IF NOT EXISTS samples_time_index ON samples (time)''')
   c.execute('''CREATE INDEX IF NOT EXISTS time_index ON timestamps (time)''')
 
@@ -71,6 +73,8 @@ class logfile:
     self.read_servers()
     self.read_sources()
     self.read_timestamps()
+    self.il_ost = []
+    self.il_mdt = []
     
   ########################
   def read(self):
@@ -105,6 +109,9 @@ class logfile:
         for nid in sp[4:]
             self.insert_nid(server, timeStamp, source, nid):
         '''
+    self.cursor.executemany('''INSERT INTO samples_ost VALUES (DEFAULT,%s,%s,%s,%s,%s,%s,%s)''',self.il_ost)
+    self.cursor.executemany('''INSERT INTO samples_mdt VALUES (DEFAULT,%s,%s,%s,%s)''',self.il_mdt)
+
 
   ########################
 
@@ -206,13 +213,17 @@ class logfile:
       sourceid = self.sources[source]
       if nidvals[i]!="":
         if stype == 'ost':
-          self.cursor.execute('''INSERT INTO ost_nid_values VALUES (NULL,?,?,?,?)''',nidvals[i].split(','))
-          id = self.cursor.lastrowid
-          self.cursor.execute('''INSERT INTO samples VALUES (NULL,?,?,?,?,?)''',(timeid, 0, sourceid, nidid, id))
+          #self.cursor.execute('''INSERT INTO ost_nid_values VALUES (NULL,?,?,?,?)''',nidvals[i].split(','))
+          #id = self.cursor.lastrowid
+          #self.cursor.execute('''INSERT INTO samples VALUES (NULL,?,?,?,?,?)''',(timeid, 0, sourceid, nidid, id))
+          temp = [timeid, sourceid, nidid]
+          temp.extend(nidvals[i].split(','))
+          self.il_ost.append(temp)
         if stype == 'mdt':
-          self.cursor.execute('''INSERT INTO mdt_nid_values VALUES (NULL,?)''',(nidvals[i],))
-          id = self.cursor.lastrowid
-          self.cursor.execute('''INSERT INTO samples VALUES (NULL,?,?,?,?,?)''',(timeid, 1, sourceid, nidid, id))
+          #self.cursor.execute('''INSERT INTO mdt_nid_values VALUES (NULL,?)''',(nidvals[i],))
+          #id = self.cursor.lastrowid
+          #self.cursor.execute('''INSERT INTO samples VALUES (NULL,?,?,?,?,?)''',(timeid, 1, sourceid, nidid, id))
+          self.il_mdt.append((timeid, sourceid, nidid, nidvals[i]))
 
 
    
