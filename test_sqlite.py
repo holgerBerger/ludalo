@@ -77,12 +77,19 @@ class logfile:
     self.read_servers()
     self.read_sources()
     self.read_timestamps()
+
+  def eta(self,secs):
+    if secs<60:
+      return "%d secs"%secs
+    else:
+      return "%dm%2.2ds" % (secs/60, secs%60)
     
   ########################
   def read(self):
     ''' action is HERE'''
     f = open(self.filename,"r")
     counter=0
+    starttime = time.time()
 
     #1.0;hmds1;time;mdt;reqs;
     #1.0;hoss3;time;ost;rio,rb,wio,wb;
@@ -99,7 +106,10 @@ class logfile:
       else:
         counter+=1
         if counter%10 == 0:
-          print "inserted %d records / %d%%\r"%(counter,int(float(f.tell())/float(self.filesize)*100.0)),
+          duration = (time.time() - starttime)
+          fraction = (float(f.tell())/float(self.filesize))
+          endtime = duration * (1.0/ fraction) - duration
+          print "\rinserted %d records / %d%% ETA = %s"%(counter,int(fraction*100.0), self.eta(endtime)),
         server = sp[0]
         timestamp = sp[1]
         source = sp[2]
