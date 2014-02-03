@@ -218,7 +218,7 @@ class SQLiteObject(AbstractDB):
     def getNidID(self, server, i):
         return self.globalnidmap[self.per_server_nids[server][i]]
 #------------------------------------------------------------------------------
-    def insert_nids(self, server, timestamp, source, nidvals, nidid):
+    def insert_nid(self, server, timestamp, source, nidvals, nidid):
         stype = self.servertype[server]
         nidid = nidid
         timeid = self.timestamps[timestamp]
@@ -246,7 +246,7 @@ class SQLiteObject(AbstractDB):
                                 (timeid, 1, sourceid, nidid, lastID))
 #------------------------------------------------------------------------------
 
-    def _insert_SERVER_values(self, mds_name, REQS, timeStamp, type):
+    def insert_SERVER_values(self, mds_name, REQS, timeStamp, type):
         ''' type 0->ost 1->mdt 2->oss 3->mds '''
         c = self.c
         timeid = self.timestamps[timeStamp]

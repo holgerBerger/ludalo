@@ -17,28 +17,37 @@ class AbstractDB(object):
         return None
 
     def addUser(self, userName, timeStamp, WR_MB, RD_MB, REQS):
+        print self.__class__.__name__
         raise NotImplementedError()
 
     def addJob(self, jobID, timeStamp, WR_MB, RD_MB, REQS):
+        print self.__class__.__name__
         raise NotImplementedError()
 
     def addGlobal(self, timeStamp, WR_MB, RD_MB, REQS):
+        print self.__class__.__name__
         raise NotImplementedError()
 
     def addMDS(self, MDS_name, timeStamp, WR_MB, RD_MB, REQS):
+        print self.__class__.__name__
         raise NotImplementedError()
 
     def addOSS(self, OSS_name, timeStamp, WR_MB, RD_MB, REQS):
+        print self.__class__.__name__
         raise NotImplementedError()
 
     def addMDT(self, OSS_name, timeStamp, WR_MB, RD_MB, REQS):
+        print self.__class__.__name__
         raise NotImplementedError()
 
     def addOST(self, OSS_name, timeStamp, WR_MB, RD_MB, REQS):
+        print self.__class__.__name__
         raise NotImplementedError()
 
     def insert_nids(self, server, timestamp, source, nidvals):
+        print self.__class__.__name__
         raise NotImplementedError()
 
     def insert_nids_server(self, server, nids):
+        print self.__class__.__name__
         raise NotImplementedError()
