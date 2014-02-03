@@ -51,7 +51,7 @@ class logfile:
     self.filename = filename
     self.cursor = cursor
     
-    myDB = DatabaseHelper()
+    self.myDB = DatabaseHelper()
     myDB.addSQLite('sqlite_new.db')  # change to db name if save...
     
     self.globalnidmap = {}
@@ -98,7 +98,9 @@ class logfile:
         timestamp = sp[1]
         source = sp[2]
         self.insert_timestamp(timestamp)
+        # self.myDB.insert_timestamp(timestamp) 
         self.insert_source(source)
+        # self.myDB.insert_source(source)
         #  server = sp[0] timestamp = sp[1] source = sp[2]
         self.insert_nids(server, timestamp, source, sp[4:])
         ''' -> preperation

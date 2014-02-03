@@ -177,21 +177,21 @@ class SQLiteObject(AbstractDB):
 
 #------------------------------------------------------------------------------
 
-    def _insert_timestamp(self, timestamp):
+    def insert_timestamp(self, timestamp):
         if timestamp not in self.timestamps:
             self.cursor.execute('''INSERT INTO timestamps VALUES (NULL,?)''',
                                 (timestamp,))
             self.timestamps[timestamp] = self.cursor.lastrowid
 #------------------------------------------------------------------------------
 
-    def _insert_source(self, source):
+    def insert_source(self, source):
         if source not in self.sources:
             self.cursor.execute('''INSERT INTO sources VALUES (NULL,?)''',
                                 (source,))
             self.sources[source] = self.cursor.lastrowid
 #------------------------------------------------------------------------------
 
-    def _insert_server(self, server, stype):
+    def insert_server(self, server, stype):
         if server not in self.per_server_nids:
             print "new server:", server
             self.per_server_nids[server] = []
