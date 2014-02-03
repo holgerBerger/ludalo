@@ -36,13 +36,17 @@ def create_tables(c):
   c.execute('''CREATE TABLE IF NOT EXISTS servers (id integer primary key asc, server text, type text)''')
   c.execute('''CREATE TABLE IF NOT EXISTS sources (id integer primary key asc, source text)''')
   c.execute('''CREATE TABLE IF NOT EXISTS ost_values (id integer primary key asc, rio integer, rb integer, wio integer, wb integer)''')
-  c.execute('''CREATE TABLE IF NOT EXISTS ost_nid_values (id integer primary key asc, rio integer, rb integer, wio integer, wb integer)''')
   c.execute('''CREATE TABLE IF NOT EXISTS mdt_values (id integer primary key asc, reqs integer)''')
-  c.execute('''CREATE TABLE IF NOT EXISTS mdt_nid_values (id integer primary key asc, reqs integer)''')
-  c.execute('''CREATE TABLE IF NOT EXISTS samples (id integer primary key asc, time integer, type integer, source integer, nid integer, vals integer)''')
+  # tables no longer needed - spillte dinto 2 samples_*
+  #c.execute('''CREATE TABLE IF NOT EXISTS ost_nid_values (id integer primary key asc, rio integer, rb integer, wio integer, wb integer)''')
+  #c.execute('''CREATE TABLE IF NOT EXISTS mdt_nid_values (id integer primary key asc, reqs integer)''')
+  #c.execute('''CREATE TABLE IF NOT EXISTS samples (id integer primary key asc, time integer, type integer, source integer, nid integer, vals integer)''')
   c.execute('''CREATE TABLE IF NOT EXISTS samples_ost (id serial primary key, time integer, source integer, nid integer, rio integer, rb bigint, wio integer, wb bigint);''')
   c.execute('''CREATE TABLE IF NOT EXISTS samples_mdt (id serial primary key, time integer, source integer, nid integer, reqs integer);''')
-  c.execute('''CREATE INDEX IF NOT EXISTS samples_time_index ON samples (time)''')
+
+  #c.execute('''CREATE INDEX IF NOT EXISTS samples_time_index ON samples (time)''')
+  c.execute('''CREATE INDEX IF NOT EXISTS samples_ost_time ON samples_ost (time)''')
+  c.execute('''CREATE INDEX IF NOT EXISTS samples_mdt_time ON samples_mdt (time)''')
   c.execute('''CREATE INDEX IF NOT EXISTS time_index ON timestamps (time)''')
 
 
