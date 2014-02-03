@@ -41,6 +41,8 @@ def drop_tables(c):
   c.execute('''drop TABLE IF EXISTS mdt_values;''')
   c.execute('''drop TABLE IF EXISTS mdt_nid_values;''')
   c.execute('''drop TABLE IF EXISTS samples''')
+  c.execute('''drop TABLE IF EXISTS samples_ost''')
+  c.execute('''drop TABLE IF EXISTS samples_mdt''')
 
 def create_tables(c):
   c.execute('''CREATE TABLE IF NOT EXISTS timestamps (id serial primary key, time integer);''')
@@ -53,6 +55,8 @@ def create_tables(c):
   c.execute('''CREATE TABLE IF NOT EXISTS mdt_values (id serial primary key, reqs integer);''')
   c.execute('''CREATE TABLE IF NOT EXISTS mdt_nid_values (id serial primary key, reqs integer);''')
   c.execute('''CREATE TABLE IF NOT EXISTS samples (id serial primary key, time integer, type integer, source integer, nid integer, vals integer);''')
+  c.execute('''CREATE TABLE IF NOT EXISTS samples_ost (id serial primary key, time integer, source integer, nid integer, rio integer, rb bigint, wio integer, wb bigint);''')
+  c.execute('''CREATE TABLE IF NOT EXISTS samples_mdt (id serial primary key, time integer, source integer, nid integer, reqs integer);''')
   c.execute('''CREATE INDEX samples_time_index ON samples (time);''')
   c.execute('''CREATE INDEX time_index ON timestamps (time);''')
 
@@ -213,20 +217,22 @@ class logfile:
     stype = self.servertype[server]
     #print server, timestamp, source, stype
     # CREATE TABLE samples (id integer primary key asc, time integer, type integer, source integer, nid integer, vals integer)
+    il_ost = []
+    il_mdt = []
     for i in range(len(nidvals)):
       nidid = self.globalnidmap[self.per_server_nids[server][i]]
       timeid = self.timestamps[timestamp]
       sourceid = self.sources[source]
       if nidvals[i]!="":
         if stype == 'ost':
-          self.cursor.execute('''INSERT INTO ost_nid_values VALUES (DEFAULT,%s,%s,%s,%s) ''',nidvals[i].split(','))
-          id = self.cursor.lastrowid
-          self.cursor.execute('''INSERT INTO samples VALUES (DEFAULT,%s,%s,%s,%s,%s)''',(timeid, 0, sourceid, nidid, id))
+          temp = [timeid, sourceid, nidid]
+          temp.extend(nidvals[i].split(','))
+          il_ost.append(temp)
         if stype == 'mdt':
-          self.cursor.execute('''INSERT INTO mdt_nid_values VALUES (DEFAULT,%s) ''',(nidvals[i],))
-          id = self.cursor.lastrowid
-          self.cursor.execute('''INSERT INTO samples VALUES (DEFAULT,%s,%s,%s,%s,%s)''',(timeid, 1, sourceid, nidid, id))
-
+          il_mdt.append((timeid, sourceid, nidid, nidvals[i]))
+    self.cursor.executemany('''INSERT INTO samples_ost VALUES (DEFAULT,%s,%s,%s,%s,%s,%s,%s)''',il_ost)
+    self.cursor.executemany('''INSERT INTO samples_mdt VALUES (DEFAULT,%s,%s,%s,%s)''',il_mdt)
+    
 
 
 conn = MySQLdb.connect(passwd='sqlsucks',db="lustre")
