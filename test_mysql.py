@@ -124,7 +124,7 @@ class logfile:
         for nid in sp[4:]
             self.insert_nid(server, timeStamp, source, nid):
         '''
-    print len(self.il_ost)
+    #print len(self.il_ost)
     self.cursor.executemany('''INSERT INTO samples_ost VALUES (DEFAULT,%s,%s,%s,%s,%s,%s,%s)''',self.il_ost)
     self.cursor.executemany('''INSERT INTO samples_mdt VALUES (DEFAULT,%s,%s,%s,%s)''',self.il_mdt)
     print "inserted %d records / %d%%\r"%(counter,int(float(f.tell())/float(self.filesize)*100.0)),
