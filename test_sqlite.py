@@ -102,8 +102,10 @@ class logfile:
         #  server = sp[0] timestamp = sp[1] source = sp[2]
         self.insert_nids(server, timestamp, source, sp[4:])
         ''' -> preperation
-        for nid in sp[4:]
-            self.insert_nid(server, timeStamp, source, nid):
+        index = 0
+        for nid in sp[4:]:
+            nidID = getNidID(server, index)
+            self.insert_nid(server, timeStamp, source, nid, nidID):
         '''
 
   ########################
@@ -192,9 +194,9 @@ class logfile:
       if nid not in self.per_server_nids[server]:
         self.per_server_nids[server].append(nid)
 
-  def insert_nid(self, server, timeStamp, source, nidvals_Tup):
+  def insert_nid(self, server, timeStamp, source, nidvals_Tup, nidID):
       ''' methode to insert only one nid value tuple '''
-      self.myDB.add_nid_values(server, timeStamp, source, nidvals_Tup)
+      self.myDB.add_nid_values(server, timeStamp, source, nidvals_Tup, nidID)
 
   def insert_nids(self, server, timestamp, source, nidvals):
     stype = self.servertype[server]

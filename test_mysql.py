@@ -10,7 +10,7 @@
 #  - add job data/user mapping
 #  - MySQL/PSQL Support??
 
-# nice benchmark query is - > hier ist der push test! öhm wat
+# nice benchmark query is
 '''
  SELECT nids.nid FROM samples
    INNER JOIN timestamps
