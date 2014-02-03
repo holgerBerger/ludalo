@@ -106,6 +106,7 @@ class logfile:
         for nid in sp[4:]:
             nidID = getNidID(server, index)
             self.insert_nid(server, timeStamp, source, nid, nidID):
+            index++
         '''
 
   ########################
