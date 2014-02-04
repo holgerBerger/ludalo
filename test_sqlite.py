@@ -126,6 +126,8 @@ class logfile:
             self.insert_nid(server, timeStamp, source, nid, nidID):
             index++
         '''
+    endtime = time.time()
+    print "used %s to insert data." % self.eta(endtime-starttime)
 
 
   ########################

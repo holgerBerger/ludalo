@@ -95,6 +95,8 @@ class logfile:
     f = open(self.filename,"r")
     counter=0
 
+    #self.cursor.execute('''lock tables samples_ost write, samples_mdt write, servers write, nids write, timestamps write, sources write''')
+    self.cursor.execute('''begin;''')
     #1.0;hmds1;time;mdt;reqs;
     #1.0;hoss3;time;ost;rio,rb,wio,wb;
     for line in f:
@@ -122,6 +124,8 @@ class logfile:
         for nid in sp[4:]
             self.insert_nid(server, timeStamp, source, nid):
         '''
+    #self.cursor.execute('''unlock tables''')
+    self.cursor.execute('''commit;''')
 
   ########################
 
