@@ -87,7 +87,7 @@ class logfile:
         stype = sp[3] # mdt or ost
 
         # add server and type to the db
-        self.insert_server(server, stype)
+        self.myDB.insert_server(server, stype)
 
         # add nids to the database 
         for nid in sp[5:]:
@@ -173,42 +173,10 @@ class logfile:
     f.close()
 
 #-------------------------------------------------------------------------------
-  def insert_timestamp(self, timestamp):
-    if timestamp not in self.timestamps:
-      self.cursor.execute('''INSERT INTO timestamps VALUES (NULL,?)''',(timestamp,))
-      self.timestamps[timestamp]=self.cursor.lastrowid
-
-  def insert_source(self, source):
-    if source not in self.sources:
-      self.cursor.execute('''INSERT INTO sources VALUES (NULL,?)''',(source,))
-      self.sources[source]=self.cursor.lastrowid
-
-  def insert_server(self, server, stype):
-    #if server not in self.per_server_nids: FIXME ???
-    if server not in self.servermap:
-      print "new server:", server
-      self.per_server_nids[server] = []
-      self.cursor.execute('''INSERT INTO servers VALUES (NULL,?,?)''',(server,stype))
-      self.servermap[server]=self.cursor.lastrowid
-      self.servertype[server]=stype
 
   def insert_nid_server(self, server, one_nid):
       nid = one_nid.split('@')[0] #get only the name
       self.myDB.add_nid_server(server, nid_name)
-  
-  def insert_nids_server_old(self, server, nids):
-    for rnid in nids:
-      nid = rnid.split('@')[0]
-      if self.hostfilemap:
-        try:
-          nid = self.hostfilemap[nid]
-        except KeyError:
-          pass
-      if nid not in self.globalnidmap:
-        self.cursor.execute('''INSERT INTO nids VALUES (NULL,?)''',(nid,))
-        self.globalnidmap[nid]=self.cursor.lastrowid
-      if nid not in self.per_server_nids[server]:
-        self.per_server_nids[server].append(nid)
 
   def insert_nid(self, server, timeStamp, source, nidvals_Tup, nidID):
       ''' methode to insert only one nid value tuple '''
@@ -231,8 +199,8 @@ class logfile:
           il_ost.append(temp)
         if stype == 'mdt':
           il_mdt.append((timeid, sourceid, nidid, nidvals[i]))
-    self.cursor.executemany('''INSERT INTO samples_ost VALUES (NULL,?,?,?,?,?,?,?)''',il_ost)
-    self.cursor.executemany('''INSERT INTO samples_mdt VALUES (NULL,?,?,?,?)''',il_mdt)
+    self.myDB.insert_ost_samples(il_ost)
+    self.myDB.insert_mdt_samples
 
 
    

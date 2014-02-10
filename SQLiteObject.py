@@ -211,32 +211,11 @@ class SQLiteObject(AbstractDB):
     def getNidID(self, server, i):
         return self.globalnidmap[self.per_server_nids[server][i]]
 #------------------------------------------------------------------------------
-    def insert_nid(self, server, timestamp, source, nidvals, nidid):
-        stype = self.servertype[server]
-        nidid = nidid
-        timeid = self.timestamps[timestamp]
-        sourceid = self.sources[source]
+    def insert_ost_samples(self, il_ost):
+        self.cursor.executemany('''INSERT INTO samples_ost VALUES (NULL,?,?,?,?,?,?,?)''',il_ost)
 
-        if nidvals != "":
-            if stype == 'ost':
-                self.cursor.execute('''INSERT INTO ost_nid_values VALUES
-                                    (NULL,?,?,?,?)''',
-                                    nidvals.split(','))
-
-                lastID = self.cursor.lastrowid
-                self.cursor.execute('''INSERT INTO samples VALUES
-                                    (NULL,?,?,?,?,?)''',
-                                    (timeid, 0, sourceid, nidid, lastID))
-
-        if stype == 'mdt':
-            self.cursor.execute('''INSERT INTO mdt_nid_values VALUES
-                                (NULL,?)''',
-                                (nidvals,))
-
-            lastID = self.cursor.lastrowid
-            self.cursor.execute('''INSERT INTO samples VALUES
-                                (NULL,?,?,?,?,?)''',
-                                (timeid, 1, sourceid, nidid, lastID))
+    def insert_mdt_samples(self, il_mdt):
+        self.cursor.executemany('''INSERT INTO samples_mdt VALUES (NULL,?,?,?,?)''',il_mdt)
 #------------------------------------------------------------------------------
 
     def insert_SERVER_values(self, mds_name, REQS, timeStamp, type):

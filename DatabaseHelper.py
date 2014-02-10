@@ -60,31 +60,38 @@ class DatabaseHelper(object):
             
     def insert_timestamp(self, timestamp):
         for db in self.databases:
-            db.insert_timestamp(self, timestamp)
+            db.insert_timestamp(timestamp)
             
     def insert_source(self, source):
         for db in self.databases:
-            db.insert_source(self, source)
+            db.insert_source(source)
 
     def insert_server(self, server, stype):
         for db in self.databases:
-            db.insert_server(self, server, stype)
+            db.insert_server(server, stype)
             
     def add_nid_server(self, server, nid_name):
         for db in self.databases:
-            db.add_nid_server(self, server, nid_name)
+            db.add_nid_server(server, nid_name)
             
     def getNidID(self, server, i):
         for db in self.databases:
-            db.getNidID(self, server, i)
+            db.getNidID(server, i)
 
     def insert_nid(self, server, timestamp, source, nidvals, nidid):
         for db in self.databases:
-            db.insert_nids(self, server, timestamp, source, nidvals, nidid)
+            db.insert_nids(server, timestamp, source, nidvals, nidid)
 
     def insert_nid_server(self, server, nid_name):
         for db in self.databases:
-            db.insert_nids(self, server, timestamp, source, nidvals)
+            db.insert_nids(server, timestamp, source, nidvals)
+
+    def insert_ost_samples(self, il_ost):
+        for db in self.databases:
+            db.insert_ost_samples(il_ost)
+    def insert_mdt_samples(self, il_mdt):
+        for db in self.databases:
+            db.insert_mdt_samples(il_mdt)
 #------------------------------------------------------------------------------
 
     def dateToTimeStamp(self, year, month, day, houer, minute):
