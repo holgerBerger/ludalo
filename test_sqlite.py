@@ -71,7 +71,7 @@ class logfile:
     else:
       return "%dm%2.2ds" % (secs/60, secs%60)
     
-  ########################
+#------------------------------------------------------------------------------
   def read(self):
     ''' action is HERE'''
     f = open(self.filename,"r")
@@ -104,29 +104,26 @@ class logfile:
           printString = ("\rinserted %d records / %d%% ETA = %s"
                          %(counter,int(fraction*100.0), self.eta(endtime)),)
           print printString
-#------------------------------------------------------------------------------
 
+#--------------------- if not headline -----------------------------------------
         server = sp[0]
         timestamp = sp[1]
         source = sp[2]
-        self.insert_timestamp(timestamp)
-        # self.myDB.insert_timestamp(timestamp) 
-        self.insert_source(source)
-        # self.myDB.insert_source(source)
-        #  server = sp[0] timestamp = sp[1] source = sp[2]
-        self.insert_nids(server, timestamp, source, sp[4:])
-        ''' -> preperation
+
+        self.myDB.insert_timestamp(timestamp) 
+        self.myDB.insert_source(source)
+
         index = 0
         for nid in sp[4:]:
             nidID = getNidID(server, index)
-            self.insert_nid(server, timeStamp, source, nid, nidID):
-            index++
-        '''
+            self.insert_nid(server, timeStamp, source, nid, nidID)
+            index = index + 1
+
+#------------------------------------------------------------------------------
     endtime = time.time()
     print "used %s to insert data." % self.eta(endtime-starttime)
 
-
-  ########################
+#--------------------- read data form database ---------------------------------
 
   def read_globalnids(self):
     self.cursor.execute('''SELECT * FROM nids;''')
@@ -158,7 +155,7 @@ class logfile:
       self.timestamps[str(v)]=k
     print "read %d old timestamps" % len(self.timestamps)
 
-
+#-------------------------------------------------------------------------------
 
   def readhostfile(self, hostfile):
     try:
@@ -175,6 +172,7 @@ class logfile:
     print "read",len(self.hostfilemap),"host mappings"
     f.close()
 
+#-------------------------------------------------------------------------------
   def insert_timestamp(self, timestamp):
     if timestamp not in self.timestamps:
       self.cursor.execute('''INSERT INTO timestamps VALUES (NULL,?)''',(timestamp,))
