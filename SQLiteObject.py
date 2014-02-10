@@ -102,7 +102,7 @@ class SQLiteObject(AbstractDB):
         self.c.execute('''CREATE TABLE IF NOT EXIST
                             timestamps (
                                 id integer primary key asc,
-                                time text)''')
+                                time integer)''')
 
         # name vom clienten
         self.c.execute('''CREATE TABLE IF NOT EXIST
@@ -132,46 +132,39 @@ class SQLiteObject(AbstractDB):
                                 wb integer)''')
 
         self.c.execute('''CREATE TABLE IF NOT EXIST
-                            ost_nid_values (
-                                id integer primary key asc,
-                                rio integer,
-                                rb integer,
-                                wio integer,
-                                wb integer)''')
-
-        self.c.execute('''CREATE TABLE IF NOT EXIST
                             mdt_values (
                                 id integer primary key asc,
                                 reqs integer)''')
 
-        self.c.execute('''CREATE TABLE IF NOT EXIST
-                            mdt_nid_values (
-                                id integer primary key asc,
+        self.c.execute('''CREATE TABLE IF NOT EXISTS 
+                            mdt_values (
+                                id integer primary key asc, 
                                 reqs integer)''')
-
-        self.c.execute('''CREATE TABLE IF NOT EXIST
-                            oss_values (
-                                id integer primary key asc,
-                                reqs integer)''')
-
-        self.c.execute('''CREATE TABLE IF NOT EXIST
-                            mds_values (
-                                id integer primary key asc,
-                                reqs integer)''')
-
-        # verknuepfung
-        self.c.execute('''CREATE TABLE IF NOT EXIST
-                            samples (
-                                id integer primary key asc,
-                                time integer, 
-                                type integer,
-                                source integer, 
-                                nid integer,
-                                vals integer)''')
+        
+        self.c.execute('''CREATE TABLE IF NOT EXISTS 
+                            samples_ost (
+                                id serial primary key, 
+                                time integer, source integer, 
+                                nid integer, 
+                                rio integer, 
+                                rb bigint, 
+                                wio integer, 
+                                wb bigint);''')
+        
+        self.c.execute('''CREATE TABLE IF NOT EXISTS 
+                            samples_mdt (
+                                id serial primary key, 
+                                  time integer, 
+                                  source integer, 
+                                  nid integer, 
+                                  reqs integer);''')
         
         self.c.execute('''CREATE INDEX IF NOT EXISTS 
-                            samples_time_index ON samples (time)''')
-        
+                            samples_ost_time ON samples_ost (time)''')
+
+        self.c.execute('''CREATE INDEX IF NOT EXISTS 
+                            samples_mdt_time ON samples_mdt (time)''')
+
         self.c.execute('''CREATE INDEX IF NOT EXISTS 
                             time_index ON timestamps (time)''')
 

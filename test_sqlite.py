@@ -31,17 +31,66 @@ import sqlite3
 from DatabaseHelper import DatabaseHelper
 
 def create_tables(c):
-  c.execute('''CREATE TABLE IF NOT EXISTS timestamps (id integer primary key asc, time integer)''')
-  c.execute('''CREATE TABLE IF NOT EXISTS nids (id integer primary key asc, nid text)''')
-  c.execute('''CREATE TABLE IF NOT EXISTS servers (id integer primary key asc, server text, type text)''')
-  c.execute('''CREATE TABLE IF NOT EXISTS sources (id integer primary key asc, source text)''')
-  c.execute('''CREATE TABLE IF NOT EXISTS ost_values (id integer primary key asc, rio integer, rb integer, wio integer, wb integer)''')
-  c.execute('''CREATE TABLE IF NOT EXISTS mdt_values (id integer primary key asc, reqs integer)''')
-  c.execute('''CREATE TABLE IF NOT EXISTS samples_ost (id serial primary key, time integer, source integer, nid integer, rio integer, rb bigint, wio integer, wb bigint);''')
-  c.execute('''CREATE TABLE IF NOT EXISTS samples_mdt (id serial primary key, time integer, source integer, nid integer, reqs integer);''')
-  c.execute('''CREATE INDEX IF NOT EXISTS samples_ost_time ON samples_ost (time)''')
-  c.execute('''CREATE INDEX IF NOT EXISTS samples_mdt_time ON samples_mdt (time)''')
-  c.execute('''CREATE INDEX IF NOT EXISTS time_index ON timestamps (time)''')
+  c.execute('''CREATE TABLE IF NOT EXISTS 
+      timestamps (
+          id integer primary key asc, 
+          time integer)''')
+  
+  c.execute('''CREATE TABLE IF NOT EXISTS 
+      nids (
+          id integer primary key asc, 
+          nid text)''')
+  
+  c.execute('''CREATE TABLE IF NOT EXISTS 
+      servers (
+          id integer primary key asc, 
+          server text, 
+          type text)''')
+  
+  c.execute('''CREATE TABLE IF NOT EXISTS 
+      sources (
+          id integer primary key asc, 
+          source text)''')
+
+  c.execute('''CREATE TABLE IF NOT EXISTS 
+      ost_values (
+          id integer primary key asc, 
+          rio integer, 
+          rb integer, 
+          wio integer, 
+          wb integer)''')
+
+  c.execute('''CREATE TABLE IF NOT EXISTS 
+      mdt_values (
+          id integer primary key asc, 
+          reqs integer)''')
+
+  c.execute('''CREATE TABLE IF NOT EXISTS 
+      samples_ost (
+          id serial primary key, 
+          time integer, source integer, 
+          nid integer, 
+          rio integer, 
+          rb bigint, 
+          wio integer, 
+          wb bigint);''')
+
+  c.execute('''CREATE TABLE IF NOT EXISTS 
+      samples_mdt (
+          id serial primary key, 
+            time integer, 
+            source integer, 
+            nid integer, 
+            reqs integer);''')
+
+  c.execute('''CREATE INDEX IF NOT EXISTS 
+      samples_ost_time ON samples_ost (time)''')
+
+  c.execute('''CREATE INDEX IF NOT EXISTS 
+      samples_mdt_time ON samples_mdt (time)''')
+
+  c.execute('''CREATE INDEX IF NOT EXISTS 
+          time_index ON timestamps (time)''')
 
 
 class logfile:
