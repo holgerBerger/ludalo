@@ -34,7 +34,7 @@ import sys
 import os.path
 import time
 import sqlite3
-from DatabaseHelper import DatabaseHelper
+from SQLiteObject import SQLiteObject
 
 
 class logfile:
@@ -43,27 +43,14 @@ class logfile:
 
     self.filename = filename
     self.cursor = cursor
-    
-    self.myDB = DatabaseHelper()
-    self.myDB.addSQLite('sqlite_new.db')  # change to db name if save...
-    
-    self.globalnidmap = {}
-    self.servermap = {}
-    self.per_server_nids = {}
-    self.timestamps = {}
-    self.sources = {}
-    self.servertype = {}
-    self.hostfilemap = {}
+
+    # change to db name if save...    
+    self.myDB = SQLiteObject('sqlite_new.db')
 
     self.filesize = os.path.getsize(filename)
 
     if hostfile:
       self.readhostfile(hostfile)
-
-    self.read_globalnids()
-    self.read_servers()
-    self.read_sources()
-    self.read_timestamps()
 
   def eta(self,secs):
     if secs<60:
@@ -93,18 +80,7 @@ class logfile:
         for nid in sp[5:]:
             self.insert_nids_server(server, nid)
 
-      # if not headline
       else:
-#--------------------- progress bar --------------------------------------------
-        counter+=1
-        if counter%10 == 0:
-          duration = (time.time() - starttime)
-          fraction = (float(f.tell())/float(self.filesize))
-          endtime = duration * (1.0/ fraction) - duration
-          printString = ("\rinserted %d records / %d%% ETA = %s"
-                         %(counter,int(fraction*100.0), self.eta(endtime)),)
-          print printString
-
 #--------------------- if not headline -----------------------------------------
         server = sp[0]
         timestamp = sp[1]
@@ -113,47 +89,20 @@ class logfile:
         self.myDB.insert_timestamp(timestamp) 
         self.myDB.insert_source(source)
 
-        index = 0
-        for nid in sp[4:]:
-            nidID = getNidID(server, index)
-            self.insert_nid(server, timeStamp, source, nid, nidID)
-            index = index + 1
-
+        self.insert_nids(server, timestamp, source, sp[4:])
+        
+#--------------------- progress bar --------------------------------------------
+      counter+=1
+      if counter%10 == 0:
+        duration = (time.time() - starttime)
+        fraction = (float(f.tell())/float(self.filesize))
+        endtime = duration * (1.0/ fraction) - duration
+        printString = ("\rinserted %d records / %d%% ETA = %s"
+                         %(counter,int(fraction*100.0), self.eta(endtime)),)
+        print printString
 #------------------------------------------------------------------------------
     endtime = time.time()
     print "used %s to insert data." % self.eta(endtime-starttime)
-
-#--------------------- read data form database ---------------------------------
-
-  def read_globalnids(self):
-    self.cursor.execute('''SELECT * FROM nids;''')
-    r = self.cursor.fetchall()
-    for (k,v) in r:
-      self.globalnidmap[str(v)]=k
-    print "read %s old nid mappings" % len(self.globalnidmap)
-
-  def read_sources(self):
-    self.cursor.execute('''SELECT * FROM sources;''')
-    r = self.cursor.fetchall()
-    for (k,v) in r:
-      self.sources[str(v)]=k
-    print "read %s old sources" % len(self.sources)
-
-  def read_servers(self):
-    self.cursor.execute('''SELECT * FROM servers;''')
-    r = self.cursor.fetchall()
-    for (k,v,t) in r:
-      self.servermap[str(v)]=k
-      self.per_server_nids[str(v)] = []
-      self.servertype[str(v)]=t
-      print "known server:",v,t
-
-  def read_timestamps(self):
-    self.cursor.execute('''SELECT * FROM timestamps;''')
-    r = self.cursor.fetchall()
-    for (k,v) in r:
-      self.timestamps[str(v)]=k
-    print "read %d old timestamps" % len(self.timestamps)
 
 #-------------------------------------------------------------------------------
 
@@ -168,8 +117,8 @@ class logfile:
         if len(sp)==0: continue
         ip = sp[0]
         name = sp[1]
-        self.hostfilemap[ip]=name
-    print "read",len(self.hostfilemap),"host mappings"
+        self.myDB.hostfilemap[ip]=name
+    print "read",len(self.myDB.hostfilemap),"host mappings"
     f.close()
 
 #-------------------------------------------------------------------------------
@@ -182,6 +131,8 @@ class logfile:
       ''' methode to insert only one nid value tuple '''
       self.myDB.add_nid_values(server, timeStamp, source, nidvals_Tup, nidID)
 
+
+#  deprecated 
   def insert_nids(self, server, timestamp, source, nidvals):
     stype = self.servertype[server]
     #print server, timestamp, source, stype
@@ -200,10 +151,7 @@ class logfile:
         if stype == 'mdt':
           il_mdt.append((timeid, sourceid, nidid, nidvals[i]))
     self.myDB.insert_ost_samples(il_ost)
-    self.myDB.insert_mdt_samples
-
-
-   
+    self.myDB.insert_mdt_samples(il_mdt)
 
 
 if __name__ == "__main__":
@@ -212,15 +160,8 @@ if __name__ == "__main__":
     print "usage: %s hostmapping logfile ..." % sys.argv[0]
     sys.exit(0)
 
-
-  conn = sqlite3.connect('sqlite.db')
-  cursor = conn.cursor()
-
-  create_tables(conn)
-
   for filename in sys.argv[2:]:
     o = logfile(cursor, filename, sys.argv[1])
     o.read()
-
-  conn.commit()
-  conn.close()
+    
+  o.myDB.closeConnection()

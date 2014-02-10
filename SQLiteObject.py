@@ -4,10 +4,9 @@ Created on 16.12.2013
 @author: Uwe Schilling
 '''
 import sqlite3
-from AbstractDB import AbstractDB
 
 
-class SQLiteObject(AbstractDB):
+class SQLiteObject(object):
     '''database connection class'''
 
     def __init__(self, dbFile):
@@ -26,11 +25,51 @@ class SQLiteObject(AbstractDB):
         self.servertype = {}
         self.mdsmap = {}
         self.hostfilemap = {}
+        
+        # init sqliteDB
+        self.build_database()
+        
+#------------------------------------------------------------------------------
+    def build_database(self):
+        self._generateSQLite()
+        # bild map's
+        
+        # nid map
+        self.cursor.execute('''SELECT * FROM nids;''')
+        r = self.cursor.fetchall()
+        for (k,v) in r:
+          self.globalnidmap[str(v)]=k
+        print "read %s old nid mappings" % len(self.globalnidmap)
+
+        # sources map
+        self.cursor.execute('''SELECT * FROM sources;''')
+        r = self.cursor.fetchall()
+        for (k,v) in r:
+          self.sources[str(v)]=k
+        print "read %s old sources" % len(self.sources)
+
+        # server map
+        self.cursor.execute('''SELECT * FROM servers;''')
+        r = self.cursor.fetchall()
+        for (k,v,t) in r:
+          self.servermap[str(v)]=k
+          self.per_server_nids[str(v)] = []
+          self.servertype[str(v)]=t
+          print "known server:",v,t
+          
+        # time stamp map
+        self.cursor.execute('''SELECT * FROM timestamps;''')
+        r = self.cursor.fetchall()
+        for (k,v) in r:
+          self.timestamps[str(v)]=k
+        print "read %d old timestamps" % len(self.timestamps)
+
 
 #------------------------------------------------------------------------------
 
     def closeConnection(self):
         ''' Closing db connection '''
+        self.con.commit()
         self.conn.close()
 #------------------------------------------------------------------------------
 
@@ -47,7 +86,6 @@ class SQLiteObject(AbstractDB):
 #------------------------------------------------------------------------------
 
     def addOST(self, OST_name, timeStamp, WR_MB, RD_MB, REQS):
-        self._generateSQLite()
         self.insert_timestamp(timeStamp)
         self.insert_server(OST_name, 'ost')
         self.insert_source(OST_name)
@@ -55,7 +93,6 @@ class SQLiteObject(AbstractDB):
 #------------------------------------------------------------------------------
 
     def addMDT(self, MDT_name, timeStamp, WR_MB, RD_MB, REQS):
-        self._generateSQLite()
         self.insert_timestamp(timeStamp)
         self.insert_server(MDT_name, 'mdt')
         self.insert_source(MDT_name)
@@ -63,7 +100,6 @@ class SQLiteObject(AbstractDB):
 #------------------------------------------------------------------------------
 
     def addOSS(self, OSS_name, timeStamp, WR_MB, RD_MB, REQS):
-        self._generateSQLite()
         self.insert_timestamp(timeStamp)
         self.insert_server(OSS_name, 'oss')
         self.insert_source(OSS_name)
@@ -71,7 +107,6 @@ class SQLiteObject(AbstractDB):
 #------------------------------------------------------------------------------
 
     def addMDS(self, MDS_name, timeStamp, WR_MB, RD_MB, REQS):
-        self._generateSQLite()
         self.insert_timestamp(timeStamp)
         self.insert_server(MDS_name, 'mds')
         self.insert_source(MDS_name)
@@ -79,7 +114,6 @@ class SQLiteObject(AbstractDB):
 #------------------------------------------------------------------------------
 
     def _addElement(self, tbName, timeStamp, WR_MB, RD_MB, REQS):
-        self._generateSQLite()
         self._addEntry(tbName, timeStamp, WR_MB, RD_MB, REQS)
 #------------------------------------------------------------------------------
 
@@ -195,7 +229,7 @@ class SQLiteObject(AbstractDB):
 #------------------------------------------------------------------------------
 
     def add_nid_server(self, server, nid_name):
-        nid = nid_name.split('@')[0]
+        #nid = nid_name.split('@')[0]
         if self.hostfilemap:
             try:
                 nid = self.hostfilemap[nid]

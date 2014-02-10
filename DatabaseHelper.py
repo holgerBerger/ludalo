@@ -89,6 +89,7 @@ class DatabaseHelper(object):
     def insert_ost_samples(self, il_ost):
         for db in self.databases:
             db.insert_ost_samples(il_ost)
+
     def insert_mdt_samples(self, il_mdt):
         for db in self.databases:
             db.insert_mdt_samples(il_mdt)
