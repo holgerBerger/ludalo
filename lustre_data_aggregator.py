@@ -5,11 +5,12 @@
 # tested with lustre 1.8 and python 2.4
 # Holger Berger 2014
 
-import xmlrpclib,time
+import xmlrpclib,time,socket
 import sys, signal, os
 from threading import Thread,Lock
 
-SLEEP = 60
+SLEEP = 60   # > 10 sec
+TIMEOUT = 30  # has to be < SLEEP
 FILEVERSION="1.0"
 
 servers = sys.argv[1:]
@@ -63,6 +64,8 @@ def worker(srv):
       iolock.release()
 
 
+socket.setdefaulttimeout(TIMEOUT)
+
 for srv in servers:
   rpcs[srv] = xmlrpclib.ServerProxy('http://'+srv+':8000')
   types[srv] = rpcs[srv].get_type()
@@ -83,5 +86,5 @@ while True:
 
   e=time.time()
   print e-sample,"sec for sample collection"
-  time.sleep(SLEEP-(e-sample))
+  time.sleep(SLEEP-((e-sample)%SLEEP))
   first = False
