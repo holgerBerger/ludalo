@@ -9,8 +9,16 @@
 #  - insert OST and MDS values as well 
 #  - add job data/user mapping
 #  - MySQL/PSQL Support??
-
+#
 # fist argument is hosts file for name mapping, following arguments is files
+#
+#
+# addition form Uwe Schilling 2014:
+# to manage more then one database added an db abstraction layer
+# this manages all the query for the db. 
+# 
+# supported db at this moment, sqlite
+#
 
 # nice benchmark query is
 '''
@@ -22,75 +30,11 @@
  ON samples.nid = nids.id;
 '''
 
-
-
 import sys
 import os.path
 import time
 import sqlite3
 from DatabaseHelper import DatabaseHelper
-
-def create_tables(c):
-  c.execute('''CREATE TABLE IF NOT EXISTS 
-      timestamps (
-          id integer primary key asc, 
-          time integer)''')
-  
-  c.execute('''CREATE TABLE IF NOT EXISTS 
-      nids (
-          id integer primary key asc, 
-          nid text)''')
-  
-  c.execute('''CREATE TABLE IF NOT EXISTS 
-      servers (
-          id integer primary key asc, 
-          server text, 
-          type text)''')
-  
-  c.execute('''CREATE TABLE IF NOT EXISTS 
-      sources (
-          id integer primary key asc, 
-          source text)''')
-
-  c.execute('''CREATE TABLE IF NOT EXISTS 
-      ost_values (
-          id integer primary key asc, 
-          rio integer, 
-          rb integer, 
-          wio integer, 
-          wb integer)''')
-
-  c.execute('''CREATE TABLE IF NOT EXISTS 
-      mdt_values (
-          id integer primary key asc, 
-          reqs integer)''')
-
-  c.execute('''CREATE TABLE IF NOT EXISTS 
-      samples_ost (
-          id serial primary key, 
-          time integer, source integer, 
-          nid integer, 
-          rio integer, 
-          rb bigint, 
-          wio integer, 
-          wb bigint);''')
-
-  c.execute('''CREATE TABLE IF NOT EXISTS 
-      samples_mdt (
-          id serial primary key, 
-            time integer, 
-            source integer, 
-            nid integer, 
-            reqs integer);''')
-
-  c.execute('''CREATE INDEX IF NOT EXISTS 
-      samples_ost_time ON samples_ost (time)''')
-
-  c.execute('''CREATE INDEX IF NOT EXISTS 
-      samples_mdt_time ON samples_mdt (time)''')
-
-  c.execute('''CREATE INDEX IF NOT EXISTS 
-          time_index ON timestamps (time)''')
 
 
 class logfile:
@@ -137,22 +81,31 @@ class logfile:
     #1.0;hmds1;time;mdt;reqs;
     #1.0;hoss3;time;ost;rio,rb,wio,wb;
     for line in f:
-      sp = line[:-1].split(";") 
-      if line.startswith("#"):
+      sp = line[:-1].split(";")  # ignore the line brake at the end 
+      if line.startswith("#"): # this is a head line
         server = sp[1]
-        stype = sp[3]
+        stype = sp[3] # mdt or ost
+
+        # add server and type to the db
         self.insert_server(server, stype)
-        self.insert_nids_server_old(server, sp[5:])
-        ''' -> preperation
+
+        # add nids to the database 
         for nid in sp[5:]:
-            self.insert_nids_server(server, nid)'''
+            self.insert_nids_server(server, nid)
+
+      # if not headline
       else:
+#--------------------- progress bar --------------------------------------------
         counter+=1
         if counter%10 == 0:
           duration = (time.time() - starttime)
           fraction = (float(f.tell())/float(self.filesize))
           endtime = duration * (1.0/ fraction) - duration
-          print "\rinserted %d records / %d%% ETA = %s"%(counter,int(fraction*100.0), self.eta(endtime)),
+          printString = ("\rinserted %d records / %d%% ETA = %s"
+                         %(counter,int(fraction*100.0), self.eta(endtime)),)
+          print printString
+#------------------------------------------------------------------------------
+
         server = sp[0]
         timestamp = sp[1]
         source = sp[2]
