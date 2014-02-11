@@ -120,7 +120,6 @@ class logfile:
         self.myDB.hostfilemap[ip]=name
     print "read",len(self.myDB.hostfilemap),"host mappings"
     f.close()
-
 #-------------------------------------------------------------------------------
 
   def insert_nid_server(self, server, one_nid):
@@ -131,25 +130,25 @@ class logfile:
       ''' methode to insert only one nid value tuple '''
       self.myDB.add_nid_values(server, timeStamp, source, nidvals_Tup, nidID)
 
-
-#  deprecated 
   def insert_nids(self, server, timestamp, source, nidvals):
     stype = self.myDB.servertype[server]
-    #print server, timestamp, source, stype
-    # CREATE TABLE samples (id integer primary key asc, time integer, type integer, source integer, nid integer, vals integer)
     il_ost = []
     il_mdt = []
+
     for i in range(len(nidvals)):
       nidid = self.myDB.globalnidmap[self.myDB.per_server_nids[server][i]]
       timeid = self.myDB.timestamps[timestamp]
       sourceid = self.myDB.sources[source]
+
       if nidvals[i]!="":
         if stype == 'ost':
           temp = [timeid, sourceid, nidid]
           temp.extend(nidvals[i].split(','))
           il_ost.append(temp)
+
         if stype == 'mdt':
           il_mdt.append((timeid, sourceid, nidid, nidvals[i]))
+
     self.myDB.insert_ost_samples(il_ost)
     self.myDB.insert_mdt_samples(il_mdt)
 
