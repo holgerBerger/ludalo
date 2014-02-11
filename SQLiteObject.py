@@ -35,22 +35,22 @@ class SQLiteObject(object):
         # bild map's
         
         # nid map
-        self.cursor.execute('''SELECT * FROM nids;''')
-        r = self.cursor.fetchall()
+        self.c.execute('''SELECT * FROM nids;''')
+        r = self.c.fetchall()
         for (k,v) in r:
           self.globalnidmap[str(v)]=k
         print "read %s old nid mappings" % len(self.globalnidmap)
 
         # sources map
-        self.cursor.execute('''SELECT * FROM sources;''')
-        r = self.cursor.fetchall()
+        self.c.execute('''SELECT * FROM sources;''')
+        r = self.c.fetchall()
         for (k,v) in r:
           self.sources[str(v)]=k
         print "read %s old sources" % len(self.sources)
 
         # server map
-        self.cursor.execute('''SELECT * FROM servers;''')
-        r = self.cursor.fetchall()
+        self.c.execute('''SELECT * FROM servers;''')
+        r = self.c.fetchall()
         for (k,v,t) in r:
           self.servermap[str(v)]=k
           self.per_server_nids[str(v)] = []
@@ -58,8 +58,8 @@ class SQLiteObject(object):
           print "known server:",v,t
           
         # time stamp map
-        self.cursor.execute('''SELECT * FROM timestamps;''')
-        r = self.cursor.fetchall()
+        self.c.execute('''SELECT * FROM timestamps;''')
+        r = self.c.fetchall()
         for (k,v) in r:
           self.timestamps[str(v)]=k
         print "read %d old timestamps" % len(self.timestamps)
@@ -69,7 +69,7 @@ class SQLiteObject(object):
 
     def closeConnection(self):
         ''' Closing db connection '''
-        self.con.commit()
+        self.conn.commit()
         self.conn.close()
 #------------------------------------------------------------------------------
 
@@ -133,31 +133,31 @@ class SQLiteObject(object):
         # create table if not exist
 
         # timestamp
-        self.c.execute('''CREATE TABLE IF NOT EXIST
+        self.c.execute('''CREATE TABLE IF NOT EXISTS
                             timestamps (
                                 id integer primary key asc,
                                 time integer)''')
 
         # name vom clienten
-        self.c.execute('''CREATE TABLE IF NOT EXIST
+        self.c.execute('''CREATE TABLE IF NOT EXISTS
                             nids (
                                 id integer primary key asc,
                                 nid text)''')
 
         # oss/mds server name
-        self.c.execute('''CREATE TABLE IF NOT EXIST
+        self.c.execute('''CREATE TABLE IF NOT EXISTS
                             servers (
                                 id integer primary key asc,
                                 server text,
                                 type text)''')
 
         # ost / mdt
-        self.c.execute('''CREATE TABLE IF NOT EXIST
+        self.c.execute('''CREATE TABLE IF NOT EXISTS
                             sources (
                                 id integer primary key asc,
                                 source text)''')
 
-        self.c.execute('''CREATE TABLE IF NOT EXIST
+        self.c.execute('''CREATE TABLE IF NOT EXISTS
                             ost_values (
                                 id integer primary key asc,
                                 rio integer,
@@ -165,7 +165,7 @@ class SQLiteObject(object):
                                 wio integer,
                                 wb integer)''')
 
-        self.c.execute('''CREATE TABLE IF NOT EXIST
+        self.c.execute('''CREATE TABLE IF NOT EXISTS
                             mdt_values (
                                 id integer primary key asc,
                                 reqs integer)''')
@@ -206,38 +206,38 @@ class SQLiteObject(object):
 
     def insert_timestamp(self, timestamp):
         if timestamp not in self.timestamps:
-            self.cursor.execute('''INSERT INTO timestamps VALUES (NULL,?)''',
+            self.c.execute('''INSERT INTO timestamps VALUES (NULL,?)''',
                                 (timestamp,))
-            self.timestamps[timestamp] = self.cursor.lastrowid
+            self.timestamps[timestamp] = self.c.lastrowid
 #------------------------------------------------------------------------------
 
     def insert_source(self, source):
         if source not in self.sources:
-            self.cursor.execute('''INSERT INTO sources VALUES (NULL,?)''',
+            self.c.execute('''INSERT INTO sources VALUES (NULL,?)''',
                                 (source,))
-            self.sources[source] = self.cursor.lastrowid
+            self.sources[source] = self.c.lastrowid
 #------------------------------------------------------------------------------
 
     def insert_server(self, server, stype):
         if server not in self.per_server_nids:
             print "new server:", server
             self.per_server_nids[server] = []
-            self.cursor.execute('''INSERT INTO servers VALUES (NULL,?)''',
-                                (server,))
-            self.servermap[server] = self.cursor.lastrowid
+            self.c.execute('''INSERT INTO servers VALUES (NULL,?,?)''',
+                                (server,stype,))
+            self.servermap[server] = self.c.lastrowid
             self.servertype[server] = stype
 #------------------------------------------------------------------------------
 
     def add_nid_server(self, server, nid_name):
-        #nid = nid_name.split('@')[0]
+        nid = nid_name.split('@')[0]
         if self.hostfilemap:
             try:
                 nid = self.hostfilemap[nid]
             except KeyError:
                 pass
         if nid not in self.globalnidmap:
-            self.cursor.execute('''INSERT INTO nids VALUES (NULL,?)''',(nid,))
-            self.globalnidmap[nid]=self.cursor.lastrowid
+            self.c.execute('''INSERT INTO nids VALUES (NULL,?)''',(nid,))
+            self.globalnidmap[nid]=self.c.lastrowid
         if nid not in self.per_server_nids[server]:
             self.per_server_nids[server].append(nid)
 #------------------------------------------------------------------------------
@@ -246,10 +246,10 @@ class SQLiteObject(object):
         return self.globalnidmap[self.per_server_nids[server][i]]
 #------------------------------------------------------------------------------
     def insert_ost_samples(self, il_ost):
-        self.cursor.executemany('''INSERT INTO samples_ost VALUES (NULL,?,?,?,?,?,?,?)''',il_ost)
+        self.c.executemany('''INSERT INTO samples_ost VALUES (NULL,?,?,?,?,?,?,?)''',il_ost)
 
     def insert_mdt_samples(self, il_mdt):
-        self.cursor.executemany('''INSERT INTO samples_mdt VALUES (NULL,?,?,?,?)''',il_mdt)
+        self.c.executemany('''INSERT INTO samples_mdt VALUES (NULL,?,?,?,?)''',il_mdt)
 #------------------------------------------------------------------------------
 
     def insert_SERVER_values(self, mds_name, REQS, timeStamp, type):
@@ -260,7 +260,7 @@ class SQLiteObject(object):
         lastID = c.lastrowid
         mdsID = self.sources[mds_name]
         # sampels:     id    time    type    source    nid    vals
-        self.cursor.execute('''INSERT INTO samples VALUES
+        self.c.execute('''INSERT INTO samples VALUES
                                         (NULL,?,?,?,NULL,?)''',
                                         # time  typ  mdsID    values
                                         (timeid, type, mdsID, lastID))

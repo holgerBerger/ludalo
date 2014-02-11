@@ -15,7 +15,8 @@
 #
 # addition form Uwe Schilling 2014:
 # to manage more then one database added an db abstraction layer
-# this manages all the query for the db. 
+# this manages all the query for the db. (abstaction layer removed)
+# 
 # 
 # supported db at this moment, sqlite
 #
@@ -39,10 +40,9 @@ from SQLiteObject import SQLiteObject
 
 class logfile:
 
-  def __init__(self, cursor, filename, hostfile=None):
+  def __init__(self, filename, hostfile=None):
 
     self.filename = filename
-    self.cursor = cursor
 
     # change to db name if save...    
     self.myDB = SQLiteObject('sqlite_new.db')
@@ -78,7 +78,7 @@ class logfile:
 
         # add nids to the database 
         for nid in sp[5:]:
-            self.insert_nids_server(server, nid)
+            self.insert_nid_server(server, nid)
 
       else:
 #--------------------- if not headline -----------------------------------------
@@ -97,9 +97,9 @@ class logfile:
         duration = (time.time() - starttime)
         fraction = (float(f.tell())/float(self.filesize))
         endtime = duration * (1.0/ fraction) - duration
-        printString = ("\rinserted %d records / %d%% ETA = %s"
-                         %(counter,int(fraction*100.0), self.eta(endtime)),)
-        print printString
+        printString = str("\rinserted %d records / %d%% ETA = %s"
+                         %(counter,int(fraction*100.0), self.eta(endtime)))
+        print printString,
 #------------------------------------------------------------------------------
     endtime = time.time()
     print "used %s to insert data." % self.eta(endtime-starttime)
@@ -124,8 +124,8 @@ class logfile:
 #-------------------------------------------------------------------------------
 
   def insert_nid_server(self, server, one_nid):
-      nid = one_nid.split('@')[0] #get only the name
-      self.myDB.add_nid_server(server, nid_name)
+      #nid_name = one_nid.split('@')[0] #get only the name
+      self.myDB.add_nid_server(server, one_nid)
 
   def insert_nid(self, server, timeStamp, source, nidvals_Tup, nidID):
       ''' methode to insert only one nid value tuple '''
@@ -134,15 +134,15 @@ class logfile:
 
 #  deprecated 
   def insert_nids(self, server, timestamp, source, nidvals):
-    stype = self.servertype[server]
+    stype = self.myDB.servertype[server]
     #print server, timestamp, source, stype
     # CREATE TABLE samples (id integer primary key asc, time integer, type integer, source integer, nid integer, vals integer)
     il_ost = []
     il_mdt = []
     for i in range(len(nidvals)):
-      nidid = self.globalnidmap[self.per_server_nids[server][i]]
-      timeid = self.timestamps[timestamp]
-      sourceid = self.sources[source]
+      nidid = self.myDB.globalnidmap[self.myDB.per_server_nids[server][i]]
+      timeid = self.myDB.timestamps[timestamp]
+      sourceid = self.myDB.sources[source]
       if nidvals[i]!="":
         if stype == 'ost':
           temp = [timeid, sourceid, nidid]
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     sys.exit(0)
 
   for filename in sys.argv[2:]:
-    o = logfile(cursor, filename, sys.argv[1])
+    o = logfile(filename, sys.argv[1])
     o.read()
     
   o.myDB.closeConnection()
