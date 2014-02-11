@@ -177,7 +177,7 @@ class SQLiteObject(object):
         
         self.c.execute('''CREATE TABLE IF NOT EXISTS 
                             samples_ost (
-                                id serial primary key, 
+                                id integer primary key asc, 
                                 time integer, source integer, 
                                 nid integer, 
                                 rio integer, 
@@ -187,7 +187,7 @@ class SQLiteObject(object):
         
         self.c.execute('''CREATE TABLE IF NOT EXISTS 
                             samples_mdt (
-                                id serial primary key, 
+                                id integer primary key asc, 
                                   time integer, 
                                   source integer, 
                                   nid integer, 
