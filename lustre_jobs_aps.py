@@ -52,13 +52,14 @@ if __name__ == "__main__":
 
   lustre_jobs_sqlite.create_tables(cursor)
 
+  restojob = {}   # map resid to job
+  jobs = {}
+
   for filename in sys.argv[2:]:
     f = open(filename, "r")
     filesize = os.path.getsize(filename)
     counter=0
 
-    restojob = {}
-    jobs = {}
 
     for l in f:
       if "Bound apid" in l:
@@ -93,7 +94,10 @@ if __name__ == "__main__":
           print "job without start",resid," "*30
         else:
           #print jobs[restojob[resid]] 
-          lustre_jobs_sqlite.insert_job(cursor, **jobs[restojob[resid]])
+          if not 'start' in jobs[restojob[resid]]:
+            print "job not placed",resid," "*30
+          else:
+            lustre_jobs_sqlite.insert_job(cursor, **jobs[restojob[resid]])
           counter+=1
           if counter%10 == 0:
             print "read %d records / %d%% from %s\r"%(counter,int(float(f.tell())/float(filesize)*100.0), filename),
