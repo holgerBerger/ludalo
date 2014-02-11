@@ -40,13 +40,10 @@ from SQLiteObject import SQLiteObject
 
 class logfile:
 
-  def __init__(self, filename, hostfile=None):
+  def __init__(self, filename, hostfile=None, dbFile='sqlite_new.db'):
 
-    self.filename = filename
-
-    # change to db name if save...    
-    self.myDB = SQLiteObject('sqlite_new.db')
-
+    self.filename = filename  
+    self.myDB = SQLiteObject(dbFile)
     self.filesize = os.path.getsize(filename)
 
     if hostfile:
@@ -56,7 +53,7 @@ class logfile:
     if secs<60:
       return "%d secs"%secs
     else:
-      return "%dm%2.2ds" % (secs/60, secs%60)
+      return "%d min%2.2d sec" % (secs/60, secs%60)
     
 #------------------------------------------------------------------------------
   def read(self):
@@ -123,7 +120,6 @@ class logfile:
 #-------------------------------------------------------------------------------
 
   def insert_nid_server(self, server, one_nid):
-      #nid_name = one_nid.split('@')[0] #get only the name
       self.myDB.add_nid_server(server, one_nid)
 
   def insert_nid(self, server, timeStamp, source, nidvals_Tup, nidID):
@@ -156,11 +152,13 @@ class logfile:
 if __name__ == "__main__":
 
   if len(sys.argv)<=2 or sys.argv[1] in ["-h", "--help"]:
-    print "usage: %s hostmapping logfile ..." % sys.argv[0]
+    print "usage: %s hostmapping dbFile logfile ..." % sys.argv[0]
     sys.exit(0)
 
+  hostfile = sys.argv[1]
+
   for filename in sys.argv[2:]:
-    o = logfile(filename, sys.argv[1])
+    o = logfile(filename, hostfile)
     o.read()
     
   o.myDB.closeConnection()
