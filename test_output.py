@@ -43,6 +43,7 @@ if __name__ == '__main__':
     conn = sqlite3.connect(dbFile)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
+    c.arraysize = 1000
     output = c.execute('''
         SELECT time FROM timestamps ORDER BY time Limit 100
          ''').fetchall()
@@ -66,22 +67,21 @@ if __name__ == '__main__':
         #print len(executeSQL)
         if len(executeSQL)>=59:
             #print len(executeSQL)
-            
+            timer_start = time.time()
             executeSQL = c.execute('''
-                SELECT * FROM timestamps as times
-                INNER JOIN
-                samples_ost as ost 
-                on times.id = ost.time
-                WHERE times.time BETWEEN ? AND ?
-                ORDER BY time''', (
+                SELECT * FROM samples_ost 
+                JOIN
+                 timestamps on timestamps.time
+                 between ? and ? 
+                 and samples_ost.time = timestamps.id ''', (
                        first_last_timestamp + 1 - one_houer, 
-                       first_last_timestamp-1)).fetchall()
-            
+                       first_last_timestamp-1)) .fetchmany()
+            print str(time.time() - timer_start)
             inter = Intervall()
             for row in executeSQL:
                 inter.times.add(row[1])
                 inter.rb = inter.rb + row[7]
-                inter.rb = inter.rb + row[9]
+                inter.wb = inter.wb + row[9]
             lmax = max(inter.times)
             lmin = min(inter.times)
             inter.show_time = lmax
