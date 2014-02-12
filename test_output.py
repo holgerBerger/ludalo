@@ -13,9 +13,11 @@ class Intervall:
         self.times = set()
         self.wb = 0
         self.rb = 0
+        self.wbs = 0
+        self.rbs = 0
         self.show_time = 0
     def toString(self):
-        print len (self.times)
+        return 'show_time = ' + str(self.show_time) + ' wbs / rbs ' + str(self.wbs) + ' / ' + str(self.rbs) 
 
 
 
@@ -42,28 +44,54 @@ if __name__ == '__main__':
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
     output = c.execute('''
-        SELECT time FROM timestamps ORDER BY time
+        SELECT time FROM timestamps ORDER BY time Limit 100
          ''').fetchall()
     first_last_timestamp = 0
     one_houer = 3600
     intervalls = []
     
     for timestamp in output:
-        printMe = c.execute('''
-            SELECT time FROM timestamps 
+        #id     time            id        time        source    nid    rio    rb    wio    wb
+        #112    1390503693      75190     112         25        273    0      0     1      63
+        
+        
+        executeSQL = c.execute('''
+            SELECT * FROM timestamps 
             WHERE time BETWEEN ? AND ?
-            ORDER BY time
-                 ''', (
+            ORDER BY time''', (
                        first_last_timestamp+1, 
-                       first_last_timestamp + one_houer -1))
-        inter = Intervall()
-        inter.times = printMe.fetchall()
-        if len(inter.times)>=55:
-            inter.show_time = max(inter.times)
+                       first_last_timestamp + one_houer -1)).fetchall()
+
+        #print str(first_last_timestamp + one_houer -1)
+        if len(executeSQL)>=59:
+            #print len(executeSQL)
+            
+            executeSQL = c.execute('''
+                SELECT * FROM timestamps as times
+                INNER JOIN
+                samples_ost as ost 
+                on times.id = ost.time
+                WHERE times.time BETWEEN ? AND ?
+                ORDER BY time''', (
+                           first_last_timestamp+1, 
+                           first_last_timestamp + one_houer -1)).fetchall()
+
+            
+            inter = Intervall()
+            for row in executeSQL:
+                inter.times.add(row[1])
+                inter.rb = inter.rb + row[7]
+                inter.rb = inter.rb + row[9]
+            lmax = max(inter.times)
+            lmin = min(inter.times)
+            inter.show_time = lmax
+            duration = lmax - lmin
+            inter.rbs = inter.rb / duration
+            inter.wbs = inter.wb / duration
             intervalls.append(inter)
         first_last_timestamp = timestamp['time']
-    print len(intervalls)
-    print intervalls[0].times[1][0]
+    for inter in intervalls:
+        print inter.toString()
 #------------------------------------------------------------------------------
     time_end = time.time()
     print "end with no errors in: " + str(time_end - time_start)
