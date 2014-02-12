@@ -59,10 +59,11 @@ if __name__ == '__main__':
             SELECT * FROM timestamps 
             WHERE time BETWEEN ? AND ?
             ORDER BY time''', (
-                       first_last_timestamp+1, 
-                       first_last_timestamp + one_houer -1)).fetchall()
+                       first_last_timestamp + 1 - one_houer, 
+                       first_last_timestamp-1)).fetchall()
 
         #print str(first_last_timestamp + one_houer -1)
+        #print len(executeSQL)
         if len(executeSQL)>=59:
             #print len(executeSQL)
             
@@ -73,9 +74,8 @@ if __name__ == '__main__':
                 on times.id = ost.time
                 WHERE times.time BETWEEN ? AND ?
                 ORDER BY time''', (
-                           first_last_timestamp+1, 
-                           first_last_timestamp + one_houer -1)).fetchall()
-
+                       first_last_timestamp + 1 - one_houer, 
+                       first_last_timestamp-1)).fetchall()
             
             inter = Intervall()
             for row in executeSQL:
