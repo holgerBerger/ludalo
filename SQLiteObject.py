@@ -169,11 +169,6 @@ class SQLiteObject(object):
                             mdt_values (
                                 id integer primary key asc,
                                 reqs integer)''')
-
-        self.c.execute('''CREATE TABLE IF NOT EXISTS 
-                            mdt_values (
-                                id integer primary key asc, 
-                                reqs integer)''')
         
         self.c.execute('''CREATE TABLE IF NOT EXISTS 
                             samples_ost (
@@ -194,7 +189,7 @@ class SQLiteObject(object):
                                   reqs integer);''')
         
         self.c.execute('''CREATE INDEX IF NOT EXISTS 
-                            samples_ost_time ON samples_ost (time)''')
+                            samples_ost_index ON samples_ost (time, rb, wb, rio, wio)''')
 
         self.c.execute('''CREATE INDEX IF NOT EXISTS 
                             samples_mdt_time ON samples_mdt (time)''')
