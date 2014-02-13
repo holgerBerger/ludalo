@@ -5,7 +5,7 @@ Created on 12.02.2014
 This code require Python 2.2.1 or later
 
 '''
-import time
+import time,atexit,curses,sys
 import datetime
 import sqlite3
 import matplotlib.pyplot as plt
@@ -52,8 +52,21 @@ def timeStampToDate(timeStamp):
                             float(timeStamp)).strftime('%Y-%m-%d %H:%M:%S')
 #------------------------------------------------------------------------------
 
+def eta(secs):
+    if secs<60:
+      return "%2.2d sec       "%secs
+    else:
+      return "%d min %2.2d sec" % (secs/60, secs%60)
+
+def cleanup():
+  print curses.tigetstr("cnorm")
+
 
 if __name__ == '__main__':
+    curses.setupterm()
+    print curses.tigetstr("civis"),
+    atexit.register(cleanup)
+
     time_start = time.time()
 #------------------------------------------------------------------------------
     dbFile = 'sqlite_new.db'
@@ -81,13 +94,14 @@ if __name__ == '__main__':
     rbSum = {}
     wbSum = {}
     
+    starttime = time.time()
+    size = len(output)
+    counter=1
     for DBtimestamp in output:
         timestampID = DBtimestamp[0]
         timestamp = DBtimestamp[1]
-        tmp = c.execute('''
-                        SELECT rb, wb FROM samples_ost WHERE time = ?
-                        ''', (timestampID,)).fetchall()
-        for item in tmp:
+        c.execute('''SELECT rb, wb FROM samples_ost WHERE time = ?''', (timestampID,))
+        for item in ResultIter(c):
             rbsMovingAverage.addValue(timestamp,item[0])
             wbsMovingAverage.addValue(timestamp,item[1])
             
@@ -96,7 +110,17 @@ if __name__ == '__main__':
             
             wbSum.setdefault(timestamp, 0)
             wbSum[timestamp]+= item[1]
-            
+        # progressbar
+        duration = (time.time() - starttime)
+        fraction = (float(counter)/float(size))
+        endtime = duration * (1.0/ fraction) - duration
+        printString = str("\rextracted %9d timestamps [%s] ETA = %s"
+                         %(counter,"|"*int(fraction*20.0)+"\\|/-"[counter%4]+"-"*(19-int(fraction*20.0)), eta(endtime)))
+        print printString,
+        sys.stdout.flush()
+        counter+=1
+        # progressbar end
+
                 
     plotrbs = []
     plotrb = []
@@ -108,9 +132,9 @@ if __name__ == '__main__':
         plotrb.append(rbSum[key[1]]/60)
         
         
-    #plt.plot(plotrbs)
+    plt.plot(rbs.keys(),plotrbs, rbSum.keys(), plotrb)
     #plt.plot(plotrb)
-    #plt.show()
+    plt.show()
 
 #------------------------------------------------------------------------------
     time_end = time.time()

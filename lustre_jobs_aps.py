@@ -14,7 +14,7 @@
 
 # FIXME does not yet contain handling of jobs not having start AND end in the single file
 
-import sys
+import sys,atexit,curses
 import os.path
 import time
 import sqlite3
@@ -36,9 +36,15 @@ def getvalue(l, key):
   return l[p+1]
 
 
+def cleanup():
+  print curses.tigetstr("cnorm")
 
 
 if __name__ == "__main__":
+
+  curses.setupterm()
+  print curses.tigetstr("civis")
+  atexit.register(cleanup)
 
   if len(sys.argv)<=2 or sys.argv[1] in ["-h", "--help"]:
     print "usage: %s passwdfile apsschedlog ..." % sys.argv[0]
@@ -47,7 +53,7 @@ if __name__ == "__main__":
   usermap = {}
   read_pw(sys.argv[1], usermap)
 
-  conn = sqlite3.connect('sqlite.db')
+  conn = sqlite3.connect('sqlite_new.db')
   cursor = conn.cursor()
 
   lustre_jobs_sqlite.create_tables(cursor)
@@ -82,7 +88,7 @@ if __name__ == "__main__":
           jobs[restojob[resid]]['owner'] = usermap[uid]
           jobs[restojob[resid]]['nids'] = nids
         except KeyError:
-          print "job without binding",resid," "*30
+          print "job without binding",resid," "*40
       if "Released apid" in l:   
         sp = l[:-1].split()
         send=sp[0]+" "+sp[1][:-1]
@@ -91,11 +97,11 @@ if __name__ == "__main__":
         try:
           jobs[restojob[resid]]['end'] = end
         except KeyError:
-          print "job without start",resid," "*30
+          print "job without start",resid," "*40
         else:
           #print jobs[restojob[resid]] 
           if not 'start' in jobs[restojob[resid]]:
-            print "job not placed",resid," "*30
+            print "job not placed",resid," "*40
           else:
             lustre_jobs_sqlite.insert_job(cursor, **jobs[restojob[resid]])
           counter+=1

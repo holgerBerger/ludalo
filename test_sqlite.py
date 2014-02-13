@@ -33,12 +33,12 @@
 
 
 
-import sys
+import sys,atexit
 import os.path
 import time
 import sqlite3
 from SQLiteObject import SQLiteObject
-
+import curses
 
 class logfile:
 
@@ -53,15 +53,16 @@ class logfile:
 
   def eta(self,secs):
     if secs<60:
-      return "%d secs"%secs
+      return "%2.2d sec       "%secs
     else:
-      return "%d min%2.2d sec" % (secs/60, secs%60)
+      return "%d min %2.2d sec" % (secs/60, secs%60)
     
 #------------------------------------------------------------------------------
   def read(self):
     ''' action is HERE'''
     f = open(self.filename,"r")
     counter=0
+    acounter=0
     starttime = time.time()
 
     #1.0;hmds1;time;mdt;reqs;
@@ -96,9 +97,13 @@ class logfile:
         duration = (time.time() - starttime)
         fraction = (float(f.tell())/float(self.filesize))
         endtime = duration * (1.0/ fraction) - duration
-        printString = str("\rinserted %d records / %d%% ETA = %s"
-                         %(counter,int(fraction*100.0), self.eta(endtime)))
+        #printString = str("\rinserted %d records / %d%% ETA = %s"
+        #                 %(counter,int(fraction*100.0), self.eta(endtime)))
+        printString = str("\rinserted %9d records [%s] ETA = %s"
+                         %(counter,"|"*int(fraction*20.0)+"\\|/-"[acounter%4]+"-"*(19-int(fraction*20.0)), self.eta(endtime)))
         print printString,
+        sys.stdout.flush()
+        acounter+=1
 #------------------------------------------------------------------------------
     endtime = time.time()
     print "used %s to insert data." % self.eta(endtime-starttime)
@@ -151,7 +156,15 @@ class logfile:
     self.myDB.insert_mdt_samples(il_mdt)
 
 
+
+def cleanup():
+  print curses.tigetstr("cnorm")
+
 if __name__ == "__main__":
+
+  curses.setupterm()
+  print curses.tigetstr("civis"),
+  atexit.register(cleanup)
 
   if len(sys.argv)<=2 or sys.argv[1] in ["-h", "--help"]:
     print "usage: %s hostmapping logfile ..." % sys.argv[0]
