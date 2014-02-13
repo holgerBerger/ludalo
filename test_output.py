@@ -5,10 +5,12 @@ Created on 12.02.2014
 This code require Python 2.2.1 or later
 
 '''
-from __future__ import generators 
 import time
 import datetime
 import sqlite3
+import matplotlib.pyplot as plt
+
+from MovingAverage import MovingAverage
 
 
 class Intervall:
@@ -58,12 +60,9 @@ if __name__ == '__main__':
     conn = sqlite3.connect(dbFile)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute('''
-        DROP TABLE ost_oneHouer_stat
-    ''')
     
     c.execute('''
-        CREATE IF NOT EXISTS 
+        CREATE TABLE IF NOT EXISTS
             ost_oneHouer_stat (
             id integer primary key asc, 
             time integer,
@@ -72,51 +71,46 @@ if __name__ == '__main__':
     ''')
     
     output = c.execute('''
-        SELECT time FROM timestamps ORDER BY time limit 80
+        SELECT * FROM timestamps ORDER BY time
          ''').fetchall()
     first_last_timestamp = 0
-    one_houer = 3600
+    one_houer = 3600*8
     intervalls = []
+    rbsMovingAverage = MovingAverage(one_houer)
+    wbsMovingAverage = MovingAverage(one_houer)
+    rbSum = {}
+    wbSum = {}
     
-    for timestamp in output:
-#id    time    source    nid    rio    rb    wio    wb      id    time
-#1     1       2         13     0      0     1      3120    1     1390497035        
-        executeSQL = c.execute('''
-            SELECT * FROM timestamps 
-            WHERE time BETWEEN ? AND ?
-            ORDER BY time''', (
-                       first_last_timestamp + 1 - one_houer, 
-                       first_last_timestamp-1)).fetchall()
-        timer_start = time.time()
-        if len(executeSQL)>=59:
-
-            executeSQL = c.execute('''
-                SELECT * FROM samples_ost 
-                JOIN
-                 timestamps on timestamps.time 
-                 BETWEEN ? AND ?
-                 and samples_ost.time = timestamps.id ''', (
-                       first_last_timestamp + 1 - one_houer, 
-                       first_last_timestamp-1))
+    for DBtimestamp in output:
+        timestampID = DBtimestamp[0]
+        timestamp = DBtimestamp[1]
+        tmp = c.execute('''
+                        SELECT rb, wb FROM samples_ost WHERE time = ?
+                        ''', (timestampID,)).fetchall()
+        for item in tmp:
+            rbsMovingAverage.addValue(timestamp,item[0])
+            wbsMovingAverage.addValue(timestamp,item[1])
             
-            inter = Intervall()
-            for row in ResultIter(executeSQL):
-                inter.times.add(row[9])
-                inter.rb = inter.rb + row[5]
-                inter.wb = inter.wb + row[7]
-
-            lmax = max(inter.times)
-            lmin = min(inter.times)
-            inter.show_time = lmax
-            duration = lmax - lmin
-            inter.rbs = inter.rb / duration
-            inter.wbs = inter.wb / duration
-            intervalls.append(inter)
-        #print str(time.time() - timer_start)        
-        first_last_timestamp = timestamp['time']
-    dbInter = []
-    for inter in intervalls:
-        dbInter.append(inter.toDB())
+            rbSum.setdefault(timestamp, 0)
+            rbSum[timestamp]+= item[0]
+            
+            wbSum.setdefault(timestamp, 0)
+            wbSum[timestamp]+= item[1]
+            
+                
+    plotrbs = []
+    plotrb = []
+    rbs = rbsMovingAverage.getAveragesDict()
+    wbs = wbsMovingAverage.getAveragesDict()
+    for key in rbs:
+        plotrbs.append(rbs[key])
+    for key in output:
+        plotrb.append(rbSum[key[1]]/60)
+        
+        
+    #plt.plot(plotrbs)
+    #plt.plot(plotrb)
+    #plt.show()
 
 #------------------------------------------------------------------------------
     time_end = time.time()

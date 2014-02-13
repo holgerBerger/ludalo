@@ -1,7 +1,11 @@
 '''
 Created on 13.02.2014
 
-@author: uwe
+@author: uwe schilling
+
+
+This is a class for simple and eficient calculation of the
+moving average.  
 '''
 
 import time
@@ -22,13 +26,13 @@ class MovingAverage(object):
             if timeIntervall < self.size:
                 self.dfd.setdefault(timestamp, 0)
                 self.dfd[timestamp]+= value
+                
             else:
                 tempSum = 0
                 for key in self.dfd:
                     tempSum += self.dfd[key]
-                
-                
-                self.average[timeIntervall_max] = tempSum / (timeIntervall+1)
+                setTime = int((timeIntervall_max + timeIntervall_min)/2)
+                self.average[setTime] = tempSum / (timeIntervall+1)
                 del self.dfd[timeIntervall_min]
                 self.dfd.setdefault(timestamp, 0)
                 self.dfd[timestamp]+= value
@@ -38,18 +42,14 @@ class MovingAverage(object):
 
     def getAveragesDict(self):
         if self.dfd.keys():
-            #print '1'
             timeIntervall_max = max(self.dfd.keys())
             timeIntervall_min = min(self.dfd.keys())
             timeIntervall = timeIntervall_max - timeIntervall_min
-            if timeIntervall < self.size: return None
-            else: 
-                #print '2'
-                tempSum = 0
-                for key in self.dfd:
-                    tempSum += self.dfd[key]
-                self.average[timeIntervall_max] = tempSum / (timeIntervall+1)
-                return self.average
+            tempSum = 0
+            for key in self.dfd:
+                tempSum += self.dfd[key]
+            self.average[timeIntervall_max] = tempSum / (timeIntervall+1)
+            return self.average
             
         else: return None
 
