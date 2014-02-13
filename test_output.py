@@ -2,11 +2,14 @@
 Created on 12.02.2014
 
 @author: uwe
-'''
+This code require Python 2.2.1 or later
 
+'''
+from __future__ import generators 
 import time
 import datetime
 import sqlite3
+
 
 class Intervall:
     def __init__(self):
@@ -19,6 +22,16 @@ class Intervall:
     def toString(self):
         return 'show_time = ' + str(self.show_time) + ' wbs / rbs ' + str(self.wbs) + ' / ' + str(self.rbs) 
 
+
+
+def ResultIter(cursor, arraysize=1000):
+    'An iterator that uses fetchmany to keep memory usage down'
+    while True:
+        results = cursor.fetchmany(arraysize)
+        if not results:
+            break
+        for result in results:
+            yield result
 
 
 def getTimeStamp(year, month, day, houer, minute):
@@ -43,45 +56,41 @@ if __name__ == '__main__':
     conn = sqlite3.connect(dbFile)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.arraysize = 1000
+    #c.arraysize = 100000
     output = c.execute('''
-        SELECT time FROM timestamps ORDER BY time Limit 100
+        SELECT time FROM timestamps ORDER BY time limit 80
          ''').fetchall()
     first_last_timestamp = 0
     one_houer = 3600
     intervalls = []
     
     for timestamp in output:
-        #id     time            id        time        source    nid    rio    rb    wio    wb
-        #112    1390503693      75190     112         25        273    0      0     1      63
-        
-        
+#id    time    source    nid    rio    rb    wio    wb      id    time
+#1     1       2         13     0      0     1      3120    1     1390497035        
         executeSQL = c.execute('''
             SELECT * FROM timestamps 
             WHERE time BETWEEN ? AND ?
             ORDER BY time''', (
                        first_last_timestamp + 1 - one_houer, 
                        first_last_timestamp-1)).fetchall()
-
-        #print str(first_last_timestamp + one_houer -1)
-        #print len(executeSQL)
+        timer_start = time.time()
         if len(executeSQL)>=59:
-            #print len(executeSQL)
-            timer_start = time.time()
+
             executeSQL = c.execute('''
                 SELECT * FROM samples_ost 
                 JOIN
                  timestamps on timestamps.time
-                 between ? and ? 
+                 WHERE timestamps.time BETWEEN ? AND ?
                  and samples_ost.time = timestamps.id ''', (
                        first_last_timestamp + 1 - one_houer, 
-                       first_last_timestamp-1)) .fetchmany()
-            print str(time.time() - timer_start)
+                       first_last_timestamp-1))
+            
             inter = Intervall()
-            for row in executeSQL:
-                inter.times.add(row[1])
-                inter.rb = inter.rb + row[7]
-                inter.wb = inter.wb + row[9]
+            for row in ResultIter(executeSQL, 1000):
+                inter.times.add(row[9])
+                inter.rb = inter.rb + row[5]
+                inter.wb = inter.wb + row[7]
+
             lmax = max(inter.times)
             lmin = min(inter.times)
             inter.show_time = lmax
@@ -89,6 +98,7 @@ if __name__ == '__main__':
             inter.rbs = inter.rb / duration
             inter.wbs = inter.wb / duration
             intervalls.append(inter)
+        #print str(time.time() - timer_start)        
         first_last_timestamp = timestamp['time']
     for inter in intervalls:
         print inter.toString()
