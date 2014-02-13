@@ -20,7 +20,9 @@ class Intervall:
         self.rbs = 0
         self.show_time = 0
     def toString(self):
-        return 'show_time = ' + str(self.show_time) + ' wbs / rbs ' + str(self.wbs) + ' / ' + str(self.rbs) 
+        return 'show_time = ' + str(self.show_time) + ' wbs / rbs ' + str(self.wbs) + ' / ' + str(self.rbs)
+    def toDB(self):
+        return (self.show_time, self.wbs, self.rbs) 
 
 
 
@@ -56,7 +58,19 @@ if __name__ == '__main__':
     conn = sqlite3.connect(dbFile)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    #c.arraysize = 100000
+    c.execute('''
+        DROP TABLE ost_oneHouer_stat
+    ''')
+    
+    c.execute('''
+        CREATE IF NOT EXISTS 
+            ost_oneHouer_stat (
+            id integer primary key asc, 
+            time integer,
+            wbs integer,
+            rbs integer)
+    ''')
+    
     output = c.execute('''
         SELECT time FROM timestamps ORDER BY time limit 80
          ''').fetchall()
@@ -100,8 +114,12 @@ if __name__ == '__main__':
             intervalls.append(inter)
         #print str(time.time() - timer_start)        
         first_last_timestamp = timestamp['time']
+    dbInter = []
     for inter in intervalls:
-        print inter.toString()
+        dbInter.append(inter.toDB())
+    c.executemany('''
+        INSERT
+    ''')
 #------------------------------------------------------------------------------
     time_end = time.time()
     print "end with no errors in: " + str(time_end - time_start)
