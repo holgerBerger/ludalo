@@ -15,7 +15,7 @@ FILEVERSION="1.0"
 
 servers = sys.argv[1:]
 
-out = open("logfile","w")
+out = open("data_file","w")
 
 rpcs = {}
 types = {}
@@ -27,21 +27,30 @@ threads = {}
 iolock = Lock()
 
 first = True
+timings = {}
 
 def signalhandler(signum, frame):
   global out,first,iolock
   if signum == signal.SIGUSR1:
     iolock.acquire()
     out.close()
-    print "switching file to","logfile"+str(int(time.time()))
-    os.rename("logfile", "logfile"+str(int(time.time())))
-    out = open("logfile","w")
+    print "switching file to","data_file_"+str(int(time.time()))
+    os.rename("data_file", "data_file_"+str(int(time.time())))
+    out = open("data_file","w")
     iolock.release()
     first=True
 
 def worker(srv):
-    global oldnids,first
-    r=rpcs[srv].get_sample()
+    global oldnids,first,timings
+    t1 = time.time()
+    try:
+      r=rpcs[srv].get_sample()
+    except:
+      print >>sys.stderr,"failed to connect to server:",srv
+      timings[srv] = time.time() - t1
+      return
+    timings[srv] = time.time() - t1
+
     if len(r)==0:
       return
     nids[srv] = r[0].split(";")
@@ -85,6 +94,14 @@ while True:
     threads[srv].join()
 
   e=time.time()
-  print e-sample,"sec for sample collection"
+  print "%3.3fs for sample collection," % (e-sample),
+  minT = ("", 10000)
+  maxT = ("", 0)
+  avg = 0
+  for (s, v) in timings.iteritems():
+    if v < minT[1]: minT = (s,v)
+    if v > maxT[1]: maxT = (s,v)
+    avg += float(v)
+  print "transfer times were max: %s %3.3fs" % maxT,"- min: %s %3.3fs"% minT, "- avg: %3.3fs" % (avg/len(timings))
   time.sleep(SLEEP-((e-sample)%SLEEP))
   first = False
