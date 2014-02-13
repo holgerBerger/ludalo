@@ -117,9 +117,7 @@ if __name__ == '__main__':
     dbInter = []
     for inter in intervalls:
         dbInter.append(inter.toDB())
-    c.executemany('''
-        INSERT
-    ''')
+
 #------------------------------------------------------------------------------
     time_end = time.time()
     print "end with no errors in: " + str(time_end - time_start)
