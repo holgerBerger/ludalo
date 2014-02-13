@@ -24,7 +24,7 @@ class Intervall:
 
 
 
-def ResultIter(cursor, arraysize=1000):
+def ResultIter(cursor, arraysize=10000):
     'An iterator that uses fetchmany to keep memory usage down'
     while True:
         results = cursor.fetchmany(arraysize)
@@ -79,14 +79,14 @@ if __name__ == '__main__':
             executeSQL = c.execute('''
                 SELECT * FROM samples_ost 
                 JOIN
-                 timestamps on timestamps.time
-                 WHERE timestamps.time BETWEEN ? AND ?
+                 timestamps on timestamps.time 
+                 BETWEEN ? AND ?
                  and samples_ost.time = timestamps.id ''', (
                        first_last_timestamp + 1 - one_houer, 
                        first_last_timestamp-1))
             
             inter = Intervall()
-            for row in ResultIter(executeSQL, 1000):
+            for row in ResultIter(executeSQL):
                 inter.times.add(row[9])
                 inter.rb = inter.rb + row[5]
                 inter.wb = inter.wb + row[7]
