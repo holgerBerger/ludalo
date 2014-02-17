@@ -5,14 +5,16 @@ Created on 13.02.2014
 
 
 This is a class for simple and eficient calculation of the
-moving average.  
+moving average.  If you need the simple Average, set calcArray to [1, 1, 1]
+for the average over 3 values. 
 '''
 
 import time
 
 class MovingAverage(object):
-    def __init__(self, size=60):
-        self.size = size
+    def __init__(self, calcArray = [1, 8, 28, 56, 70, 56, 28, 8, 1]):
+        self.calcArray = calcArray
+        self.calcSum = sum(calcArray)
         self.dfd = {}
         self.average = {}
 
