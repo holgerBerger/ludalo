@@ -26,7 +26,7 @@ def binArray(binStart):
 if __name__ == '__main__':
     time_start = time.time()
 #------------------------------------------------------------------------------
-    print 'binomialCoeffs from 0 to 8 ' + str(binArray(8))
+    print 'binomialCoeffs from 0 to 4 ' + str(binArray(4))
 #------------------------------------------------------------------------------
     time_end = time.time()
     print "end with no errors in: " + str(time_end - time_start)
