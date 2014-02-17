@@ -28,7 +28,7 @@ class Intervall:
 
 
 
-def ResultIter(cursor, arraysize=10000):
+def ResultIter(cursor, arraysize=100):
     'An iterator that uses fetchmany to keep memory usage down'
     while True:
         results = cursor.fetchmany(arraysize)
@@ -101,15 +101,21 @@ if __name__ == '__main__':
         timestampID = DBtimestamp[0]
         timestamp = DBtimestamp[1]
         c.execute('''SELECT rb, wb FROM samples_ost WHERE time = ?''', (timestampID,))
-        for item in ResultIter(c):            
-            rbSum.setdefault(timestamp, 0)
-            rbSum[timestamp]+= item[0]
-            
-            wbSum.setdefault(timestamp, 0)
-            wbSum[timestamp]+= item[1]
+        if timestamp not in rbSum: 
+          rbSum[timestamp]=0
+          wbSum[timestamp]=0
+        while True:
+          res = c.fetchmany(500)
+          if not res: 
+            break
+          else:
+            for item in res:
+                #rbSum.setdefault(timestamp, 0)
+
+                rbSum[timestamp]+= item[0]
+                wbSum[timestamp]+= item[1]
             
                 
-        # progressbar
         duration = (time.time() - starttime)
         fraction = (float(counter)/float(size))
         endtime = duration * (1.0/ fraction) - duration
@@ -140,17 +146,17 @@ if __name__ == '__main__':
         plotrb.append(rbSum[key])
         
 
+#------------------------------------------------------------------------------
+    time_end = time.time()
+    print "end with no errors in: " + str(time_end - time_start)
+    
+#-----------------------------------------------------------------------------
         
     plt.plot(sorted(rbSum.keys()), plotrb, lw=0.1)
     plt.plot(plotrbsTims,plotrbs, lw=3)
     
     plt.show()
 
-#------------------------------------------------------------------------------
-    time_end = time.time()
-    print "end with no errors in: " + str(time_end - time_start)
-    
-#-----------------------------------------------------------------------------
 
 
     
