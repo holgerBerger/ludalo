@@ -49,7 +49,6 @@ class MovingAverage(object):
         return int(round(tmp))
 
     def calculate(self):
-        calc = False
         #calculate only if more then the half array is filled
         if self.valueList[self.sizeHalf]:
             #state 1 -> only half array is filed
@@ -72,7 +71,6 @@ class MovingAverage(object):
                     (self.valueList[self.pointMid][0], self.getValue(newValueArray)))
 
                 self.pointMid = self.pointMid + 1
-                calc = True
             #state 2 -> normal mode
             else:
                 newValueArray = []
@@ -85,8 +83,6 @@ class MovingAverage(object):
 
                 self.pointMid = self.pointMid + 1
                 self.pointMin = self.pointMin + 1 
-                calc = True
-        return calc
 
     def calcLast(self):
 

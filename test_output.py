@@ -88,7 +88,6 @@ if __name__ == '__main__':
          ''').fetchall()
     first_last_timestamp = 0
     one_houer = 3600*8
-    intervalls = []
     rbSum = {}
     wbSum = {}
     
