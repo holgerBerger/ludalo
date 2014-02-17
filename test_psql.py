@@ -24,7 +24,7 @@
 
 
 
-import sys
+import sys,atexit,curses
 import os.path
 import time
 import psycopg2
@@ -234,8 +234,14 @@ class logfile:
     
 
 
+def cleanup():
+  print curses.tigetstr("cnorm")
 
 if __name__ == "__main__":
+
+  curses.setupterm()
+  print curses.tigetstr("civis")
+  atexit.register(cleanup)
 
   if len(sys.argv)<=2 or sys.argv[1] in ["-h", "--help"]:
     print "usage: %s hostmapping logfile ..." % sys.argv[0]

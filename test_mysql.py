@@ -24,7 +24,7 @@
 
 
 
-import sys
+import sys,atexit,curses
 import os.path
 import time
 import MySQLdb
@@ -238,16 +238,19 @@ class logfile:
     self.cursor.executemany('''INSERT INTO samples_mdt VALUES (DEFAULT,%s,%s,%s,%s)''',il_mdt)
     
 
+def cleanup():
+  print curses.tigetstr("cnorm")
 
-conn = MySQLdb.connect(passwd='sqlsucks',db="lustre")
-cursor = conn.cursor()
 
 if __name__ == "__main__":
+
+  curses.setupterm()
+  print curses.tigetstr("civis")
+  atexit.register(cleanup)
 
   if len(sys.argv)<=2 or sys.argv[1] in ["-h", "--help"]:
     print "usage: %s hostmapping logfile ..." % sys.argv[0]
     sys.exit(0)
-
 
   conn = MySQLdb.connect(passwd='sqlsucks',db="lustre")
   cursor = conn.cursor()
