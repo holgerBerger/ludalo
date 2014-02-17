@@ -38,9 +38,12 @@ class MovingAverage(object):
         #self.dfd = {}
         self.average = []
         
+    def getAverage(self):
+        self.calcLast()
+        return self.average
+        
     def getValue(self, valueArray):
         tmp = 0
-        print valueArray
         for i in range(0, self.size):
             tmp = tmp + (valueArray[i] * self.calcArray[i])
         tmp = tmp / self.calcSum
@@ -165,7 +168,7 @@ if __name__ == '__main__':
     p9 = int(round(p9 /16))
     
     test = [ (0,p1), (1,p2), (2,p3), (3,p4), (4,p5), (5,p6), (6,p7), (7,p8), (8,p9)]
-    print test
+    #print test
     
     mav.addValue(0, 408)
     mav.addValue(1, 372)
@@ -179,7 +182,9 @@ if __name__ == '__main__':
 
     
     mav.calcLast()
-    print mav.average
+    #print mav.average
+    if test == mav.average:
+        print 'Test pass!'
 
     '''
     if output =

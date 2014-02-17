@@ -84,13 +84,13 @@ if __name__ == '__main__':
     ''')
     
     output = c.execute('''
-        SELECT * FROM timestamps ORDER BY time
+        SELECT * FROM timestamps ORDER BY time limit 100
          ''').fetchall()
     first_last_timestamp = 0
     one_houer = 3600*8
     intervalls = []
-    rbsMovingAverage = MovingAverage(one_houer)
-    wbsMovingAverage = MovingAverage(one_houer)
+    rbsMovingAverage = MovingAverage(21)
+    wbsMovingAverage = MovingAverage(21)
     rbSum = {}
     wbSum = {}
     
@@ -101,15 +101,19 @@ if __name__ == '__main__':
         timestampID = DBtimestamp[0]
         timestamp = DBtimestamp[1]
         c.execute('''SELECT rb, wb FROM samples_ost WHERE time = ?''', (timestampID,))
-        for item in ResultIter(c):
-            rbsMovingAverage.addValue(timestamp,item[0])
-            wbsMovingAverage.addValue(timestamp,item[1])
-            
+        for item in ResultIter(c):            
             rbSum.setdefault(timestamp, 0)
             rbSum[timestamp]+= item[0]
             
             wbSum.setdefault(timestamp, 0)
             wbSum[timestamp]+= item[1]
+            
+        for key in rbSum:
+            rbsMovingAverage.addValue(key, rbSum[key])
+
+        for key in wbSum:
+            wbsMovingAverage.addValue(key, wbSum[key])
+                
         # progressbar
         duration = (time.time() - starttime)
         fraction = (float(counter)/float(size))
@@ -123,16 +127,18 @@ if __name__ == '__main__':
 
                 
     plotrbs = []
+    plotrbsTims = []
     plotrb = []
-    rbs = rbsMovingAverage.getAveragesDict()
-    wbs = wbsMovingAverage.getAveragesDict()
-    for key in rbs:
-        plotrbs.append(rbs[key])
+    rbs = rbsMovingAverage.getAverage()
+    wbs = wbsMovingAverage.getAverage()
+    for item in rbs:
+        plotrbsTims.append(item[0])
+        plotrbs.append(item[1])
     for key in output:
         plotrb.append(rbSum[key[1]]/60)
         
         
-    plt.plot(rbs.keys(),plotrbs, rbSum.keys(), plotrb)
+    plt.plot(plotrbsTims,plotrbs, rbSum.keys(), plotrb)
     #plt.plot(plotrb)
     plt.show()
 
