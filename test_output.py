@@ -84,13 +84,13 @@ if __name__ == '__main__':
     ''')
     
     output = c.execute('''
-        SELECT * FROM timestamps ORDER BY time limit 100
+        SELECT * FROM timestamps ORDER BY time limit 10000
          ''').fetchall()
     first_last_timestamp = 0
     one_houer = 3600*8
     intervalls = []
-    rbsMovingAverage = MovingAverage(21)
-    wbsMovingAverage = MovingAverage(21)
+    rbsMovingAverage = MovingAverage(61)
+    wbsMovingAverage = MovingAverage(61)
     rbSum = {}
     wbSum = {}
     
@@ -108,11 +108,6 @@ if __name__ == '__main__':
             wbSum.setdefault(timestamp, 0)
             wbSum[timestamp]+= item[1]
             
-        for key in rbSum:
-            rbsMovingAverage.addValue(key, rbSum[key])
-
-        for key in wbSum:
-            wbsMovingAverage.addValue(key, wbSum[key])
                 
         # progressbar
         duration = (time.time() - starttime)
@@ -125,21 +120,30 @@ if __name__ == '__main__':
         counter+=1
         # progressbar end
 
+    for key in sorted(rbSum.keys()):
+        rbsMovingAverage.addValue(key, rbSum[key])
+
+    for key in sorted(wbSum.keys()):
+        wbsMovingAverage.addValue(key, wbSum[key])
+
                 
     plotrbs = []
     plotrbsTims = []
     plotrb = []
     rbs = rbsMovingAverage.getAverage()
     wbs = wbsMovingAverage.getAverage()
+    print len(rbs)
     for item in rbs:
         plotrbsTims.append(item[0])
         plotrbs.append(item[1])
-    for key in output:
-        plotrb.append(rbSum[key[1]]/60)
+    for key in sorted(rbSum.keys()):
+        plotrb.append(rbSum[key])
         
+
         
-    plt.plot(plotrbsTims,plotrbs, rbSum.keys(), plotrb)
-    #plt.plot(plotrb)
+    plt.plot(sorted(rbSum.keys()), plotrb, lw=0.1)
+    plt.plot(plotrbsTims,plotrbs, lw=3)
+    
     plt.show()
 
 #------------------------------------------------------------------------------
