@@ -89,8 +89,6 @@ if __name__ == '__main__':
     first_last_timestamp = 0
     one_houer = 3600*8
     intervalls = []
-    rbsMovingAverage = MovingAverage(61)
-    wbsMovingAverage = MovingAverage(61)
     rbSum = {}
     wbSum = {}
     
@@ -101,6 +99,8 @@ if __name__ == '__main__':
         timestampID = DBtimestamp[0]
         timestamp = DBtimestamp[1]
         c.execute('''SELECT rb, wb FROM samples_ost WHERE time = ?''', (timestampID,))
+        tmpSumRB = 0
+        tmpSumWB = 0
         if timestamp not in rbSum: 
           rbSum[timestamp]=0
           wbSum[timestamp]=0
@@ -111,10 +111,13 @@ if __name__ == '__main__':
           else:
             for item in res:
                 #rbSum.setdefault(timestamp, 0)
+                tmpSumRB += item[0]
+                tmpSumWB += item[1]
+                #rbSum[timestamp]+= item[0]
+                #wbSum[timestamp]+= item[1]
 
-                rbSum[timestamp]+= item[0]
-                wbSum[timestamp]+= item[1]
-            
+        rbSum[timestamp]+= tmpSumRB
+        wbSum[timestamp]+= tmpSumWB            
                 
         duration = (time.time() - starttime)
         fraction = (float(counter)/float(size))
@@ -125,6 +128,9 @@ if __name__ == '__main__':
         sys.stdout.flush()
         counter+=1
         # progressbar end
+
+    rbsMovingAverage = MovingAverage(61)
+    wbsMovingAverage = MovingAverage(61)
 
     for key in sorted(rbSum.keys()):
         rbsMovingAverage.addValue(key, rbSum[key])
