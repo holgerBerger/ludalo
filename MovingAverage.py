@@ -35,7 +35,6 @@ class MovingAverage(object):
         self.pointMin = 0
         self.pointMax = 0
         self.pointMid = 0
-        #self.dfd = {}
         self.average = []
         
     def getAverage(self):
