@@ -94,6 +94,7 @@ while True:
     threads[srv].join()
 
   e=time.time()
+  first = False   # set this here, to have a good chance to get it right during sleep 
   print "%3.3fs for sample collection," % (e-sample),
   minT = ("", 10000)
   maxT = ("", 0)
@@ -104,4 +105,3 @@ while True:
     avg += float(v)
   print "transfer times were max: %s %3.3fs" % maxT,"- min: %s %3.3fs"% minT, "- avg: %3.3fs" % (avg/len(timings))
   time.sleep(SLEEP-((e-sample)%SLEEP))
-  first = False

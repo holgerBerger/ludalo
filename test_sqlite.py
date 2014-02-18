@@ -40,7 +40,7 @@ import sqlite3
 from SQLiteObject import SQLiteObject
 import curses
 
-class logfile:
+class Logfile:
 
   def __init__(self, filename, hostfile=None, dbFile='sqlite_new.db'):
 
@@ -170,9 +170,12 @@ def cleanup():
 
 if __name__ == "__main__":
 
-  curses.setupterm()
-  print curses.tigetstr("civis"),
-  atexit.register(cleanup)
+  try:
+    curses.setupterm()
+    print curses.tigetstr("civis"),
+    atexit.register(cleanup)
+  except:
+    pass
 
   if len(sys.argv)<=2 or sys.argv[1] in ["-h", "--help"]:
     print "usage: %s hostmapping logfile ..." % sys.argv[0]
@@ -181,7 +184,6 @@ if __name__ == "__main__":
   hostfile = sys.argv[1]
 
   for filename in sys.argv[2:]:
-    o = logfile(filename, hostfile)
+    o = Logfile(filename, hostfile)
     o.read()
-    
-  o.myDB.closeConnection()
+    o.myDB.closeConnection()
