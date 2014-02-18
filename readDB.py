@@ -23,7 +23,7 @@ class readDB(object):
         job_list = self.c.execute(''' 
             select nodelist.nid, jobs.jobid, jobs.start, jobs.end 
             from jobs, nodelist 
-            where nodelist.job = jobs.jobid 
+            where nodelist.job = jobs.id 
             and nodelist.nid = ? ''',(nidID,)).fetchall()
         return job_list
         
@@ -109,6 +109,7 @@ if __name__ == '__main__':
 #------------------------------------------------------------------------------
     db = readDB('sqlite_new.db')
     p1 = db.getAll_Nid_IDs_Between((1392713493-(3600)), 1392713493)
+    print p1
 
     #p2 = len(db.getAll_Nid_IDs_Between((1392713493-(3600*12)), 1392713493, 1000000))
     #p3 = len(db.getAll_Nid_IDs_Between((1392713493-(3600*12)), 1392713493, 5000000000))
