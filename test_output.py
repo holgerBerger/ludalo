@@ -84,13 +84,13 @@ if __name__ == '__main__':
     ''')
     
     output = c.execute('''
-        SELECT * FROM timestamps ORDER BY time limit 10000
+        SELECT * FROM timestamps ORDER BY time
          ''').fetchall()
     first_last_timestamp = 0
     one_houer = 3600*8
-    rbSum = {}
-    wbSum = {}
-    
+    rbSum = {} #dict read
+    wbSum = {} #dict write
+    cpSum = {} #dict complete
     starttime = time.time()
     size = len(output)
     counter=1
@@ -100,23 +100,25 @@ if __name__ == '__main__':
         c.execute('''SELECT rb, wb FROM samples_ost WHERE time = ?''', (timestampID,))
         tmpSumRB = 0
         tmpSumWB = 0
+        tmpSumCP = 0
         if timestamp not in rbSum: 
           rbSum[timestamp]=0
           wbSum[timestamp]=0
+          cpSum[timestamp]=0
         while True:
           res = c.fetchmany(500)
           if not res: 
             break
           else:
             for item in res:
-                #rbSum.setdefault(timestamp, 0)
-                tmpSumRB += item[0]
-                tmpSumWB += item[1]
-                #rbSum[timestamp]+= item[0]
-                #wbSum[timestamp]+= item[1]
+                tmpSumRB -= ((item[0]/60)/1000000)
+                tmpSumWB += ((item[1]/60)/1000000)
+                tmpSumCP = tmpSumCP + (((item[1] +item[0])/60)/1000000)
+
 
         rbSum[timestamp]+= tmpSumRB
-        wbSum[timestamp]+= tmpSumWB            
+        wbSum[timestamp]+= tmpSumWB 
+        cpSum[timestamp]+= tmpSumCP           
                 
         duration = (time.time() - starttime)
         fraction = (float(counter)/float(size))
@@ -128,28 +130,41 @@ if __name__ == '__main__':
         counter+=1
         # progressbar end
 
-    rbsMovingAverage = MovingAverage(61)
-    wbsMovingAverage = MovingAverage(61)
+    rbsMovingAverage = MovingAverage(21)
+    wbsMovingAverage = MovingAverage(21)
+    cpMovingAverage = MovingAverage(21)
 
     for key in sorted(rbSum.keys()):
         rbsMovingAverage.addValue(key, rbSum[key])
 
     for key in sorted(wbSum.keys()):
         wbsMovingAverage.addValue(key, wbSum[key])
+    
+    for key in sorted(cpSum.keys()):
+        cpMovingAverage.addValue(key, cpSum[key])
 
                 
     plotrbs = []
+    plotwbs = []
     plotrbsTims = []
+    plotwbsTims = []
     plotrb = []
+    plotwb = []
     rbs = rbsMovingAverage.getAverage()
     wbs = wbsMovingAverage.getAverage()
-    print len(rbs)
+    cps = cpMovingAverage.getAverage()
+    
     for item in rbs:
         plotrbsTims.append(item[0])
         plotrbs.append(item[1])
     for key in sorted(rbSum.keys()):
         plotrb.append(rbSum[key])
-        
+
+    for item in wbs:
+        plotwbsTims.append(item[0])
+        plotwbs.append(item[1])
+    for key in sorted(wbSum.keys()):
+        plotwb.append(wbSum[key])        
 
 #------------------------------------------------------------------------------
     time_end = time.time()
@@ -158,7 +173,9 @@ if __name__ == '__main__':
 #-----------------------------------------------------------------------------
         
     plt.plot(sorted(rbSum.keys()), plotrb, lw=0.1)
+    plt.plot(sorted(wbSum.keys()), plotwb, lw=0.1)
     plt.plot(plotrbsTims,plotrbs, lw=3)
+    plt.plot(plotwbsTims,plotwbs, lw=3)
     
     plt.show()
 
