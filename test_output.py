@@ -97,6 +97,7 @@ if __name__ == '__main__':
     for DBtimestamp in output:
         timestampID = DBtimestamp[0]
         timestamp = DBtimestamp[1]
+        #c.execute('''SELECT rb, wb FROM samples_ost WHERE time = ?''', (timestampID,)) <- slow as hell :-)
         c.execute('''SELECT rb, wb FROM ost_values WHERE time = ?''', (timestampID,))
         tmpSumRB = 0
         tmpSumWB = 0
