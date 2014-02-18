@@ -97,7 +97,7 @@ if __name__ == '__main__':
     for DBtimestamp in output:
         timestampID = DBtimestamp[0]
         timestamp = DBtimestamp[1]
-        #c.execute('''SELECT rb, wb FROM samples_ost WHERE time = ?''', (timestampID,)) <- slow as hell :-)
+        #c.execute('''SELECT rb, wb FROM samples_ost WHERE time = ?''', (timestampID,)) # <- slow as hell :-)
         c.execute('''SELECT rb, wb FROM ost_values WHERE time = ?''', (timestampID,))
         tmpSumRB = 0
         tmpSumWB = 0
@@ -121,14 +121,15 @@ if __name__ == '__main__':
         wbSum[timestamp]+= tmpSumWB 
         cpSum[timestamp]+= tmpSumCP           
                 
-        duration = (time.time() - starttime)
-        fraction = (float(counter)/float(size))
-        endtime = duration * (1.0/ fraction) - duration
-        printString = str("\rextracted %9d timestamps [%s] ETA = %s"
-                         %(counter,"|"*int(fraction*20.0)+"\\|/-"[counter%4]+"-"*(19-int(fraction*20.0)), eta(endtime)))
-        print printString,
-        sys.stdout.flush()
-        counter+=1
+	if counter%10 == 0:
+		duration = (time.time() - starttime)
+		fraction = (float(counter)/float(size))
+		endtime = duration * (1.0/ fraction) - duration
+		printString = str("\rextracted %9d timestamps [%s] ETA = %s"
+				 %(counter,"|"*int(fraction*20.0)+"\\|/-"[counter%4]+"-"*(19-int(fraction*20.0)), eta(endtime)))
+		print printString,
+		sys.stdout.flush()
+	counter+=1
         # progressbar end
 
     rbsMovingAverage = MovingAverage(21)

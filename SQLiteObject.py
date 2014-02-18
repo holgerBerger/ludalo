@@ -206,7 +206,7 @@ class SQLiteObject(object):
 #------------------------------------------------------------------------------
 
     def insert_ost_global(self, server, tup, timestamp):
-        if not server == 'hmds1':
+        if self.servertype[server] == 'ost':
             tup = tup.split(',')
             insert_string = []
             insert_string.append(self.timestamps[timestamp])

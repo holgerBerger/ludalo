@@ -27,6 +27,7 @@ def create_tables(c):
                                   nid integer
                                   )''')
   c.execute('''CREATE INDEX IF NOT EXISTS jobid_index ON jobs (jobid,start,end,owner)''')
+  c.execute('''CREATE INDEX IF NOT EXISTS nodelist_index ON nodelist (job,nid)''')
 
 
 def insert_job(c, jobid, start, end, owner, nids, cmd):
@@ -43,6 +44,7 @@ def insert_job(c, jobid, start, end, owner, nids, cmd):
       c.execute('''INSERT INTO users VALUES (NULL,?)''',(owner,))
       userid=c.lastrowid
     c.execute('''INSERT INTO jobs VALUES (NULL,?,?,?,?,?,?)''',(jobid,start,end,userid,nids,cmd))
+    jobkey = c.lastrowid
     # nodes - expand cray name compression with ranges 
     nl=[]
     for node in nids.split(','):
@@ -64,5 +66,5 @@ def insert_job(c, jobid, start, end, owner, nids, cmd):
       else:
         c.execute('''INSERT INTO nids VALUES (NULL,?)''',(node,))
         nodeid=c.lastrowid
-      c.execute('''INSERT INTO nodelist VALUES (NULL,?,?)''',(jobid,nodeid))
+      c.execute('''INSERT INTO nodelist VALUES (NULL,?,?)''',(jobkey,nodeid))
         
