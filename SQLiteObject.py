@@ -160,6 +160,8 @@ class SQLiteObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             ost_values (
                                 id integer primary key asc,
+                                time integer, 
+                                source integer,
                                 rio integer,
                                 rb integer,
                                 wio integer,
@@ -173,7 +175,8 @@ class SQLiteObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS 
                             samples_ost (
                                 id integer primary key asc, 
-                                time integer, source integer, 
+                                time integer, 
+                                source integer, 
                                 nid integer, 
                                 rio integer, 
                                 rb bigint, 
@@ -192,11 +195,28 @@ class SQLiteObject(object):
                             samples_ost_index ON samples_ost (time, rb, wb, rio, wio)''')
 
         self.c.execute('''CREATE INDEX IF NOT EXISTS 
+                            ost_values_index ON ost_values (time)''')
+
+        self.c.execute('''CREATE INDEX IF NOT EXISTS 
                             samples_mdt_time ON samples_mdt (time)''')
 
         self.c.execute('''CREATE INDEX IF NOT EXISTS 
                             time_index ON timestamps (time)''')
 
+#------------------------------------------------------------------------------
+
+    def insert_ost_global(self, server, tup, timestamp):
+        if not server == 'hmds1':
+            tup = tup.split(',')
+            insert_string = []
+            insert_string.append(self.timestamps[timestamp])
+            insert_string.append(server)
+            insert_string.append(tup[0]) # rio
+            insert_string.append(tup[1]) # rb
+            insert_string.append(tup[2]) # wio
+            insert_string.append(tup[3]) # wb
+            self.c.execute(''' INSERT INTO ost_values VALUES (NULL, ?,?,?, ?,?,?)
+                    ''', insert_string)
 #------------------------------------------------------------------------------
 
     def insert_timestamp(self, timestamp):
@@ -240,8 +260,10 @@ class SQLiteObject(object):
     def getNidID(self, server, i):
         return self.globalnidmap[self.per_server_nids[server][i]]
 #------------------------------------------------------------------------------
+
     def insert_ost_samples(self, il_ost):
         self.c.executemany('''INSERT INTO samples_ost VALUES (NULL,?,?,?,?,?,?,?)''',il_ost)
+#------------------------------------------------------------------------------
 
     def insert_mdt_samples(self, il_mdt):
         self.c.executemany('''INSERT INTO samples_mdt VALUES (NULL,?,?,?,?)''',il_mdt)

@@ -71,10 +71,12 @@ class logfile:
       sp = line[:-1].split(";")  # ignore the line break at the end 
       if line.startswith("#"): # this is a head line
         server = sp[1]
+        timestamp = sp[2] 
         stype = sp[3] # mdt or ost
 
         # add server and type to the db
         self.myDB.insert_server(server, stype)
+
 
         # add nids to the database 
         for nid in sp[5:]:
@@ -85,9 +87,13 @@ class logfile:
         server = sp[0]
         timestamp = sp[1]
         source = sp[2]
+        value_tupel = sp[3] # values for ost
 
         self.myDB.insert_timestamp(timestamp) 
         self.myDB.insert_source(source)
+        
+        # add ost global
+        self.insert_ost_global(server, value_tupel, timestamp)
 
         self.insert_nids(server, timestamp, source, sp[4:])
         
@@ -125,6 +131,8 @@ class logfile:
     print "read",len(self.myDB.hostfilemap),"host mappings"
     f.close()
 #-------------------------------------------------------------------------------
+  def insert_ost_global(self, server, tuple, timestamp):
+      self.myDB.insert_ost_global(server, tuple, timestamp)
 
   def insert_nid_server(self, server, one_nid):
       self.myDB.add_nid_server(server, one_nid)
