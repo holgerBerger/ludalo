@@ -39,6 +39,7 @@ import time
 import sqlite3
 from SQLiteObject import SQLiteObject
 import curses
+import hashlib
 
 class Logfile:
 
@@ -69,6 +70,7 @@ class Logfile:
     #1.0;hoss3;time;ost;rio,rb,wio,wb;
     for line in f:
       sp = line[:-1].split(";")  # ignore the line break at the end 
+
       if line.startswith("#"): # this is a head line
         server = sp[1]
         timestamp = sp[2] 
@@ -84,6 +86,13 @@ class Logfile:
 
       else:
 #--------------------- if not headline -----------------------------------------
+        # form a hash digest of the line and check if line is already in database,
+        # if so, do not add line again to avoid bloat and wrong results for sums over data
+        hexdigest = hashlib.sha224(line).hexdigest()
+        if self.myDB.has_hash(hexdigest):
+          #print "line collision"
+          continue
+
         server = sp[0]
         timestamp = sp[1]
         source = sp[2]

@@ -190,7 +190,10 @@ class SQLiteObject(object):
                                   source integer, 
                                   nid integer, 
                                   reqs integer);''')
-        
+
+        self.c.execute('''CREATE TABLE IF NOT EXISTS 
+                            hashes (hash string primary key);''')
+
         self.c.execute('''CREATE INDEX IF NOT EXISTS 
                             samples_ost_index ON samples_ost (time, rb, wb, rio, wio)''')
 
@@ -203,6 +206,15 @@ class SQLiteObject(object):
         self.c.execute('''CREATE INDEX IF NOT EXISTS 
                             time_index ON timestamps (time)''')
 
+#------------------------------------------------------------------------------
+    def has_hash(self, hexdigest):
+        self.c.execute('''SELECT * FROM hashes WHERE hash=?''', (hexdigest,))
+        r = self.c.fetchall()
+        if r: 
+          return True
+        else:
+          self.c.execute(''' INSERT INTO hashes VALUES (?)''', (hexdigest,))
+          return False
 #------------------------------------------------------------------------------
 
     def insert_ost_global(self, server, tup, timestamp):
