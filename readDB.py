@@ -18,16 +18,41 @@ class readDB(object):
         self.c = self.conn.cursor()
 #------------------------------------------------------------------------------
 
+    def get_All_Users_r_w(self, houers, rw_in_MB=1):
+        timestamp_end = time.time()
+        timestamp_start = timestamp_end - (houers*60*60)
+        
+        volume = rw_in_MB * 1000 * 1000
+        
+        p1 = db.getAll_Nid_IDs_Between(timestamp_start, timestamp_end, volume)
+        userList = set()
+        for p in p1:
+            tmp = db.getAll_Jobs_to_Nid_ID_Between(timestamp_start, timestamp_end, p)
+            if tmp:
+                userList.add(db.get_User_To_Job(tmp[0][2])[0][0])
+        return userList
+#------------------------------------------------------------------------------
+
+    def get_User_To_Job(self, jobID):
+        user = self.c.execute(''' 
+                       select users.username 
+                       from users, jobs 
+                       where users.id = jobs.owner 
+                       and jobid = ? ''',(jobID,)).fetchall()
+        return user
+        
+#------------------------------------------------------------------------------
+
     def getAll_Jobs_to_Nid_ID_Between(self, timeStamp_start, timeStamp_end, nidID):
         
         job_list = self.c.execute(''' 
-            select nodelist.nid, jobs.jobid, jobs.start, jobs.end 
+            select owner, nodelist.nid, jobs.jobid, jobs.start, jobs.end 
             from jobs, nodelist 
             where nodelist.job = jobs.id 
-            and nodelist.nid = ? ''',(nidID,)).fetchall()
+            and nodelist.nid = ? 
+            and jobs.end > ?
+            and jobs.start < ?''',(nidID, timeStamp_start, timeStamp_end)).fetchall()
         return job_list
-        
-        
 #------------------------------------------------------------------------------
         
     def getAll_Nid_IDs_Between(self, timeStamp_start, timeStamp_end, threshold_b = 0):
@@ -87,7 +112,7 @@ class readDB(object):
 
         collReturn = collReturn | tmp
 
-        return collReturn
+        return list(collReturn)
     
     def getTimeStamp(year, month, day, houer, minute):
         ''' convert from year day month to time stamp '''
@@ -108,17 +133,9 @@ if __name__ == '__main__':
     time_start = time.time()
 #------------------------------------------------------------------------------
     db = readDB('sqlite_new.db')
-    p1 = db.getAll_Nid_IDs_Between((1392713493-(3600)), 1392713493)
-    print p1
-
-    #p2 = len(db.getAll_Nid_IDs_Between((1392713493-(3600*12)), 1392713493, 1000000))
-    #p3 = len(db.getAll_Nid_IDs_Between((1392713493-(3600*12)), 1392713493, 5000000000))
-    #print p1,p2,p3
-    p1 = list(p1) # ein nid
-    for p in p1:
-        tmp = db.getAll_Jobs_to_Nid_ID_Between(0, 0, p)
-        if tmp:
-            print tmp
+    l = db.get_All_Users_r_w(24*10, 100) # all user how have ritten more then 100mb in the last 10 days
+    for user in l:
+        print user
 
 #------------------------------------------------------------------------------
     time_end = time.time()
