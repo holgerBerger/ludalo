@@ -9,8 +9,8 @@ import time,atexit,curses,sys
 import datetime
 import sqlite3
 import matplotlib.pyplot as plt
-
-from MovingAverage import MovingAverage
+from matplotlib.dates import YearLocator, MonthLocator, DateFormatter
+import plotGraph
 
 
 class Intervall:
@@ -131,40 +131,13 @@ if __name__ == '__main__':
 		sys.stdout.flush()
 	counter+=1
         # progressbar end
-
-    rbsMovingAverage = MovingAverage(21)
-    wbsMovingAverage = MovingAverage(21)
-    cpMovingAverage = MovingAverage(21)
-
-    for key in sorted(rbSum.keys()):
-        rbsMovingAverage.addValue(key, rbSum[key])
-
-    for key in sorted(wbSum.keys()):
-        wbsMovingAverage.addValue(key, wbSum[key])
-    
-    for key in sorted(cpSum.keys()):
-        cpMovingAverage.addValue(key, cpSum[key])
-
-                
-    plotrbs = []
-    plotwbs = []
-    plotrbsTims = []
-    plotwbsTims = []
+         
     plotrb = []
     plotwb = []
-    rbs = rbsMovingAverage.getAverage()
-    wbs = wbsMovingAverage.getAverage()
-    cps = cpMovingAverage.getAverage()
-    
-    for item in rbs:
-        plotrbsTims.append(item[0])
-        plotrbs.append(item[1])
+
     for key in sorted(rbSum.keys()):
         plotrb.append(rbSum[key])
 
-    for item in wbs:
-        plotwbsTims.append(item[0])
-        plotwbs.append(item[1])
     for key in sorted(wbSum.keys()):
         plotwb.append(wbSum[key])        
 
@@ -173,14 +146,11 @@ if __name__ == '__main__':
     print "end with no errors in: " + str(time_end - time_start)
     
 #-----------------------------------------------------------------------------
-        
-    plt.plot(sorted(rbSum.keys()), plotrb, lw=0.1)
-    plt.plot(sorted(wbSum.keys()), plotwb, lw=0.1)
-    plt.plot(plotrbsTims,plotrbs, lw=3)
-    plt.plot(plotwbsTims,plotwbs, lw=3)
-    
-    plt.show()
-
-
+    list_of_list = []
+    list_of_list.append(sorted(rbSum.keys()))
+    list_of_list.append(plotrb)
+    list_of_list.append(sorted(wbSum.keys()))
+    list_of_list.append(plotwb)
 
     
+    plotGraph.plotGraph(list_of_list, 'ich bin ein Test!')
