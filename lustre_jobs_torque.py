@@ -6,8 +6,8 @@
 
 import sys,atexit,curses
 import os.path
-import sqlite3
-import lustre_jobs_sqlite
+#import lustre_jobs_MySQL as lustre_jobs_db
+import lustre_jobs_sqlite as lustre_jobs_db
 
 def cleanup():
   print curses.tigetstr("cnorm")
@@ -25,10 +25,9 @@ for filename in sys.argv[1:]:
   filesize = os.path.getsize(filename)
   counter=0
 
-  conn = sqlite3.connect('sqlite_new.db')
-  cursor = conn.cursor()
+  db = lustre_jobs_db.DB('sqlite_new.db')
 
-  lustre_jobs_sqlite.create_tables(cursor)
+  db.create_tables()
 
   for l in f:
     sp = l[:-1].split(";")
@@ -48,7 +47,7 @@ for filename in sys.argv[1:]:
             if n not in l:
               l.append(n)
           hosts=",".join(l)
-          lustre_jobs_sqlite.insert_job(cursor, jobid, start, end, owner, hosts, "")
+          db.insert_job(jobid, start, end, owner, hosts, "")
           counter+=1
           if counter%10 == 0:
             print "read %d records / %d%% from %s\r"%(counter,int(float(f.tell())/float(filesize)*100.0), filename),
@@ -56,5 +55,4 @@ for filename in sys.argv[1:]:
   print "read %d records / %d%% from %s"%(counter,int(float(f.tell())/float(filesize)*100.0), filename)
   f.close()
   
-conn.commit()
-conn.close()
+  db.close()

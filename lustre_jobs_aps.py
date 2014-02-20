@@ -17,9 +17,8 @@
 import sys,atexit,curses
 import os.path
 import time
-import sqlite3
 
-import lustre_jobs_sqlite
+import lustre_jobs_sqlite as lustre_jobs_db
 
 def read_pw(filename, usermap):
   f = open(filename, "r")
@@ -53,10 +52,9 @@ if __name__ == "__main__":
   usermap = {}
   read_pw(sys.argv[1], usermap)
 
-  conn = sqlite3.connect('sqlite_new.db')
-  cursor = conn.cursor()
+  db = lustre_jobs_db.DB('sqlite_new.db')
 
-  lustre_jobs_sqlite.create_tables(cursor)
+  db.create_tables()
 
   restojob = {}   # map resid to job
   jobs = {}
@@ -103,7 +101,7 @@ if __name__ == "__main__":
           if not 'start' in jobs[restojob[resid]]:
             print "job not placed",resid," "*40
           else:
-            lustre_jobs_sqlite.insert_job(cursor, **jobs[restojob[resid]])
+            db.insert_job(**jobs[restojob[resid]])
           counter+=1
           if counter%10 == 0:
             print "read %d records / %d%% from %s\r"%(counter,int(float(f.tell())/float(filesize)*100.0), filename),
@@ -111,5 +109,4 @@ if __name__ == "__main__":
     print "read %d records / %d%% from %s"%(counter,int(float(f.tell())/float(filesize)*100.0), filename)
     f.close()
 
-  conn.commit()
-  conn.close()
+  db.close()
