@@ -21,9 +21,9 @@ class DB:
 
   def create_tables(self):
     self.c.execute('''CREATE TABLE IF NOT EXISTS jobs (id serial primary key, 
-                                    jobid text, 
-                                    start integer, 
-                                    end integer, 
+                                    jobid varchar(30), 
+                                    starttime integer, 
+                                    endtime integer, 
                                     owner integer,
                                     nodelist text,
                                     cmd text
@@ -35,14 +35,18 @@ class DB:
                                     job integer,
                                     nid integer
                                     )''')
-    self.c.execute('''CREATE INDEX jobid_index ON jobs (jobid,start,end,owner)''')
-    self.c.execute('''CREATE INDEX nodelist_index ON nodelist (job,nid)''')
+    try:
+      self.c.execute('''CREATE INDEX jobid_index ON jobs (jobid,starttime,endtime,owner)''')
+      self.c.execute('''CREATE INDEX nodelist_index ON nodelist (job,nid)''')
+    except:
+      # damn postgres is strange
+      self.conn.rollback()
 
 
   def insert_job(self, jobid, start, end, owner, nids, cmd):
     #print jobid, start, end, owner, nids, cmd
     # check if job is already in DB
-    self.c.execute('''SELECT jobid FROM jobs WHERE jobid = %s''',(jobid,))
+    self.c.execute("""SELECT jobid FROM jobs WHERE jobid = %s;""",(jobid,))
     if not self.c.fetchone():
       # check if user is already in DB
       self.c.execute('''SELECT id FROM users WHERE users.username = %s''',(owner,))

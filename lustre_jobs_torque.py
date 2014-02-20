@@ -7,6 +7,7 @@
 import sys,atexit,curses
 import os.path,time
 #import lustre_jobs_MySQL as lustre_jobs_db
+#import lustre_jobs_PSQL as lustre_jobs_db
 import lustre_jobs_sqlite as lustre_jobs_db
 
 def cleanup():
