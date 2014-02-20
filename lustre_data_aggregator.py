@@ -28,6 +28,8 @@ iolock = Lock()
 
 first = True
 timings = {}
+bws = {}
+reqs = {}
 
 def signalhandler(signum, frame):
   global out,first,iolock
@@ -41,7 +43,9 @@ def signalhandler(signum, frame):
     first=True
 
 def worker(srv):
-    global oldnids,first,timings
+    global oldnids,first,timings,bws,reqs
+
+
     t1 = time.time()
     try:
       r=rpcs[srv].get_sample()
@@ -63,7 +67,8 @@ def worker(srv):
     oldnids[srv] = nids[srv]
     for ost in r[1:]:
       l = []
-      for i in ost.split(";"):
+      sp = ost.split(";") 
+      for i in sp:
         if type(i) == list:
           l.append(",".join(map(str,i)))
         else:
@@ -71,7 +76,13 @@ def worker(srv):
       iolock.acquire()
       out.write(hostnames[srv]+";"+str(int(sample))+";"+";".join(map(str,l))+"\n")
       iolock.release()
-
+      vs = sp[1].split(',')
+      if len(vs)==1:
+        reqs[srv]= reqs.setdefault(srv, 0) + int(sp[1])
+      else:
+        (wb,rb) = bws.setdefault(srv, (0,0))
+        bws[srv]=(wb+int(vs[1]) , rb+int(vs[3]))
+      
 
 socket.setdefaulttimeout(TIMEOUT)
 
@@ -103,5 +114,11 @@ while True:
     if v < minT[1]: minT = (s,v)
     if v > maxT[1]: maxT = (s,v)
     avg += float(v)
-  print "transfer times were max: %s %3.3fs" % maxT,"- min: %s %3.3fs"% minT, "- avg: %3.3fs" % (avg/len(timings))
+  print "transfer times - max: %s %3.3fs" % maxT,"- min: %s %3.3fs"% minT, "- avg: %3.3fs" % (avg/len(timings))
+  for mdt in reqs:
+    print "  metadata requests  %s: %6.1f/s" % (mdt,reqs[mdt]/float(SLEEP))
+  for oss in bws:
+    print "  oss data bandwidth %s: read %7.1f MB/s - write %7.1f MB/s" % (
+                                 oss, bws[oss][0]/(1024.0*1024.0*float(SLEEP)), 
+                                 bws[oss][1]/(1024.0*1024.0*float(SLEEP)))
   time.sleep(SLEEP-((e-sample)%SLEEP))
