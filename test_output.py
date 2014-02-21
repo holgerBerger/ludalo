@@ -84,7 +84,7 @@ if __name__ == '__main__':
     ''')
     
     output = c.execute('''
-        SELECT * FROM timestamps ORDER BY time
+        SELECT * FROM timestamps ORDER BY time limit 100
          ''').fetchall()
     first_last_timestamp = 0
     one_houer = 3600*8

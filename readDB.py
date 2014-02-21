@@ -16,9 +16,50 @@ class readDB(object):
         self.dbFile = dbFile
         self.conn = sqlite3.connect(dbFile)
         self.c = self.conn.cursor()
+
+#------------------------------------------------------------------------------
+    def get_sum_nids_to_job(self, jobID):
+        nids = self.get_nid_to_Job(jobID)
+        start_end = self.get_job_star_end(jobID)
+        start = start_end[0] 
+        end = start_end[1]
+        print jobID, start-end
+        if start-end < 120:
+            return False
+        else:
+            print self.getAll_Nid_IDs_Between(start, end)
+        
+
+    def get_job_star_end(self, jobID):
+        start_end = self.c.execute(''' 
+                        select start, end 
+                        from jobs
+                        where id = ? ''',(jobID,)).fetchall()
+        if start_end:
+            return start_end[0]
+        else: return [0,0]
+#------------------------------------------------------------------------------
+    def get_nid_to_Job(self, jobID):
+        nids = self.c.execute('''
+                        select nids.nid 
+                        From jobs, nids, nodelist 
+                        where nids.id = nodelist.nid 
+                        and jobs.id = nodelist.job 
+                        and jobs.id = ?;
+                        ''', (jobID,)).fetchall()
+        nidReturn = []
+        for nid in nids:
+            nidReturn.append(nid[0])
+        
+        return nidReturn
+
 #------------------------------------------------------------------------------
 
     def get_All_Users_r_w(self, houers, rw_in_MB=1):
+        ''' give a user lists back with all users witch read and write is 
+            grader then rw_in_MB with in the last houers eg.
+            get_All_Users_r_w(12, rw_in_MB=100) -> all users witch io is grader
+            then 100MB in the last 12 houers. '''
         timestamp_end = time.time()
         timestamp_start = timestamp_end - (houers*60*60)
         
@@ -64,7 +105,7 @@ class readDB(object):
                             order by time desc 
                             limit 1
                             ''', (timeStamp_start,timeStamp_end)).fetchone()
-
+        print timestamp
         timeStamp_end_id = timestamp[0]
         
         timestamp = self.c.execute(''' SELECT * FROM timestamps 
@@ -133,9 +174,12 @@ if __name__ == '__main__':
     time_start = time.time()
 #------------------------------------------------------------------------------
     db = readDB('sqlite_new.db')
-    l = db.get_All_Users_r_w(24*10, 100) # all user how have ritten more then 100mb in the last 10 days
-    for user in l:
-        print user
+    for i in range(1,40):
+        db.get_sum_nids_to_job(i)
+    #print db.get_nid_to_Job(1)
+    #l = db.get_All_Users_r_w(24*10, 100) # all user how have ritten more then 100mb in the last 10 days
+    #for user in l:
+    #    print user
 
 #------------------------------------------------------------------------------
     time_end = time.time()
