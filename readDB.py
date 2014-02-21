@@ -16,9 +16,63 @@ class readDB(object):
         self.dbFile = dbFile
         self.conn = sqlite3.connect(dbFile)
         self.c = self.conn.cursor()
+
+#------------------------------------------------------------------------------
+    def get_sum_nids_to_job(self, jobID):
+        nids = self.get_nid_to_Job(jobID)
+        start_end = self.get_job_star_end(jobID)
+        if start_end:
+            start = start_end[0] 
+            end = start_end[1]
+            if not (end-start < 120):
+                print jobID,end-start,start,end, self.getAll_Nid_IDs_Between(start, end)
+            else: return None
+        else: return None
+
+    def get_job_star_end(self, jobID):
+        start_end = self.c.execute(''' 
+                        select start, end 
+                        from jobs
+                        where id = ? ''',(jobID,)).fetchall()
+        samples_max = self.c.execute(''' 
+                        select time from timestamps 
+                        order by time desc 
+                        limit 1 ''').fetchall()
+        samples_min = self.c.execute(''' 
+                        select time from timestamps 
+                        order by time 
+                        limit 1 ''').fetchall()
+                        
+        # out of sample range
+        if not (start_end[0][0] < samples_min[0][0] or start_end[0][1] >  samples_max[0][0]):
+            if start_end:
+                return start_end[0]
+            else: return None
+        else: return None
+        
+
+#------------------------------------------------------------------------------
+    def get_nid_to_Job(self, jobID):
+        nids = self.c.execute('''
+                        select nids.nid 
+                        From jobs, nids, nodelist 
+                        where nids.id = nodelist.nid 
+                        and jobs.id = nodelist.job 
+                        and jobs.id = ?;
+                        ''', (jobID,)).fetchall()
+        nidReturn = []
+        for nid in nids:
+            nidReturn.append(nid[0])
+        
+        return nidReturn
+
 #------------------------------------------------------------------------------
 
     def get_All_Users_r_w(self, houers, rw_in_MB=1):
+        ''' give a user lists back with all users witch read and write is 
+            grader then rw_in_MB with in the last houers eg.
+            get_All_Users_r_w(12, rw_in_MB=100) -> all users witch io is grader
+            then 100MB in the last 12 houers. '''
         timestamp_end = time.time()
         timestamp_start = timestamp_end - (houers*60*60)
         
@@ -54,66 +108,74 @@ class readDB(object):
             and jobs.start < ?''',(nidID, timeStamp_start, timeStamp_end)).fetchall()
         return job_list
 #------------------------------------------------------------------------------
-        
-    def getAll_Nid_IDs_Between(self, timeStamp_start, timeStamp_end, threshold_b = 0):
-        ''' get all nids between two timestamps  if thershold only nids with
-            more rb or wb between this timestamps'''
-        
-        timestamp = self.c.execute(''' SELECT * FROM timestamps 
+    def get_hi_lo_TimestampsID_Between(self,timeStamp_start,timeStamp_end):
+        t_end = self.c.execute(''' SELECT * FROM timestamps 
                             WHERE TIME BETWEEN ? AND ? 
                             order by time desc 
                             limit 1
                             ''', (timeStamp_start,timeStamp_end)).fetchone()
 
-        timeStamp_end_id = timestamp[0]
-        
-        timestamp = self.c.execute(''' SELECT * FROM timestamps 
+        t_start = self.c.execute(''' SELECT * FROM timestamps 
                             WHERE TIME BETWEEN ? AND ? 
-                            order by time 
+                            order by time  
                             limit 1
                             ''', (timeStamp_start,timeStamp_end)).fetchone()
-
-        timeStamp_start_id = timestamp[0]
+                            
+        if not t_start and not t_end:
+            return None
+        else:
+            return (t_start[0], t_end[0])
         
-        c = self.c.execute(''' SELECT nid, rb, wb FROM samples_ost 
-                            WHERE TIME BETWEEN ? AND ?
-                            ''', (timeStamp_start_id,timeStamp_end_id)).fetchall()
-
-        nidDictrb = {}
-        nidDictwb = {}
-        for row in c:
-            nid = row[0]
-            rb = row[1]
-            wb = row[2]
-
-            if nid not in nidDictrb:
-                nidDictrb[nid] = 0
-
-            if nid not in nidDictwb:
-                nidDictwb[nid] = 0
-            
-            nidDictrb[nid] += rb
-            nidDictwb[nid] += wb
+    def getAll_Nid_IDs_Between(self, timeStamp_start, timeStamp_end, threshold_b = 0):
+        ''' get all nids between two timestamps  if thershold only nids with
+            more rb or wb between this timestamps'''
         
-        for key in nidDictrb.keys():
-            if nidDictrb[key] < threshold_b:
-                del(nidDictrb[key])
+        timestamp = self.get_hi_lo_TimestampsID_Between(timeStamp_start, timeStamp_end)
         
-        for key in nidDictwb.keys():
-            if nidDictwb[key] < threshold_b:
-                del(nidDictwb[key])
+        if timestamp:
+            timeStamp_end_id = timestamp[1]
+            timeStamp_start_id = timestamp[0]
         
-        
-        tmp = nidDictrb.keys()
-        collReturn = nidDictwb.keys()
-
-        collReturn = set(collReturn)
-        tmp = set(tmp)
-
-        collReturn = collReturn | tmp
-
-        return list(collReturn)
+            c = self.c.execute(''' SELECT nid, rb, wb FROM samples_ost 
+                                WHERE TIME BETWEEN ? AND ?
+                                ''', (timeStamp_start_id,timeStamp_end_id)).fetchall()
     
+            nidDictrb = {}
+            nidDictwb = {}
+            for row in c:
+                nid = row[0]
+                rb = row[1]
+                wb = row[2]
+    
+                if nid not in nidDictrb:
+                    nidDictrb[nid] = 0
+    
+                if nid not in nidDictwb:
+                    nidDictwb[nid] = 0
+                
+                nidDictrb[nid] += rb
+                nidDictwb[nid] += wb
+            
+            for key in nidDictrb.keys():
+                if nidDictrb[key] < threshold_b:
+                    del(nidDictrb[key])
+            
+            for key in nidDictwb.keys():
+                if nidDictwb[key] < threshold_b:
+                    del(nidDictwb[key])
+            
+            
+            tmp = nidDictrb.keys()
+            collReturn = nidDictwb.keys()
+    
+            collReturn = set(collReturn)
+            tmp = set(tmp)
+    
+            collReturn = collReturn | tmp
+    
+            return list(collReturn)
+        else:
+            return None
     def getTimeStamp(year, month, day, houer, minute):
         ''' convert from year day month to time stamp '''
         dateTimeInput = datetime.datetime(year, month, day, houer, minute)
@@ -133,9 +195,19 @@ if __name__ == '__main__':
     time_start = time.time()
 #------------------------------------------------------------------------------
     db = readDB('sqlite_new.db')
-    l = db.get_All_Users_r_w(24*10, 100) # all user how have ritten more then 100mb in the last 10 days
-    for user in l:
-        print user
+    jobs = db.c.execute('''select id from jobs''').fetchall()
+    t1 = 1392710568
+    t2 = 1392710844
+    
+    #print db.getAll_Nid_IDs_Between(t1, t2)
+    
+    
+    for job in jobs:
+        db.get_sum_nids_to_job(job[0])
+    #print db.get_nid_to_Job(1)
+    #l = db.get_All_Users_r_w(24*10, 100) # all user how have ritten more then 100mb in the last 10 days
+    #for user in l:
+    #    print user
 
 #------------------------------------------------------------------------------
     time_end = time.time()
