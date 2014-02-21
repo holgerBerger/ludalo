@@ -117,8 +117,18 @@ while True:
   print "transfer times - max: %s %3.3fs" % maxT,"- min: %s %3.3fs"% minT, "- avg: %3.3fs" % (avg/len(timings))
   for mdt in reqs:
     print "  metadata requests  %s: %6.1f/s" % (mdt,reqs[mdt]/float(SLEEP))
+    reqs[mdt] = 0
+  trbs = 0
+  twbs = 0
   for oss in bws:
     print "  oss data bandwidth %s: read %7.1f MB/s - write %7.1f MB/s" % (
                                  oss, bws[oss][0]/(1024.0*1024.0*float(SLEEP)), 
                                  bws[oss][1]/(1024.0*1024.0*float(SLEEP)))
+    trbs += bws[oss][0]
+    twbs += bws[oss][1]
+    bws[oss] = (0,0)
+  print "  === total bandwidth === : read %7.1f MB/s - write %7.1f MB/s" % (
+                                 trbs/(1024.0*1024.0*float(SLEEP)), 
+                                 twbs/(1024.0*1024.0*float(SLEEP)))
+  
   time.sleep(SLEEP-((e-sample)%SLEEP))
