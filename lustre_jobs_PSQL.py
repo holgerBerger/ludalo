@@ -37,9 +37,11 @@ class DB:
                                     )''')
     try:
       self.c.execute('''CREATE INDEX jobid_index ON jobs (jobid,starttime,endtime,owner)''')
+    except:
+      self.conn.rollback()
+    try:
       self.c.execute('''CREATE INDEX nodelist_index ON nodelist (job,nid)''')
     except:
-      # damn postgres is strange
       self.conn.rollback()
 
 
