@@ -3,10 +3,10 @@ Created on 16.12.2013
 
 @author: Uwe Schilling
 '''
-import MySQLdb;
+import psycopg2
 
 
-class SQLiteObject(object):
+class PSQLObject(object):
     '''database connection class'''
 
     def __init__(self, dbFile):
@@ -14,7 +14,7 @@ class SQLiteObject(object):
         Constructor
         '''
         self.dbFile = dbFile
-        self.conn = MySQLdb.connect(passwd='sqlsucks',db="lustre")
+        self.conn = psycopg2.connect("dbname=lustre user=berger")
         self.c = self.conn.cursor()
 
         self.globalnidmap = {}
@@ -125,7 +125,7 @@ class SQLiteObject(object):
                      'RD_MB,' +
                      'REQS' +
                      ')' +
-                     'VALUES (?,?,?,?)')
+                     'VALUES (%s,%s,%s,%s)')
         self.c.execute(exeString, collection)
 #------------------------------------------------------------------------------
 
@@ -135,48 +135,48 @@ class SQLiteObject(object):
         # timestamp
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             timestamps (
-                                id integer primary key asc,
+                                id serial primary key ,
                                 time integer)''')
 
         # name vom clienten
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             nids (
-                                id integer primary key asc,
+                                id serial primary key ,
                                 nid text)''')
 
         # oss/mds server name
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             servers (
-                                id integer primary key asc,
+                                id serial primary key ,
                                 server text,
                                 type text)''')
 
         # ost / mdt
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             sources (
-                                id integer primary key asc,
+                                id serial primary key ,
                                 source text)''')
 
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             ost_values (
-                                id integer primary key asc,
+                                id serial primary key ,
                                 time integer, 
-                                source integer,
+                                source text,
                                 rio integer,
-                                rb integer,
+                                rb bigint,
                                 wio integer,
-                                wb integer)''')
+                                wb bigint)''')
 
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             mdt_values (
-                                id integer primary key asc,
+                                id serial primary key ,
                                 reqs integer)''')
         
         self.c.execute('''CREATE TABLE IF NOT EXISTS 
                             samples_ost (
-                                id integer primary key asc, 
+                                id serial primary key , 
                                 time integer, 
-                                source integer, 
+                                source text, 
                                 nid integer, 
                                 rio integer, 
                                 rb bigint, 
@@ -185,35 +185,39 @@ class SQLiteObject(object):
         
         self.c.execute('''CREATE TABLE IF NOT EXISTS 
                             samples_mdt (
-                                id integer primary key asc, 
+                                id serial primary key , 
                                   time integer, 
-                                  source integer, 
+                                  source text, 
                                   nid integer, 
                                   reqs integer);''')
 
         self.c.execute('''CREATE TABLE IF NOT EXISTS 
-                            hashes (hash string primary key);''')
+                            hashes (hash varchar(63) primary key);''')
 
-        self.c.execute('''CREATE INDEX IF NOT EXISTS 
-                            samples_ost_index ON samples_ost (time, rb, wb, rio, wio)''')
+        try:
+          self.c.execute('''CREATE INDEX 
+                              samples_ost_index ON samples_ost (time, rb, wb, rio, wio)''')
 
-        self.c.execute('''CREATE INDEX IF NOT EXISTS 
-                            ost_values_index ON ost_values (time)''')
+          self.c.execute('''CREATE INDEX
+                              ost_values_index ON ost_values (time)''')
 
-        self.c.execute('''CREATE INDEX IF NOT EXISTS 
-                            samples_mdt_time ON samples_mdt (time)''')
+          self.c.execute('''CREATE INDEX
+                              samples_mdt_time ON samples_mdt (time)''')
 
-        self.c.execute('''CREATE INDEX IF NOT EXISTS 
-                            time_index ON timestamps (time)''')
+          self.c.execute('''CREATE INDEX
+                              time_index ON timestamps (time)''')
+        except:
+          pass
+          
 
 #------------------------------------------------------------------------------
     def has_hash(self, hexdigest):
-        self.c.execute('''SELECT * FROM hashes WHERE hash=?''', (hexdigest,))
+        self.c.execute('''SELECT * FROM hashes WHERE hash=%s''', (hexdigest,))
         r = self.c.fetchall()
         if r: 
           return True
         else:
-          self.c.execute(''' INSERT INTO hashes VALUES (?)''', (hexdigest,))
+          self.c.execute(''' INSERT INTO hashes VALUES (%s)''', (hexdigest,))
           return False
 #------------------------------------------------------------------------------
 
@@ -227,31 +231,31 @@ class SQLiteObject(object):
             insert_string.append(tup[1]) # rb
             insert_string.append(tup[2]) # wio
             insert_string.append(tup[3]) # wb
-            self.c.execute(''' INSERT INTO ost_values VALUES (NULL, ?,?,?, ?,?,?)
+            self.c.execute(''' INSERT INTO ost_values VALUES (DEFAULT, %s,%s,%s, %s,%s,%s)
                     ''', insert_string)
 #------------------------------------------------------------------------------
 
     def insert_timestamp(self, timestamp):
         if timestamp not in self.timestamps:
-            self.c.execute('''INSERT INTO timestamps VALUES (NULL,?)''',
+            self.c.execute('''INSERT INTO timestamps VALUES (DEFAULT,%s) RETURNING ID''',
                                 (timestamp,))
-            self.timestamps[timestamp] = self.c.lastrowid
+            self.timestamps[timestamp] = self.c.fetchone()[0]
 #------------------------------------------------------------------------------
 
     def insert_source(self, source):
         if source not in self.sources:
-            self.c.execute('''INSERT INTO sources VALUES (NULL,?)''',
+            self.c.execute('''INSERT INTO sources VALUES (DEFAULT,%s) RETURNING ID''',
                                 (source,))
-            self.sources[source] = self.c.lastrowid
+            self.sources[source] = self.c.fetchone()[0]
 #------------------------------------------------------------------------------
 
     def insert_server(self, server, stype):
         if server not in self.per_server_nids:
             print "new server:", server
             self.per_server_nids[server] = []
-            self.c.execute('''INSERT INTO servers VALUES (NULL,?,?)''',
+            self.c.execute('''INSERT INTO servers VALUES (DEFAULT,%s,%s) RETURNING ID''',
                                 (server,stype,))
-            self.servermap[server] = self.c.lastrowid
+            self.servermap[server] = self.c.fetchone()[0]
             self.servertype[server] = stype
 #------------------------------------------------------------------------------
 
@@ -263,8 +267,8 @@ class SQLiteObject(object):
             except KeyError:
                 pass
         if nid not in self.globalnidmap:
-            self.c.execute('''INSERT INTO nids VALUES (NULL,?)''',(nid,))
-            self.globalnidmap[nid]=self.c.lastrowid
+            self.c.execute('''INSERT INTO nids VALUES (DEFAULT,%s) RETURNING ID''',(nid,))
+            self.globalnidmap[nid]=self.c.fetchone()[0]
         if nid not in self.per_server_nids[server]:
             self.per_server_nids[server].append(nid)
 #------------------------------------------------------------------------------
@@ -274,22 +278,22 @@ class SQLiteObject(object):
 #------------------------------------------------------------------------------
 
     def insert_ost_samples(self, il_ost):
-        self.c.executemany('''INSERT INTO samples_ost VALUES (NULL,?,?,?,?,?,?,?)''',il_ost)
+        self.c.executemany('''INSERT INTO samples_ost VALUES (DEFAULT,%s,%s,%s,%s,%s,%s,%s)''',il_ost)
 #------------------------------------------------------------------------------
 
     def insert_mdt_samples(self, il_mdt):
-        self.c.executemany('''INSERT INTO samples_mdt VALUES (NULL,?,?,?,?)''',il_mdt)
+        self.c.executemany('''INSERT INTO samples_mdt VALUES (DEFAULT,%s,%s,%s,%s)''',il_mdt)
 #------------------------------------------------------------------------------
 
     def insert_SERVER_values(self, mds_name, REQS, timeStamp, type):
         ''' type 0->ost 1->mdt 2->oss 3->mds '''
         c = self.c
         timeid = self.timestamps[timeStamp]
-        c.execute('''INSERT INTO mds_values (NULL,?)''', (REQS,))
-        lastID = c.lastrowid
+        c.execute('''INSERT INTO mds_values (DEFAULT,%s) RETURNING ID''', (REQS,))
+        lastID = c.fetchone()[0]
         mdsID = self.sources[mds_name]
         # sampels:     id    time    type    source    nid    vals
         self.c.execute('''INSERT INTO samples VALUES
-                                        (NULL,?,?,?,NULL,?)''',
+                                        (DEFAULT,%s,%s,%s,NULL,%s)''',
                                         # time  typ  mdsID    values
                                         (timeid, type, mdsID, lastID))

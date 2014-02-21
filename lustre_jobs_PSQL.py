@@ -1,17 +1,18 @@
 
-# helper to add data to sqlite database, using some preexisting tables
+
+# helper to add data to MySQL database, using some preexisting tables
 # create_tables only creates new tables for this routine
 # uses NIDS table created by data importer.
 
 # this routine imports names as coming from batch system,
 # so in case of torque, it is hostnames, not IP addresses.
 
-import sqlite3
+import psycopg2
 
 
 class DB:
   def __init__(self, dbname=None):
-    self.conn = sqlite3.connect(dbname)
+    self.conn = psycopg2.connect("dbname=lustre user=berger")
     self.c = self.conn.cursor()
 
   def close(self):
@@ -19,40 +20,44 @@ class DB:
     self.conn.close()
 
   def create_tables(self):
-    self.c.execute('''CREATE TABLE IF NOT EXISTS jobs (id integer primary key asc, 
-                                    jobid text, 
-                                    start integer, 
-                                    end integer, 
+    self.c.execute('''CREATE TABLE IF NOT EXISTS jobs (id serial primary key, 
+                                    jobid varchar(30), 
+                                    starttime integer, 
+                                    endtime integer, 
                                     owner integer,
                                     nodelist text,
                                     cmd text
                                     )''')
-    self.c.execute('''CREATE TABLE IF NOT EXISTS users (id integer primary key asc, 
+    self.c.execute('''CREATE TABLE IF NOT EXISTS users (id serial primary key, 
                                     username text
                                     )''')
-    self.c.execute('''CREATE TABLE IF NOT EXISTS nodelist (id integer primary key asc, 
+    self.c.execute('''CREATE TABLE IF NOT EXISTS nodelist (id serial primary key, 
                                     job integer,
                                     nid integer
                                     )''')
-    self.c.execute('''CREATE INDEX IF NOT EXISTS jobid_index ON jobs (jobid,start,end,owner)''')
-    self.c.execute('''CREATE INDEX IF NOT EXISTS nodelist_index ON nodelist (job,nid)''')
+    try:
+      self.c.execute('''CREATE INDEX jobid_index ON jobs (jobid,starttime,endtime,owner)''')
+      self.c.execute('''CREATE INDEX nodelist_index ON nodelist (job,nid)''')
+    except:
+      # damn postgres is strange
+      self.conn.rollback()
 
 
   def insert_job(self, jobid, start, end, owner, nids, cmd):
     #print jobid, start, end, owner, nids, cmd
     # check if job is already in DB
-    self.c.execute('''SELECT jobid FROM jobs WHERE jobid = ?''',(jobid,))
+    self.c.execute("""SELECT jobid FROM jobs WHERE jobid = %s;""",(jobid,))
     if not self.c.fetchone():
       # check if user is already in DB
-      self.c.execute('''SELECT id FROM users WHERE users.username = ?''',(owner,))
+      self.c.execute('''SELECT id FROM users WHERE users.username = %s''',(owner,))
       r=self.c.fetchone()
       if r:
         userid=r[0]
       else:
-        self.c.execute('''INSERT INTO users VALUES (NULL,?)''',(owner,))
-        userid = self.c.lastrowid
-      self.c.execute('''INSERT INTO jobs VALUES (NULL,?,?,?,?,?,?)''',(jobid,start,end,userid,nids,cmd))
-      jobkey = self.c.lastrowid
+        self.c.execute('''INSERT INTO users VALUES (DEFAULT,%s) RETURNING ID''',(owner,))
+        userid=self.c.fetchone()[0]
+      self.c.execute('''INSERT INTO jobs VALUES (DEFAULT,%s,%s,%s,%s,%s,%s) RETURNING ID''',(jobid,start,end,userid,nids,cmd))
+      jobkey = self.c.fetchone()[0]
       # nodes - expand cray name compression with ranges 
       nl=[]
       for node in nids.split(','):
@@ -67,12 +72,12 @@ class DB:
       # insert into db
       # check if node is already in DB
       for node in nl:
-        self.c.execute('''SELECT id FROM nids WHERE nid = ?''',(node,))
+        self.c.execute('''SELECT id FROM nids WHERE nid = %s''',(node,))
         r=self.c.fetchone()
         if r:
           nodeid=r[0]
         else:
-          self.c.execute('''INSERT INTO nids VALUES (NULL,?)''',(node,))
-          nodeid=self.c.lastrowid
-        self.c.execute('''INSERT INTO nodelist VALUES (NULL,?,?)''',(jobkey,nodeid))
+          self.c.execute('''INSERT INTO nids VALUES (DEFAULT,%s) RETURNING ID''',(node,))
+          nodeid = self.c.fetchone()[0]
+        self.c.execute('''INSERT INTO nodelist VALUES (DEFAULT,%s,%s)''',(jobkey,nodeid))
           
