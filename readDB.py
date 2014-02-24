@@ -18,6 +18,23 @@ class readDB(object):
         self.c = self.conn.cursor()
 
 #------------------------------------------------------------------------------
+    def read_write_sum_to_Nid(self, start, end, nidName):
+        tmp = self.c.execute(''' 
+                        select samples_ost.rb, samples_ost.wb,timestamps.time, nids.nid 
+                        from samples_ost, nids, timestamps 
+                        where nids.id = samples_ost.nid 
+                        and timestamps.id = samples_ost.time 
+                        and timestamps.time between ? and ? 
+                        and nids.nid = ?;''',(start, end, nidName)).fetchall()
+        rb = 0
+        wb = 0
+        for item in tmp:
+            rb += item[0]
+            wb += item[1]
+        #print (start, end, nidName, wb, rb)
+        return (start, end, nidName, wb, rb)
+
+#------------------------------------------------------------------------------
     def get_sum_nids_to_job(self, jobID):
         nids = self.get_nid_to_Job(jobID)
         start_end = self.get_job_star_end(jobID)
@@ -25,10 +42,14 @@ class readDB(object):
             start = start_end[0] 
             end = start_end[1]
             if not (end-start < 120):
-                print jobID,end-start,start,end, self.getAll_Nid_IDs_Between(start, end)
+                print 'find nids'
+                colReturn = []
+                for nid in nids:
+                    colReturn.append(self.read_write_sum_to_Nid(start, end, nid))
+                return colReturn
             else: return None
         else: return None
-
+#------------------------------------------------------------------------------
     def get_job_star_end(self, jobID):
         start_end = self.c.execute(''' 
                         select start, end 
@@ -176,6 +197,8 @@ class readDB(object):
             return list(collReturn)
         else:
             return None
+#------------------------------------------------------------------------------
+
     def getTimeStamp(year, month, day, houer, minute):
         ''' convert from year day month to time stamp '''
         dateTimeInput = datetime.datetime(year, month, day, houer, minute)
@@ -203,11 +226,17 @@ if __name__ == '__main__':
     
     
     for job in jobs:
-        db.get_sum_nids_to_job(job[0])
+        
+        sum = db.get_sum_nids_to_job(job[0])
+        
+        if sum:
+            print job[0]
+            print sum
+        
     #print db.get_nid_to_Job(1)
     #l = db.get_All_Users_r_w(24*10, 100) # all user how have ritten more then 100mb in the last 10 days
     #for user in l:
-    #    print user
+    #    print userx
 
 #------------------------------------------------------------------------------
     time_end = time.time()
