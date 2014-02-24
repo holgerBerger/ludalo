@@ -6,6 +6,7 @@ Created on 18.02.2014
 
 import time
 import sqlite3
+from plotGraph import plotGraph
 
 class readDB(object):
     
@@ -20,19 +21,30 @@ class readDB(object):
 #------------------------------------------------------------------------------
     def read_write_sum_to_Nid(self, start, end, nidName):
         tmp = self.c.execute(''' 
-                        select samples_ost.rb, samples_ost.wb,timestamps.time, nids.nid 
+                        select samples_ost.rb, samples_ost.wb, timestamps.time, nids.nid 
                         from samples_ost, nids, timestamps 
                         where nids.id = samples_ost.nid 
                         and timestamps.id = samples_ost.time 
                         and timestamps.time between ? and ? 
                         and nids.nid = ?;''',(start, end, nidName)).fetchall()
-        rb = 0
-        wb = 0
+
+        timeMapRB = {}
+        timeMapWB = {}
+        nidList = set()
         for item in tmp:
-            rb += item[0]
-            wb += item[1]
-        #print (start, end, nidName, wb, rb)
-        return (start, end, nidName, wb, rb)
+            read = item[0]
+            write = item[1]
+            timestamp = item[2]
+            nid = item[3]
+            if timestamp not in timeMapRB:
+                timeMapRB[timestamp] = 0
+                timeMapWB[timestamp] = 0
+            timeMapRB[timestamp] += read
+            timeMapWB[timestamp] += write
+            nidList.add(nid)
+                
+        return (start, end, timeMapRB, timeMapWB, nidList)
+
 
 #------------------------------------------------------------------------------
     def get_sum_nids_to_job(self, jobID):
@@ -42,7 +54,7 @@ class readDB(object):
             start = start_end[0] 
             end = start_end[1]
             if not (end-start < 120):
-                print 'find nids'
+                #print 'find nids'
                 colReturn = []
                 for nid in nids:
                     colReturn.append(self.read_write_sum_to_Nid(start, end, nid))
@@ -224,15 +236,58 @@ if __name__ == '__main__':
     
     #print db.getAll_Nid_IDs_Between(t1, t2)
     
+    sum = None
+    job = None
     
-    for job in jobs:
-        
+    tmpTest = 0
+    
+    for job in jobs: 
         sum = db.get_sum_nids_to_job(job[0])
         
         if sum:
-            print job[0]
-            print sum
+            job = job[0]
+            sum = sum
+            
+            if tmpTest == 0:
+                break
+            tmpTest += 1
+    job_info = db.c.execute('''
+            select jobs.jobid, users.username 
+            from jobs, users 
+            where jobs.id = ? 
+            and users.id = jobs.owner''', (job,)).fetchone()
+
+    title = 'Job: ' + str(job_info[0]) + ' Owner: ' + str(job_info[1])
+    List_of_lists = []
+    
+    for nid in sum:
+        start = nid[0]
+        end = nid[1]
+        readDic = nid[2]
+        writeDic = nid[3]
+
+        readY = []
+        readX = sorted(readDic.keys())
+        for timeStamp in readX:
+            readY.append(-readDic[timeStamp])
+
+    
+        writeY = []
+        writeX = sorted(writeDic.keys())
+        for timeStamp in writeX:
+            writeY.append(writeDic[timeStamp])
+
         
+        if readX and readY and writeY and writeX:
+            List_of_lists.append(readX)
+            List_of_lists.append(readY)
+
+            List_of_lists.append(writeX)
+            List_of_lists.append(writeY)
+
+    
+    print len(List_of_lists)
+    plotGraph(List_of_lists,title)
     #print db.get_nid_to_Job(1)
     #l = db.get_All_Users_r_w(24*10, 100) # all user how have ritten more then 100mb in the last 10 days
     #for user in l:
