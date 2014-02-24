@@ -197,17 +197,26 @@ class PSQLObject(object):
         try:
           self.c.execute('''CREATE INDEX 
                               samples_ost_index ON samples_ost (time, rb, wb, rio, wio)''')
+        except:
+          self.conn.rollback()
 
+        try:
           self.c.execute('''CREATE INDEX
                               ost_values_index ON ost_values (time)''')
+        except:
+          self.conn.rollback()
 
+        try:
           self.c.execute('''CREATE INDEX
                               samples_mdt_time ON samples_mdt (time)''')
+        except:
+          self.conn.rollback()
 
+        try:
           self.c.execute('''CREATE INDEX
                               time_index ON timestamps (time)''')
         except:
-          pass
+          self.conn.rollback()
           
 
 #------------------------------------------------------------------------------
