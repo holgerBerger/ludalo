@@ -53,7 +53,7 @@ class readDB(object):
         if start_end:
             start = start_end[0] 
             end = start_end[1]
-            if not (end-start < 120):
+            if not (end-start < 180):
                 #print 'find nids'
                 colReturn = []
                 for nid in nids:
