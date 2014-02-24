@@ -3,7 +3,7 @@ Created on 16.12.2013
 
 @author: Uwe Schilling
 '''
-import MySQLdb;
+import sqlite3
 
 
 class SQLiteObject(object):
@@ -14,7 +14,7 @@ class SQLiteObject(object):
         Constructor
         '''
         self.dbFile = dbFile
-        self.conn = MySQLdb.connect(passwd='sqlsucks',db="lustre")
+        self.conn = sqlite3.connect(dbFile)
         self.c = self.conn.cursor()
 
         self.globalnidmap = {}
@@ -205,6 +205,9 @@ class SQLiteObject(object):
 
         self.c.execute('''CREATE INDEX IF NOT EXISTS 
                             time_index ON timestamps (time)''')
+
+        self.c.execute('''CREATE INDEX IF NOT EXISTS 
+                            nids_index ON nids (nid)''')
 
 #------------------------------------------------------------------------------
     def has_hash(self, hexdigest):
