@@ -30,6 +30,14 @@ class readDB(object):
 
         timeMapRB = {}
         timeMapWB = {}
+        tmp_time = self.c.execute('''
+                            select time from timestamps 
+                            where time between ? and ?''',(start, end)).fetchall()
+        
+        for timeStamp in tmp_time:
+            timeMapRB[timeStamp[0]] = 0
+            timeMapWB[timeStamp[0]] = 0
+        
         nidList = set()
         for item in tmp:
             read = item[0]
@@ -37,6 +45,8 @@ class readDB(object):
             timestamp = item[2]
             nid = item[3]
             if timestamp not in timeMapRB:
+                print 'lol hier wollt ich nicht hin....'
+                print timeMapRB[timestamp], timeMapWB[timestamp]
                 timeMapRB[timestamp] = 0
                 timeMapWB[timestamp] = 0
             timeMapRB[timestamp] += read
@@ -241,7 +251,7 @@ if __name__ == '__main__':
     
     tmpTest = 0
     
-    for job in jobs: 
+    for job in jobs[-440:]: 
         sum = db.get_sum_nids_to_job(job[0])
         
         if sum:
@@ -269,13 +279,13 @@ if __name__ == '__main__':
         readY = []
         readX = sorted(readDic.keys())
         for timeStamp in readX:
-            readY.append(-readDic[timeStamp])
+            readY.append(-readDic[timeStamp]/60)
 
     
         writeY = []
         writeX = sorted(writeDic.keys())
         for timeStamp in writeX:
-            writeY.append(writeDic[timeStamp])
+            writeY.append(writeDic[timeStamp]/60)
 
         
         if readX and readY and writeY and writeX:
