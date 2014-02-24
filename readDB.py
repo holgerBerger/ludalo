@@ -48,6 +48,7 @@ class readDB(object):
 
 #------------------------------------------------------------------------------
     def get_sum_nids_to_job(self, jobID):
+        print jobID
         nids = self.get_nid_to_Job(jobID)
         start_end = self.get_job_star_end(jobID)
         if start_end:
@@ -241,6 +242,9 @@ if __name__ == '__main__':
     
     tmpTest = 0
     
+    #for job in jobs[-500:]: 
+    #for job in jobs[-330:]:  seltsam
+    #for job in jobs[-333:]: 
     for job in jobs: 
         sum = db.get_sum_nids_to_job(job[0])
         
