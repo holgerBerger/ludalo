@@ -46,8 +46,6 @@ class readDB(object):
             timestamp = item[2]
             nid = item[3]
             if timestamp not in timeMapRB:
-                print 'lol hier wollt ich nicht hin....'
-                print timeMapRB[timestamp], timeMapWB[timestamp]
                 timeMapRB[timestamp] = 0
                 timeMapWB[timestamp] = 0
             timeMapRB[timestamp] += read
@@ -302,26 +300,35 @@ if __name__ == '__main__':
     #print db.getAll_Nid_IDs_Between(t1, t2)
     
     sum = None
-    job = None
+    jobid = None
     
     tmpTest = 0
+
+    print jobs
     
-    for job in jobs[-440:]: 
+    for job in jobs:
+    #for job in jobs[-500:]: 
+    #for job in jobs[-330:]: # seltsam
+    #for job in jobs[-333:]: 
+    #for job in jobs: 
+        print job[0]
         sum = db.get_sum_nids_to_job(job[0])
         
         if sum:
-            job = job[0]
+            jobid = job[0]
             sum = sum
             
             if tmpTest == 0:
                 break
             tmpTest += 1
+    print jobid
     job_info = db.c.execute('''
             select jobs.jobid, users.username 
             from jobs, users 
             where jobs.id = ? 
-            and users.id = jobs.owner''', (job,)).fetchone()
+            and users.id = jobs.owner''', (jobid,)).fetchone()
 
+    print job_info
     title = 'Job: ' + str(job_info[0]) + ' Owner: ' + str(job_info[1])
     List_of_lists = []
     

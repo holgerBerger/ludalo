@@ -206,6 +206,9 @@ class MySQLObject(object):
 
           self.c.execute('''CREATE INDEX
                               time_index ON timestamps (time)''')
+
+          self.c.execute('''CREATE INDEX
+                              nids_index ON nids (nid)''')
         except:
           pass
           
