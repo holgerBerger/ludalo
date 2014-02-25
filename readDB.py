@@ -7,6 +7,7 @@ Created on 18.02.2014
 import time
 import sqlite3
 from plotGraph import plotGraph
+import sys
 
 class readDB(object):
     
@@ -234,7 +235,61 @@ class readDB(object):
         return datetime.datetime.fromtimestamp(
                                 float(timeStamp)).strftime('%Y-%m-%d %H:%M:%S')
 #------------------------------------------------------------------------------
+
+    def print_job(self, job):
         
+        check_job = self.c.execute(''' 
+                        select * from jobs where id = ?
+                         ''',(job,))
+        
+        if not check_job:
+            print 'No such job: ', job
+            sys.exit(0)
+        
+        sum = db.get_sum_nids_to_job(job)
+        
+        if sum:
+            job = job
+            sum = sum
+            
+            if tmpTest == 0:
+                break
+            tmpTest += 1
+        job_info = db.c.execute('''
+                select jobs.jobid, users.username 
+                from jobs, users 
+                where jobs.id = ? 
+                and users.id = jobs.owner''', (job,)).fetchone()
+    
+        title = 'Job: ' + str(job_info[0]) + ' Owner: ' + str(job_info[1])
+        List_of_lists = []
+        
+        for nid in sum:
+            start = nid[0]
+            end = nid[1]
+            readDic = nid[2]
+            writeDic = nid[3]
+    
+            readY = []
+            readX = sorted(readDic.keys())
+            for timeStamp in readX:
+                readY.append(-readDic[timeStamp]/60)
+    
+        
+            writeY = []
+            writeX = sorted(writeDic.keys())
+            for timeStamp in writeX:
+                writeY.append(writeDic[timeStamp]/60)
+    
+            
+            if readX and readY and writeY and writeX:
+                List_of_lists.append(readX)
+                List_of_lists.append(readY)
+    
+                List_of_lists.append(writeX)
+                List_of_lists.append(writeY)
+    
+        plotGraph(List_of_lists,title)
 
 if __name__ == '__main__':
     time_start = time.time()
@@ -295,8 +350,6 @@ if __name__ == '__main__':
             List_of_lists.append(writeX)
             List_of_lists.append(writeY)
 
-    
-    print len(List_of_lists)
     plotGraph(List_of_lists,title)
     #print db.get_nid_to_Job(1)
     #l = db.get_All_Users_r_w(24*10, 100) # all user how have ritten more then 100mb in the last 10 days
