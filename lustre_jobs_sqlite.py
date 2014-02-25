@@ -27,7 +27,10 @@ class DB:
                                     t_end integer, 
                                     owner integer,
                                     nodelist text,
-                                    cmd text
+                                    cmd text,
+                                    r_sum integer,
+                                    w_sum integer,
+                                    reqs_sum integer
                                     )''')
     self.c.execute('''CREATE TABLE IF NOT EXISTS users (id integer primary key asc, 
                                     username text
