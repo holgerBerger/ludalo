@@ -46,7 +46,8 @@ class MovingAverage(object):
         for i in range(0, self.size):
             tmp = tmp + (valueArray[i] * self.calcArray[i])
         tmp = tmp / self.calcSum
-        return int(round(tmp))
+        #return int(round(tmp))
+        return tmp
 
     def calculate(self):
         #calculate only if more then the half array is filled

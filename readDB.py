@@ -62,7 +62,7 @@ class readDB(object):
         if start_end:
             start = start_end[0] 
             end = start_end[1]
-            if not (end-start < 180):
+            if not (end-start < 900):
                 #print 'find nids'
                 colReturn = []
                 for nid in nids:
@@ -267,13 +267,13 @@ class readDB(object):
                 readY = []
                 readX = sorted(readDic.keys())
                 for timeStamp in readX:
-                    readY.append(-readDic[timeStamp]/60)
+                    readY.append(float(-readDic[timeStamp])/(60*1000000))
         
             
                 writeY = []
                 writeX = sorted(writeDic.keys())
                 for timeStamp in writeX:
-                    writeY.append(writeDic[timeStamp]/60)
+                    writeY.append(float(writeDic[timeStamp])/(60*1000000))
         
                 
                 if readX and readY and writeY and writeX:
@@ -289,14 +289,18 @@ if __name__ == '__main__':
     time_start = time.time()
 #------------------------------------------------------------------------------
     db = readDB('sqlite_new.db')
-    jobs = db.c.execute('''select id from jobs''').fetchall()
+    jobs = db.c.execute('''select id, jobid from jobs''').fetchall()
     valid_jobs = []
     print '# of jobs: ' + str(len(jobs))
     
     
     for job in jobs:
-        if db.get_job_star_end(job[0]):
-            valid_jobs.append(job[0])
+        start_end = db.get_job_star_end(job[0])
+        if start_end:
+            start = start_end[0] 
+            end = start_end[1]
+            if not (end-start < 900):
+                valid_jobs.append(job[0])
             
     print '# of valid jobs: ' + str(len(valid_jobs))
     
@@ -305,56 +309,10 @@ if __name__ == '__main__':
     
     tmpTest = 0
     
-    for job in valid_jobs[5:]:
-        sum = db.get_sum_nids_to_job(job)
-        
-        if sum:
-            jobid = job
-            
-            if tmpTest == 0:
-                break
-            tmpTest += 1
-    print 'JobID: ', jobid
-    job_info = db.c.execute('''
-            select jobs.jobid, users.username 
-            from jobs, users 
-            where jobs.id = ? 
-            and users.id = jobs.owner''', (jobid,)).fetchone()
+    for job in valid_jobs:
+        db.print_job(job)
 
-    title = 'Job: ' + str(job_info[0]) + ' Owner: ' + str(job_info[1])
-    List_of_lists = []
-    
-    for nid in sum:
-        start = nid[0]
-        end = nid[1]
-        readDic = nid[2]
-        writeDic = nid[3]
-
-        readY = []
-        readX = sorted(readDic.keys())
-        for timeStamp in readX:
-            readY.append(-readDic[timeStamp]/60)
-
-    
-        writeY = []
-        writeX = sorted(writeDic.keys())
-        for timeStamp in writeX:
-            writeY.append(writeDic[timeStamp]/60)
-
-        
-        if readX and readY and writeY and writeX:
-            List_of_lists.append(readX)
-            List_of_lists.append(readY)
-
-            List_of_lists.append(writeX)
-            List_of_lists.append(writeY)
-
-    plotGraph(List_of_lists,title)
-    #print db.get_nid_to_Job(1)
-    #l = db.get_All_Users_r_w(24*10, 100) # all user how have ritten more then 100mb in the last 10 days
-    #for user in l:
-    #    print userx
-
+ 
 #------------------------------------------------------------------------------
     time_end = time.time()
     print "end with no errors in: " + str(time_end - time_start)

@@ -63,7 +63,7 @@ def plotGraph(list_of_list, diagramName = ''):
         ax=plt.gca()
         xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
         ax.xaxis.set_major_formatter(xfmt)
-        plt.plot(datenums,list_of_list[i+1],lw=0.2, color='gray')
+        plt.plot(datenums,list_of_list[i+1],lw=1, color='gray')
 
         # ---- Append filtered values ------
         dates = [dt.datetime.fromtimestamp(ts) for ts in fvTimes]
@@ -83,6 +83,7 @@ def plotGraph(list_of_list, diagramName = ''):
     plt.xlabel('Time')
     plt.ylabel('Speed [MB/s]')
     plt.savefig('plt/' + str(diagramName) + '.png')
+    plt.close('all')
 #------------------------------------------------------------------------------
     time_end = time.time()
     #print "end with no errors in: " + str(time_end - time_start)
