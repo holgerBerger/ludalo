@@ -21,8 +21,8 @@ class DB:
   def create_tables(self):
     self.c.execute('''CREATE TABLE IF NOT EXISTS jobs (id integer primary key asc, 
                                     jobid text, 
-                                    start integer, 
-                                    end integer, 
+                                    t_start integer, 
+                                    t_end integer, 
                                     owner integer,
                                     nodelist text,
                                     cmd text

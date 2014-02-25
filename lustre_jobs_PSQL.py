@@ -22,8 +22,8 @@ class DB:
   def create_tables(self):
     self.c.execute('''CREATE TABLE IF NOT EXISTS jobs (id serial primary key, 
                                     jobid varchar(30), 
-                                    starttime integer, 
-                                    endtime integer, 
+                                    t_start integer, 
+                                    t_end integer, 
                                     owner integer,
                                     nodelist text,
                                     cmd text
