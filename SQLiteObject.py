@@ -278,7 +278,6 @@ class SQLiteObject(object):
             else:
                 return False
         else:
-            print 'fail two'
             self.c.execute(''' INSERT INTO version VALUES (NULL, ?) ''', (self.DB_VERSION,))
             self.conn.commit()
             return self.check_version()
@@ -370,6 +369,9 @@ class SQLiteObject(object):
                                         (NULL,?,?,?,NULL,?)''',
                                         # time  typ  mdsID    values
                                         (timeid, type, mdsID, lastID))
+
+
+
 if __name__ == '__main__':
     time_start = time.time()
 #------------------------------------------------------------------------------

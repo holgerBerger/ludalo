@@ -18,6 +18,8 @@ class DB:
     self.conn.commit()
     self.conn.close()
 
+### it is possible to remove this if db exist. this table will create in the
+### SQLiteObject.
   def create_tables(self):
     self.c.execute('''CREATE TABLE IF NOT EXISTS jobs (id integer primary key asc, 
                                     jobid text, 
