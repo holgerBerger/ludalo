@@ -5,6 +5,7 @@ Created on 16.12.2013
 '''
 import sqlite3
 import time
+import sys
 
 
 class SQLiteObject(object):
@@ -39,6 +40,7 @@ class SQLiteObject(object):
                        'DB version is ' +  str(version) + 
                        ''' but expect version ''' + 
                        str(self.DB_VERSION))
+            sys.exit(0)
         
 #------------------------------------------------------------------------------
     def build_database(self):
