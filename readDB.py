@@ -15,11 +15,39 @@ class readDB(object):
         '''
         Constructor
         '''
+        self.DB_VERSION = 1
         self.dbFile = dbFile
         self.conn = sqlite3.connect(dbFile)
         self.c = self.conn.cursor()
+        if not self.check_version():
+            v = self.c.execute(''' select version from version 
+                                        order by id 
+                                        desc limit 1 ''').fetchone()
+            if not v:
+                print 'pleas regenerate database!!!'
+                sys.exit(1)
+            version = v[0]
+            print ('\nThere is something with the Database\n' + 
+                       'DB version is ' +  str(version) + 
+                       ''' but expect version ''' + 
+                       str(self.DB_VERSION))
+            sys.exit(0)
 
 #------------------------------------------------------------------------------
+    def check_version(self):
+        version = self.c.execute(''' select version from version 
+                                        order by id 
+                                        desc limit 1 ''').fetchone()
+        if version:
+            if version[0] == self.DB_VERSION:
+                return True
+            else:
+                return False
+        else:
+            return False
+
+#------------------------------------------------------------------------------
+
     def read_write_sum_to_Nid(self, start, end, nidName):
         tmp = self.c.execute(''' 
                         select samples_ost.rb, samples_ost.wb, timestamps.time, nids.nid 
@@ -73,7 +101,7 @@ class readDB(object):
 #------------------------------------------------------------------------------
     def get_job_star_end(self, jobID):
         start_end = self.c.execute(''' 
-                        select start, end 
+                        select t_start, t_end 
                         from jobs
                         where id = ? ''',(jobID,)).fetchall()
         samples_max = self.c.execute(''' 
@@ -142,7 +170,7 @@ class readDB(object):
     def getAll_Jobs_to_Nid_ID_Between(self, timeStamp_start, timeStamp_end, nidID):
         
         job_list = self.c.execute(''' 
-            select owner, nodelist.nid, jobs.jobid, jobs.start, jobs.end 
+            select owner, nodelist.nid, jobs.jobid, jobs.t_start, jobs.t_end 
             from jobs, nodelist 
             where nodelist.job = jobs.id 
             and nodelist.nid = ? 

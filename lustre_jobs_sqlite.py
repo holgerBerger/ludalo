@@ -39,7 +39,7 @@ class DB:
                                     job integer,
                                     nid integer
                                     )''')
-    self.c.execute('''CREATE INDEX IF NOT EXISTS jobid_index ON jobs (jobid,start,end,owner)''')
+    self.c.execute('''CREATE INDEX IF NOT EXISTS jobid_index ON jobs (jobid,t_start,t_end,owner)''')
     self.c.execute('''CREATE INDEX IF NOT EXISTS nodelist_index ON nodelist (job,nid)''')
 
 
