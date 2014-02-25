@@ -247,88 +247,80 @@ class readDB(object):
         sum = db.get_sum_nids_to_job(job)
         
         if sum:
-            job = job
-            sum = sum
+            jobid = job
+
+            job_info = db.c.execute('''
+                    select jobs.jobid, users.username 
+                    from jobs, users 
+                    where jobs.id = ? 
+                    and users.id = jobs.owner''', (jobid,)).fetchone()
+    
+            title = 'Job: ' + str(job_info[0]) + ' Owner: ' + str(job_info[1])
+            List_of_lists = []
             
-            if tmpTest == 0:
-                break
-            tmpTest += 1
-        job_info = db.c.execute('''
-                select jobs.jobid, users.username 
-                from jobs, users 
-                where jobs.id = ? 
-                and users.id = jobs.owner''', (job,)).fetchone()
-    
-        title = 'Job: ' + str(job_info[0]) + ' Owner: ' + str(job_info[1])
-        List_of_lists = []
+            for nid in sum:
+                start = nid[0]
+                end = nid[1]
+                readDic = nid[2]
+                writeDic = nid[3]
         
-        for nid in sum:
-            start = nid[0]
-            end = nid[1]
-            readDic = nid[2]
-            writeDic = nid[3]
-    
-            readY = []
-            readX = sorted(readDic.keys())
-            for timeStamp in readX:
-                readY.append(-readDic[timeStamp]/60)
-    
+                readY = []
+                readX = sorted(readDic.keys())
+                for timeStamp in readX:
+                    readY.append(-readDic[timeStamp]/60)
         
-            writeY = []
-            writeX = sorted(writeDic.keys())
-            for timeStamp in writeX:
-                writeY.append(writeDic[timeStamp]/60)
-    
             
-            if readX and readY and writeY and writeX:
-                List_of_lists.append(readX)
-                List_of_lists.append(readY)
-    
-                List_of_lists.append(writeX)
-                List_of_lists.append(writeY)
-    
-        plotGraph(List_of_lists,title)
+                writeY = []
+                writeX = sorted(writeDic.keys())
+                for timeStamp in writeX:
+                    writeY.append(writeDic[timeStamp]/60)
+        
+                
+                if readX and readY and writeY and writeX:
+                    List_of_lists.append(readX)
+                    List_of_lists.append(readY)
+        
+                    List_of_lists.append(writeX)
+                    List_of_lists.append(writeY)
+            print 'Plot: ', title
+            plotGraph(List_of_lists,title)
 
 if __name__ == '__main__':
     time_start = time.time()
 #------------------------------------------------------------------------------
     db = readDB('sqlite_new.db')
     jobs = db.c.execute('''select id from jobs''').fetchall()
-    t1 = 1392710568
-    t2 = 1392710844
+    valid_jobs = []
+    print '# of jobs: ' + str(len(jobs))
     
-    #print db.getAll_Nid_IDs_Between(t1, t2)
+    
+    for job in jobs:
+        if db.get_job_star_end(job[0]):
+            valid_jobs.append(job[0])
+            
+    print '# of valid jobs: ' + str(len(valid_jobs))
     
     sum = None
     jobid = None
     
     tmpTest = 0
-
-    print jobs
     
-    for job in jobs:
-    #for job in jobs[-500:]: 
-    #for job in jobs[-330:]: # seltsam
-    #for job in jobs[-333:]: 
-    #for job in jobs: 
-        print job[0]
-        sum = db.get_sum_nids_to_job(job[0])
+    for job in valid_jobs[5:]:
+        sum = db.get_sum_nids_to_job(job)
         
         if sum:
-            jobid = job[0]
-            sum = sum
+            jobid = job
             
             if tmpTest == 0:
                 break
             tmpTest += 1
-    print jobid
+    print 'JobID: ', jobid
     job_info = db.c.execute('''
             select jobs.jobid, users.username 
             from jobs, users 
             where jobs.id = ? 
             and users.id = jobs.owner''', (jobid,)).fetchone()
 
-    print job_info
     title = 'Job: ' + str(job_info[0]) + ' Owner: ' + str(job_info[1])
     List_of_lists = []
     
