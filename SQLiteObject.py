@@ -4,6 +4,7 @@ Created on 16.12.2013
 @author: Uwe Schilling
 '''
 import sqlite3
+import time
 
 
 class SQLiteObject(object):
@@ -13,6 +14,7 @@ class SQLiteObject(object):
         '''
         Constructor
         '''
+        self.DB_VERSION = 1
         self.dbFile = dbFile
         self.conn = sqlite3.connect(dbFile)
         self.c = self.conn.cursor()
@@ -28,6 +30,15 @@ class SQLiteObject(object):
         
         # init sqliteDB
         self.build_database()
+        if not self.check_version():
+            v = self.c.execute(''' select version from version 
+                                        order by id 
+                                        desc limit 1 ''').fetchone()
+            version = v[0]
+            print ('\nThere is something with the Database\n' + 
+                       'DB version is ' +  str(version) + 
+                       ''' but expect version ''' + 
+                       str(self.DB_VERSION))
         
 #------------------------------------------------------------------------------
     def build_database(self):
@@ -132,32 +143,38 @@ class SQLiteObject(object):
     def _generateSQLite(self):
         # create table if not exist
 
+        self.c.execute( '''CREATE TABLE IF NOT EXISTS
+                            version (
+                                id integer primary key asc,
+                                version integer); ''')
+
+
         # timestamp
-        self.c.execute('''CREATE TABLE IF NOT EXISTS
+        self.c.execute( '''CREATE TABLE IF NOT EXISTS
                             timestamps (
                                 id integer primary key asc,
-                                time integer)''')
+                                time integer); ''')
 
         # name vom clienten
-        self.c.execute('''CREATE TABLE IF NOT EXISTS
+        self.c.execute( '''CREATE TABLE IF NOT EXISTS
                             nids (
                                 id integer primary key asc,
-                                nid text)''')
+                                nid text); ''')
 
         # oss/mds server name
-        self.c.execute('''CREATE TABLE IF NOT EXISTS
+        self.c.execute( '''CREATE TABLE IF NOT EXISTS
                             servers (
                                 id integer primary key asc,
                                 server text,
-                                type text)''')
+                                type text); ''')
 
         # ost / mdt
-        self.c.execute('''CREATE TABLE IF NOT EXISTS
+        self.c.execute( '''CREATE TABLE IF NOT EXISTS
                             sources (
                                 id integer primary key asc,
-                                source text)''')
+                                source text); ''')
 
-        self.c.execute('''CREATE TABLE IF NOT EXISTS
+        self.c.execute( '''CREATE TABLE IF NOT EXISTS
                             ost_values (
                                 id integer primary key asc,
                                 time integer, 
@@ -165,14 +182,14 @@ class SQLiteObject(object):
                                 rio integer,
                                 rb integer,
                                 wio integer,
-                                wb integer)''')
+                                wb integer); ''')
 
-        self.c.execute('''CREATE TABLE IF NOT EXISTS
+        self.c.execute( ''' CREATE TABLE IF NOT EXISTS
                             mdt_values (
                                 id integer primary key asc,
-                                reqs integer)''')
+                                reqs integer); ''')
         
-        self.c.execute('''CREATE TABLE IF NOT EXISTS 
+        self.c.execute(''' CREATE TABLE IF NOT EXISTS 
                             samples_ost (
                                 id integer primary key asc, 
                                 time integer, 
@@ -181,33 +198,88 @@ class SQLiteObject(object):
                                 rio integer, 
                                 rb bigint, 
                                 wio integer, 
-                                wb bigint);''')
+                                wb bigint); ''')
         
-        self.c.execute('''CREATE TABLE IF NOT EXISTS 
+        self.c.execute(''' CREATE TABLE IF NOT EXISTS 
                             samples_mdt (
                                 id integer primary key asc, 
-                                  time integer, 
-                                  source integer, 
-                                  nid integer, 
-                                  reqs integer);''')
+                                time integer, 
+                                source integer, 
+                                nid integer, 
+                                reqs integer); ''')
+        
+        self.c.execute(''' CREATE TABLE IF NOT EXISTS
+                            users (
+                                id integer primary key asc, 
+                                username text); ''')
 
-        self.c.execute('''CREATE TABLE IF NOT EXISTS 
-                            hashes (hash string primary key);''')
+        self.c.execute(''' CREATE TABLE IF NOT EXISTS
+                            jobs (
+                                id integer primary key asc, 
+                                jobid text, 
+                                t_start integer, 
+                                t_end integer, 
+                                owner integer,
+                                nodelist text,
+                                cmd text); ''')
 
-        self.c.execute('''CREATE INDEX IF NOT EXISTS 
-                            samples_ost_index ON samples_ost (time, rb, wb, rio, wio)''')
+        self.c.execute(''' CREATE TABLE IF NOT EXISTS
+                            nodelist (
+                                id integer primary key asc, 
+                                job integer,
+                                nid integer); ''')
 
-        self.c.execute('''CREATE INDEX IF NOT EXISTS 
-                            ost_values_index ON ost_values (time)''')
+        self.c.execute(''' CREATE TABLE IF NOT EXISTS 
+                            hashes (
+                                hash string primary key);''')
 
-        self.c.execute('''CREATE INDEX IF NOT EXISTS 
-                            samples_mdt_time ON samples_mdt (time)''')
+#------------------------------------------------------------------------------
+        
+        # create INDEX if not exists
+        self.c.execute(''' CREATE INDEX IF NOT EXISTS
+                            jobid_index 
+                            ON jobs (jobid,start,end,owner);''')
+        
+        self.c.execute(''' CREATE INDEX IF NOT EXISTS
+                            nodelist_index 
+                            ON nodelist (job,nid);''')
 
-        self.c.execute('''CREATE INDEX IF NOT EXISTS 
-                            time_index ON timestamps (time)''')
+        self.c.execute(''' CREATE INDEX IF NOT EXISTS 
+                            samples_ost_index 
+                            ON samples_ost (time, rb, wb, rio, wio)''')
 
-        self.c.execute('''CREATE INDEX IF NOT EXISTS 
-                            nids_index ON nids (nid)''')
+        self.c.execute(''' CREATE INDEX IF NOT EXISTS 
+                            ost_values_index 
+                            ON ost_values (time)''')
+
+        self.c.execute(''' CREATE INDEX IF NOT EXISTS 
+                            samples_mdt_time 
+                            ON samples_mdt (time)''')
+
+        self.c.execute(''' CREATE INDEX IF NOT EXISTS 
+                            time_index 
+                            ON timestamps (time)''')
+
+        self.c.execute(''' CREATE INDEX IF NOT EXISTS 
+                            nids_index 
+                            ON nids (nid)''')
+
+#------------------------------------------------------------------------------
+
+    def check_version(self):
+        version = self.c.execute(''' select version from version 
+                                        order by id 
+                                        desc limit 1 ''').fetchone()
+        if version:
+            if version[0] == self.DB_VERSION:
+                return True
+            else:
+                return False
+        else:
+            print 'fail two'
+            self.c.execute(''' INSERT INTO version VALUES (NULL, ?) ''', (self.DB_VERSION,))
+            self.conn.commit()
+            return self.check_version()
 
 #------------------------------------------------------------------------------
     def has_hash(self, hexdigest):
@@ -296,3 +368,12 @@ class SQLiteObject(object):
                                         (NULL,?,?,?,NULL,?)''',
                                         # time  typ  mdsID    values
                                         (timeid, type, mdsID, lastID))
+if __name__ == '__main__':
+    time_start = time.time()
+#------------------------------------------------------------------------------
+    db = SQLiteObject('sqlite_new.db')
+
+    
+#------------------------------------------------------------------------------
+    time_end = time.time()
+    print "end with no errors in: " + str(time_end - time_start)
