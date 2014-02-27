@@ -243,7 +243,7 @@ class SQLiteObject(object):
         # create INDEX if not exists
         self.c.execute(''' CREATE INDEX IF NOT EXISTS
                             jobid_index 
-                            ON jobs (jobid,start,end,owner);''')
+                            ON jobs (jobid,t_start,t_end,owner);''')
         
         self.c.execute(''' CREATE INDEX IF NOT EXISTS
                             nodelist_index 
