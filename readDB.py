@@ -283,7 +283,7 @@ class readDB(object):
                     where jobs.id = ? 
                     and users.id = jobs.owner''', (jobid,)).fetchone()
     
-            title = 'Job: ' + str(job_info[0]) + ' Owner: ' + str(job_info[1])
+            title = 'Job_' + str(job_info[0]) + '__Owner_' + str(job_info[1])
             List_of_lists = []
             
             for nid in sum:
