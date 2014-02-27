@@ -8,6 +8,8 @@ import time
 import sqlite3
 from plotGraph import plotGraph
 import sys
+from threading import Thread,Lock
+
 
 
 class readDB(object):
@@ -87,7 +89,7 @@ class readDB(object):
 #------------------------------------------------------------------------------
     def get_sum_nids_to_job(self, jobID):
         nids = self.get_nid_to_Job(jobID)
-        start_end = self.get_job_star_end(jobID)
+        start_end = self.get_job_start_end(jobID)
         if start_end:
             start = start_end[0] 
             end = start_end[1]
@@ -100,7 +102,7 @@ class readDB(object):
             else: return None
         else: return None
 #------------------------------------------------------------------------------
-    def get_job_star_end(self, jobID):
+    def get_job_start_end(self, jobID):
         start_end = self.c.execute(''' 
                         select t_start, t_end 
                         from jobs
@@ -263,56 +265,65 @@ class readDB(object):
                                 float(timeStamp)).strftime('%Y-%m-%d %H:%M:%S')
 #------------------------------------------------------------------------------
 
-    def print_job(self, job):
-        
-        check_job = self.c.execute(''' 
-                        select * from jobs where id = ?
-                         ''',(job,))
-        
-        if not check_job:
-            print 'No such job: ', job
-            sys.exit(0)
-        
-        sum = db.get_sum_nids_to_job(job)
-        
-        if sum:
-            jobid = job
+loeckle = Lock()
 
-            job_info = db.c.execute('''
-                    select jobs.jobid, users.username 
-                    from jobs, users 
-                    where jobs.id = ? 
-                    and users.id = jobs.owner''', (jobid,)).fetchone()
+def print_job(job):
     
-            title = 'Job_' + str(job_info[0]) + '__Owner_' + str(job_info[1])
-            List_of_lists = []
+    db = readDB('sqlite_new.db')
+
+    check_job = db.c.execute(''' 
+                    select * from jobs where id = ?
+                     ''',(job,))
+    
+    if not check_job:
+        print 'No such job: ', job
+        sys.exit(0)
+    
+    sum = db.get_sum_nids_to_job(job)
+    
+    if sum:
+        jobid = job
+
+        job_info = db.c.execute('''
+                select jobs.jobid, users.username 
+                from jobs, users 
+                where jobs.id = ? 
+                and users.id = jobs.owner''', (jobid,)).fetchone()
+
+        title = 'Job_' + str(job_info[0]) + '__Owner_' + str(job_info[1])
+        List_of_lists = []
+        
+        for nid in sum:
+            start = nid[0]
+            end = nid[1]
+            readDic = nid[2]
+            writeDic = nid[3]
+    
+            readY = []
+            readX = sorted(readDic.keys())
+            for timeStamp in readX:
+                readY.append(float(-readDic[timeStamp])/(60*1000000))
+    
+        
+            writeY = []
+            writeX = sorted(writeDic.keys())
+            for timeStamp in writeX:
+                writeY.append(float(writeDic[timeStamp])/(60*1000000))
+    
             
-            for nid in sum:
-                start = nid[0]
-                end = nid[1]
-                readDic = nid[2]
-                writeDic = nid[3]
-        
-                readY = []
-                readX = sorted(readDic.keys())
-                for timeStamp in readX:
-                    readY.append(float(-readDic[timeStamp])/(60*1000000))
-        
-            
-                writeY = []
-                writeX = sorted(writeDic.keys())
-                for timeStamp in writeX:
-                    writeY.append(float(writeDic[timeStamp])/(60*1000000))
-        
-                
-                if readX and readY and writeY and writeX:
-                    List_of_lists.append(readX)
-                    List_of_lists.append(readY)
-        
-                    List_of_lists.append(writeX)
-                    List_of_lists.append(writeY)
-            print 'Plot: ', title
-            plotGraph(List_of_lists,title)
+            if readX and readY and writeY and writeX:
+                List_of_lists.append(readX)
+                List_of_lists.append(readY)
+    
+                List_of_lists.append(writeX)
+                List_of_lists.append(writeY)
+        print 'Plot: ', title
+        loeckle.acquire()
+        plotGraph(List_of_lists,title)
+        loeckle.release()
+
+
+
 
 if __name__ == '__main__':
     time_start = time.time()
@@ -324,7 +335,7 @@ if __name__ == '__main__':
     
     
     for job in jobs:
-        start_end = db.get_job_star_end(job[0])
+        start_end = db.get_job_start_end(job[0])
         if start_end:
             start = start_end[0] 
             end = start_end[1]
@@ -337,10 +348,14 @@ if __name__ == '__main__':
     jobid = None
     
     tmpTest = 0
+    threads = {}
     
     for job in valid_jobs:
-        db.print_job(job)
+        threads[job] = Thread( target = print_job, args = (job,)) 
+        threads[job].start()
 
+    for job in valid_jobs:
+        threads[job].join()
  
 #------------------------------------------------------------------------------
     time_end = time.time()
