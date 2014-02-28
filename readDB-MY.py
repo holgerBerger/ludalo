@@ -12,10 +12,11 @@ Created on 18.02.2014
 # c) matplotlib seems to be non-reeantrant, therefor lock around call to plotting
 
 import time
-import sqlite3
+import MySQLdb
 from plotGraph import plotGraph
 import sys
 from threading import Thread,Lock
+from multiprocessing.pool import ThreadPool
 
 
 
@@ -27,12 +28,13 @@ class readDB(object):
         '''
         self.DB_VERSION = 1
         self.dbFile = dbFile
-        self.conn = sqlite3.connect(dbFile)
+        self.conn = MySQLdb.connect(passwd='sqlsucks',db="lustre")
         self.c = self.conn.cursor()
         if not self.check_version():
-            v = self.c.execute(''' select version from version 
+            self.c.execute(''' select version from version 
                                         order by id 
-                                        desc limit 1 ''').fetchone()
+                                        desc limit 1 ''')
+            v = self.c.fetchone()
             if not v:
                 print 'pleas regenerate database!!!'
                 sys.exit(1)
@@ -45,9 +47,10 @@ class readDB(object):
 
 #------------------------------------------------------------------------------
     def check_version(self):
-        version = self.c.execute(''' select version from version 
+        self.c.execute(''' select version from version 
                                         order by id 
-                                        desc limit 1 ''').fetchone()
+                                        desc limit 1 ''')
+        version = self.c.fetchone()
         if version:
             if version[0] == self.DB_VERSION:
                 return True
@@ -59,19 +62,22 @@ class readDB(object):
 #------------------------------------------------------------------------------
 
     def read_write_sum_to_Nid(self, start, end, nidName):
-        tmp = self.c.execute(''' 
+        print "do the query"
+        self.c.execute(''' 
                         select samples_ost.rb, samples_ost.wb, timestamps.time, nids.nid 
                         from samples_ost, nids, timestamps 
                         where nids.id = samples_ost.nid 
                         and timestamps.id = samples_ost.time 
-                        and timestamps.time between ? and ? 
-                        and nids.nid = ?;''',(start, end, nidName)).fetchall()
+                        and timestamps.time between %s and %s 
+                        and nids.nid = %s;''',(start, end, nidName))
+        tmp = self.c.fetchall()
 
         timeMapRB = {}
         timeMapWB = {}
-        tmp_time = self.c.execute('''
+        self.c.execute('''
                             select time from timestamps 
-                            where time between ? and ?''',(start, end)).fetchall()
+                            where time between %s and %s''',(start, end))
+        tmp_time = self.c.fetchall()
         
         for timeStamp in tmp_time:
             timeMapRB[timeStamp[0]] = 0
@@ -100,8 +106,8 @@ class readDB(object):
             start = start_end[0] 
             end = start_end[1]
             if not (end-start < 900):
-                nids = self.get_nid_to_Job(jobID)   # performance - moved here
                 #print 'find nids'
+                nids = self.get_nid_to_Job(jobID)   # performance - moved here
                 colReturn = []
                 for nid in nids:
                     colReturn.append(self.read_write_sum_to_Nid(start, end, nid))
@@ -110,18 +116,21 @@ class readDB(object):
         else: return None
 #------------------------------------------------------------------------------
     def get_job_start_end(self, jobID):
-        start_end = self.c.execute(''' 
+        self.c.execute(''' 
                         select t_start, t_end 
                         from jobs
-                        where id = ? ''',(jobID,)).fetchall()
-        samples_max = self.c.execute(''' 
+                        where id = %s ''',(jobID,))
+        start_end = self.c.fetchall()
+        self.c.execute(''' 
                         select time from timestamps 
                         order by time desc 
-                        limit 1 ''').fetchall()
-        samples_min = self.c.execute(''' 
+                        limit 1 ''')
+        samples_max = self.c.fetchall()
+        self.c.execute(''' 
                         select time from timestamps 
                         order by time 
-                        limit 1 ''').fetchall()
+                        limit 1 ''')
+        samples_min = self.c.fetchall()
                         
         # out of sample range
         if not (start_end[0][0] < samples_min[0][0] or start_end[0][1] >  samples_max[0][0]):
@@ -133,13 +142,14 @@ class readDB(object):
 
 #------------------------------------------------------------------------------
     def get_nid_to_Job(self, jobID):
-        nids = self.c.execute('''
+        self.c.execute('''
                         select nids.nid 
                         From jobs, nids, nodelist 
                         where nids.id = nodelist.nid 
                         and jobs.id = nodelist.job 
-                        and jobs.id = ?;
-                        ''', (jobID,)).fetchall()
+                        and jobs.id = %s;
+                        ''', (jobID,))
+        nids = self.c.fetchall()
         nidReturn = []
         for nid in nids:
             nidReturn.append(nid[0])
@@ -168,38 +178,42 @@ class readDB(object):
 #------------------------------------------------------------------------------
 
     def get_User_To_Job(self, jobID):
-        user = self.c.execute(''' 
+        self.c.execute(''' 
                        select users.username 
                        from users, jobs 
                        where users.id = jobs.owner 
-                       and jobid = ? ''',(jobID,)).fetchall()
+                       and jobid = %s ''',(jobID,))
+        user = self.c.fetchall()
         return user
         
 #------------------------------------------------------------------------------
 
     def getAll_Jobs_to_Nid_ID_Between(self, timeStamp_start, timeStamp_end, nidID):
         
-        job_list = self.c.execute(''' 
+        self.c.execute(''' 
             select owner, nodelist.nid, jobs.jobid, jobs.t_start, jobs.t_end 
             from jobs, nodelist 
             where nodelist.job = jobs.id 
-            and nodelist.nid = ? 
-            and jobs.end > ?
-            and jobs.start < ?''',(nidID, timeStamp_start, timeStamp_end)).fetchall()
+            and nodelist.nid = %s 
+            and jobs.end > %s
+            and jobs.start < %s''',(nidID, timeStamp_start, timeStamp_end))
+        job_list = self.c.fetchall()
         return job_list
 #------------------------------------------------------------------------------
     def get_hi_lo_TimestampsID_Between(self,timeStamp_start,timeStamp_end):
-        t_end = self.c.execute(''' SELECT * FROM timestamps 
-                            WHERE TIME BETWEEN ? AND ? 
+        self.c.execute(''' SELECT * FROM timestamps 
+                            WHERE TIME BETWEEN %s AND %s 
                             order by time desc 
                             limit 1
-                            ''', (timeStamp_start,timeStamp_end)).fetchone()
+                            ''', (timeStamp_start,timeStamp_end))
+        t_end = self.c.fetchone()
 
-        t_start = self.c.execute(''' SELECT * FROM timestamps 
-                            WHERE TIME BETWEEN ? AND ? 
+        self.c.execute(''' SELECT * FROM timestamps 
+                            WHERE TIME BETWEEN %s AND %s 
                             order by time  
                             limit 1
-                            ''', (timeStamp_start,timeStamp_end)).fetchone()
+                            ''', (timeStamp_start,timeStamp_end))
+        t_start = self.c.fetchone()
                             
         if not t_start and not t_end:
             return None
@@ -216,9 +230,10 @@ class readDB(object):
             timeStamp_end_id = timestamp[1]
             timeStamp_start_id = timestamp[0]
         
-            c = self.c.execute(''' SELECT nid, rb, wb FROM samples_ost 
-                                WHERE TIME BETWEEN ? AND ?
-                                ''', (timeStamp_start_id,timeStamp_end_id)).fetchall()
+            self.c.execute(''' SELECT nid, rb, wb FROM samples_ost 
+                                WHERE TIME BETWEEN %s AND %s
+                                ''', (timeStamp_start_id,timeStamp_end_id))
+            c = self.c.fetchall()
     
             nidDictrb = {}
             nidDictwb = {}
@@ -279,27 +294,34 @@ def print_job(job):
     db = readDB('sqlite_new.db')
 
     check_job = db.c.execute(''' 
-                    select * from jobs where id = ?
+                    select * from jobs where id = %s
                      ''',(job,))
     
     if not check_job:
         print 'No such job: ', job
         sys.exit(0)
     
+    t1=time.time()
     sum = db.get_sum_nids_to_job(job)
+    t2=time.time()
+    print "monsterquery:", t2-t1
     
     if sum:
         jobid = job
 
-        job_info = db.c.execute('''
+        t1=time.time()
+        db.c.execute('''
                 select jobs.jobid, users.username 
                 from jobs, users 
-                where jobs.id = ? 
-                and users.id = jobs.owner''', (jobid,)).fetchone()
+                where jobs.id = %s 
+                and users.id = jobs.owner''', (jobid,))
+        job_info = db.c.fetchone()
+        t2=time.time()
 
         title = 'Job_' + str(job_info[0]) + '__Owner_' + str(job_info[1])
         List_of_lists = []
         
+        t3=time.time()
         for nid in sum:
             start = nid[0]
             end = nid[1]
@@ -324,9 +346,14 @@ def print_job(job):
     
                 List_of_lists.append(writeX)
                 List_of_lists.append(writeY)
-        print 'Plot: ', title
+        t4=time.time()
         loeckle.acquire()
+        print "query:", t2-t1
+        print "calc:", t4-t3
+        print 'Plot: ', 
+        sys.stdout.flush()
         plotGraph(List_of_lists,title)
+        print title
         loeckle.release()
 
 
@@ -336,7 +363,8 @@ if __name__ == '__main__':
     time_start = time.time()
 #------------------------------------------------------------------------------
     db = readDB('sqlite_new.db')
-    jobs = db.c.execute('''select id, jobid from jobs''').fetchall()
+    db.c.execute('''select id, jobid from jobs''')
+    jobs = db.c.fetchall()
     valid_jobs = []
     print '# of jobs: ' + str(len(jobs))
     
@@ -355,14 +383,17 @@ if __name__ == '__main__':
     jobid = None
     
     tmpTest = 0
-    threads = {}
+    #threads = {}
     
-    for job in valid_jobs:
-        threads[job] = Thread( target = print_job, args = (job,)) 
-        threads[job].start()
+    pool = ThreadPool(4)
+    pool.map(print_job, valid_jobs)
 
-    for job in valid_jobs:
-        threads[job].join()
+    #for job in valid_jobs:
+        #threads[job] = Thread( target = print_job, args = (job,)) 
+        #threads[job].start()
+
+    #.for job in valid_jobs:
+    #    threads[job].join()
  
 #------------------------------------------------------------------------------
     time_end = time.time()
