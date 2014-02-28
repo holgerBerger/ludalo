@@ -4,6 +4,10 @@ Created on 19.02.2014
 @author: uwe
 '''
 import datetime
+
+import matplotlib
+matplotlib.use('AGG')
+
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
 import numpy as np
