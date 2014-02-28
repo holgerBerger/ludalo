@@ -4,6 +4,13 @@ Created on 18.02.2014
 @author: uwe
 '''
 
+
+# parallel version:
+# a) sqlite connections can be only used from 1 thread.
+#    therefor one connection to get job list and one connection per thread
+# b) TKAGG backend of matplotlib can be only used from master thread, therefor other backend AGG 
+# c) matplotlib seems to be non-reeantrant, therefor lock around call to plotting
+
 import time
 import sqlite3
 from plotGraph import plotGraph
