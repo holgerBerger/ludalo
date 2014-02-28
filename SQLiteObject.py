@@ -251,7 +251,7 @@ class SQLiteObject(object):
 
         self.c.execute(''' CREATE INDEX IF NOT EXISTS 
                             samples_ost_index 
-                            ON samples_ost (time, rb, wb, rio, wio)''')
+                            ON samples_ost (time, nid, rb, wb, rio, wio)''')
 
         self.c.execute(''' CREATE INDEX IF NOT EXISTS 
                             ost_values_index 
