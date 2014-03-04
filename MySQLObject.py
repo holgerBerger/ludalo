@@ -196,7 +196,7 @@ class MySQLObject(object):
 
         try:
           self.c.execute('''CREATE INDEX 
-                              samples_ost_index ON samples_ost (time, rb, wb, rio, wio)''')
+                              samples_ost_index ON samples_ost (time, nid, rb, wb, rio, wio)''')
 
           self.c.execute('''CREATE INDEX
                               ost_values_index ON ost_values (time)''')

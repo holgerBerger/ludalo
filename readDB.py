@@ -86,12 +86,12 @@ class readDB(object):
 
 #------------------------------------------------------------------------------
     def get_sum_nids_to_job(self, jobID):
-        nids = self.get_nid_to_Job(jobID)
         start_end = self.get_job_star_end(jobID)
         if start_end:
             start = start_end[0] 
             end = start_end[1]
             if not (end-start < 900):
+                nids = self.get_nid_to_Job(jobID)   # moved here for performance
                 #print 'find nids'
                 colReturn = []
                 for nid in nids:
