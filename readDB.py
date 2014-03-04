@@ -332,16 +332,10 @@ if __name__ == '__main__':
                 valid_jobs.append(job[0])
             
     print '# of valid jobs: ' + str(len(valid_jobs))
-    
-    sum = None
-    jobid = None
-    
-    tmpTest = 0
-    
+
     for job in valid_jobs:
         db.print_job(job)
 
- 
 #------------------------------------------------------------------------------
     time_end = time.time()
     print "end with no errors in: " + str(time_end - time_start)
