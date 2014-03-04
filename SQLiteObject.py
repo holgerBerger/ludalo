@@ -223,7 +223,7 @@ class SQLiteObject(object):
                                 t_end integer, 
                                 owner integer,
                                 nodelist text,
-                                cmd text
+                                cmd text,
                                 r_sum integer,
                                 w_sum integer,
                                 reqs_sum integer); ''')
