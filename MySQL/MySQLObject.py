@@ -15,7 +15,7 @@ class MySQLObject(object):
         '''
         self.DB_VERSION = 1
         self.dbFile = dbFile
-        self.conn = MySQLdb.connect(passwd='sqlsucks',db="lustre")
+        self.conn = MySQLdb.connect(passwd='sqlsucks',db="lustre_myisam")
         self.c = self.conn.cursor()
 
         self.globalnidmap = {}

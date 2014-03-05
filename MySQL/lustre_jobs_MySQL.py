@@ -12,7 +12,7 @@ import MySQLdb
 
 class DB:
   def __init__(self, dbname=None):
-    self.conn = MySQLdb.connect(passwd='sqlsucks',db="lustre")
+    self.conn = MySQLdb.connect(passwd='sqlsucks',db="lustre_myisam")
     self.c = self.conn.cursor()
 
   def close(self):
@@ -26,7 +26,10 @@ class DB:
                                     t_end integer, 
                                     owner integer,
                                     nodelist text,
-                                    cmd text
+                                    cmd text,
+                                    r_sum integer,
+                                    w_sum integer,
+                                    reqs_sum integer
                                     )''')
     self.c.execute('''CREATE TABLE IF NOT EXISTS users (id serial primary key, 
                                     username text
@@ -36,7 +39,7 @@ class DB:
                                     nid integer
                                     )''')
     try:
-      self.c.execute('''CREATE INDEX jobid_index ON jobs (jobid,start,end,owner)''')
+      self.c.execute('''CREATE INDEX jobid_index ON jobs (jobid,t_start,t_end,owner)''')
       self.c.execute('''CREATE INDEX nodelist_index ON nodelist (job,nid)''')
     except:
       pass
@@ -55,7 +58,7 @@ class DB:
       else:
         self.c.execute('''INSERT INTO users VALUES (NULL,%s)''',(owner,))
         userid=self.c.lastrowid
-      self.c.execute('''INSERT INTO jobs VALUES (NULL,%s,%s,%s,%s,%s,%s)''',(jobid,start,end,userid,nids,cmd))
+      self.c.execute('''INSERT INTO jobs VALUES (NULL,%s,%s,%s,%s,%s,%s,NULL,NULL,NULL)''',(jobid,start,end,userid,nids,cmd))
       jobkey = self.c.lastrowid
       # nodes - expand cray name compression with ranges 
       nl=[]

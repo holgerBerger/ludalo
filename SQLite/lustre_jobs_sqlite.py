@@ -59,7 +59,7 @@ class DB:
       else:
         self.c.execute('''INSERT INTO users VALUES (NULL,?)''', (owner,))
         userid = self.c.lastrowid
-      self.c.execute('''INSERT INTO jobs VALUES (NULL,?,?,?,?,?,?,NULL,NULL)''', (jobid, start, end, userid, nids, cmd))
+      self.c.execute('''INSERT INTO jobs VALUES (NULL,?,?,?,?,?,?,NULL,NULL,NULL)''', (jobid, start, end, userid, nids, cmd))
       jobkey = self.c.lastrowid
       # nodes - expand cray name compression with ranges 
       nl=[]

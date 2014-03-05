@@ -18,7 +18,8 @@ import sys,atexit,curses
 import os.path
 import time
 
-import lustre_jobs_sqlite as lustre_jobs_db
+sys.path.append("MySQL")
+import lustre_jobs_MySQL as lustre_jobs_db
 
 def read_pw(filename, usermap):
   f = open(filename, "r")
