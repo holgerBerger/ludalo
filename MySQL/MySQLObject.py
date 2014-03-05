@@ -158,7 +158,7 @@ class MySQLObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             nids (
                                 id serial primary key ,
-                                nid varchars(64)) engine=myisam''')
+                                nid varchar(64)) engine=myisam''')
 
         # oss/mds server name
         self.c.execute('''CREATE TABLE IF NOT EXISTS
