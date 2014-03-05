@@ -158,7 +158,7 @@ class MySQLObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             nids (
                                 id serial primary key ,
-                                nid text) engine=myisam''')
+                                nid varchars(64)) engine=myisam''')
 
         # oss/mds server name
         self.c.execute('''CREATE TABLE IF NOT EXISTS
@@ -215,7 +215,7 @@ class MySQLObject(object):
         self.c.execute(''' CREATE TABLE IF NOT EXISTS
                             jobs (
                                 id serial primary key,
-                                jobid text,
+                                jobid varchar(32),
                                 t_start integer,
                                 t_end integer,
                                 owner integer,
@@ -241,23 +241,41 @@ class MySQLObject(object):
           self.c.execute('''CREATE INDEX
                             jobid_index
                             ON jobs (jobid,t_start,t_end,owner);''')
+        except:
+          pass
 
+        try:
           self.c.execute('''CREATE INDEX
                             nodelist_index
                             ON nodelist (job,nid);''')
+        except:
+          pass
 
+        try:
           self.c.execute('''CREATE INDEX 
                               samples_ost_index ON samples_ost (time, nid)''')
+        except:
+          pass
 
+        try:
           self.c.execute('''CREATE INDEX
                               ost_values_index ON ost_values (time)''')
+        except:
+          pass
 
+        try:
           self.c.execute('''CREATE INDEX
                               samples_mdt_time ON samples_mdt (time)''')
+        except:
+          pass
 
+        try:
           self.c.execute('''CREATE INDEX
                               time_index ON timestamps (time)''')
+        except:
+          pass
 
+        try:
           self.c.execute('''CREATE INDEX
                               nids_index ON nids (nid)''')
         except:
