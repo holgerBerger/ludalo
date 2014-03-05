@@ -51,7 +51,7 @@ class readDB(object):
 
     def read_write_sum_to_Nid(self, start, end, nidName):
         tmp = self.c.execute(''' 
-                        select samples_ost.rb, samples_ost.wb, timestamps.time, nids.nid 
+                        select samples_ost.rb, samples_ost.wb, timestamps.time, nids.nid, samples_ost.rio, samples_ost.wio
                         from samples_ost, nids, timestamps 
                         where nids.id = samples_ost.nid 
                         and timestamps.id = samples_ost.time 
@@ -60,6 +60,8 @@ class readDB(object):
 
         timeMapRB = {}
         timeMapWB = {}
+        timeMapRIO = {}
+        timeMapWIO = {}
         tmp_time = self.c.execute('''
                             select time from timestamps 
                             where time between ? and ?''',(start, end)).fetchall()
@@ -67,6 +69,8 @@ class readDB(object):
         for timeStamp in tmp_time:
             timeMapRB[timeStamp[0]] = 0
             timeMapWB[timeStamp[0]] = 0
+            timeMapRIO[timeStamp[0]] = 0
+            timeMapWIO[timeStamp[0]] = 0
         
         nidList = set()
         for item in tmp:
@@ -74,14 +78,20 @@ class readDB(object):
             write = item[1]
             timestamp = item[2]
             nid = item[3]
-            if timestamp not in timeMapRB:
+            rio = item[4]
+            wio = item[5]
+            if timestamp not in timeMapRB or timeMapWB or timeMapRIO or timeMapWIO:
                 timeMapRB[timestamp] = 0
-                timeMapWB[timestamp] = 0
+                timeMapWB[timestamp] = 0 
+                timeMapRIO[timestamp] = 0
+                timeMapWIO[timestamp] = 0
             timeMapRB[timestamp] += read
             timeMapWB[timestamp] += write
+            timeMapRIO[timestamp] += rio
+            timeMapWIO[timestamp] += wio
             nidList.add(nid)
                 
-        return (start, end, timeMapRB, timeMapWB, nidList)
+        return (start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
 
 
 #------------------------------------------------------------------------------
@@ -263,6 +273,20 @@ class readDB(object):
                                 float(timeStamp)).strftime('%Y-%m-%d %H:%M:%S')
 #------------------------------------------------------------------------------
 
+    def explainJob(self, jobID):
+        query = ''' select jobs.jobid, jobs.t_start, jobs.t_end, users.username, jobs.nodelist
+                        from jobs, users
+                        where jobs.id = ?
+                        and users.id = jobs.owner'''
+        executer = self.c.execute(query, (jobID,))
+        head = executer.description
+        informations = zip(zip(*head)[0], executer.fetchall()[0])
+        print informations[0][0], informations[0][1], informations[3][0], informations[3][1]
+        print 'Duration:', (informations[2][1] - informations[1][1])/60, 'min'
+        number_of_nodes = len(informations[4][1].split(','))
+        print 'Number of Nodes:', number_of_nodes    
+#------------------------------------------------------------------------------
+
     def print_job(self, job):
         
         check_job = self.c.execute(''' 
@@ -273,9 +297,9 @@ class readDB(object):
             print 'No such job: ', job
             sys.exit(0)
         
-        sum = db.get_sum_nids_to_job(job)
+        sum_nid = db.get_sum_nids_to_job(job)
         
-        if sum:
+        if sum_nid:
             jobid = job
 
             job_info = db.c.execute('''
@@ -286,25 +310,38 @@ class readDB(object):
     
             title = 'Job_' + str(job_info[0]) + '__Owner_' + str(job_info[1])
             List_of_lists = []
-            
-            for nid in sum:
+            read_sum= []
+            write_sum= []
+            io_sum = []           
+            for nid in sum_nid:
+                #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
                 start = nid[0]
                 end = nid[1]
                 readDic = nid[2]
                 writeDic = nid[3]
-        
+                
+                rioDic = nid[4]
+                wioDic = nid[5]
+                
+                #print 'dic keys =',sorted(rioDic.keys()) == sorted(writeDic.keys())  
                 readY = []
+                writeY = []
+                ioread = []
+                iowrite = []
+                writeX = sorted(writeDic.keys())
                 readX = sorted(readDic.keys())
+                
                 for timeStamp in readX:
                     readY.append(float(-readDic[timeStamp])/(60*1000000))
-        
-            
-                writeY = []
-                writeX = sorted(writeDic.keys())
-                for timeStamp in writeX:
                     writeY.append(float(writeDic[timeStamp])/(60*1000000))
-        
-                
+
+                    read_sum.append(readDic[timeStamp])
+                    write_sum.append(writeDic[timeStamp])
+                    io_sum.append(rioDic[timeStamp] + wioDic[timeStamp])
+                    
+                    ioread.append(-rioDic[timeStamp])
+                    iowrite.append(wioDic[timeStamp])
+
                 if readX and readY and writeY and writeX:
                     List_of_lists.append(readX)
                     List_of_lists.append(readY)
@@ -312,16 +349,23 @@ class readDB(object):
                     List_of_lists.append(writeX)
                     List_of_lists.append(writeY)
             print 'Plot: ', title
-            plotGraph(List_of_lists,title)
+            write_sum_b = sum(write_sum)
+            read_sum_b = sum(read_sum)
+            io_sum_b = sum(io_sum)
+            query = ''' UPDATE jobs
+                        SET r_sum = ?, w_sum = ?, reqs_sum = ?
+                        where jobs.id = ?  '''
+            self.c.execute(query, (read_sum_b, write_sum_b, io_sum_b, job))
+            #plotGraph(List_of_lists,title)
 
 if __name__ == '__main__':
     time_start = time.time()
 #------------------------------------------------------------------------------
-    db = readDB('sqlite_new.db')
+    db = readDB('sqlite_db.db')
     jobs = db.c.execute('''select id, jobid from jobs''').fetchall()
     valid_jobs = []
     print '# of jobs: ' + str(len(jobs))
-    
+    db.conn.commit()
     
     for job in jobs:
         start_end = db.get_job_star_end(job[0])
@@ -334,7 +378,9 @@ if __name__ == '__main__':
     print '# of valid jobs: ' + str(len(valid_jobs))
 
     for job in valid_jobs:
+        db.explainJob(job)
         db.print_job(job)
+    db.conn.commit()
 
 #------------------------------------------------------------------------------
     time_end = time.time()
