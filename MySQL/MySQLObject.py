@@ -266,9 +266,10 @@ class MySQLObject(object):
 #------------------------------------------------------------------------------
 
     def check_version(self):
-        version = self.c.execute(''' select version from version
+        self.c.execute(''' select version from version
                                         order by id
-                                        desc limit 1 ''').fetchone()
+                                        desc limit 1 ''')
+        version = self.c.fetchone()
         if version:
             if version[0] == self.DB_VERSION:
                 return True
@@ -276,7 +277,7 @@ class MySQLObject(object):
                 return False
         else:
             self.c.execute(''' INSERT INTO version
-                                    VALUES (NULL, ?) ''', (self.DB_VERSION,))
+                                    VALUES (NULL, %s) ''', (self.DB_VERSION,))
             self.conn.commit()
             return self.check_version()
 
