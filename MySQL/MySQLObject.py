@@ -146,32 +146,32 @@ class MySQLObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             version (
                                 id serial primary key,
-                                version integer); ''')
+                                version integer) engine=myisam''')
 
         # timestamp
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             timestamps (
                                 id serial primary key ,
-                                time integer)''')
+                                time integer) engine=myisam''')
 
         # name vom clienten
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             nids (
                                 id serial primary key ,
-                                nid text)''')
+                                nid text) engine=myisam''')
 
         # oss/mds server name
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             servers (
                                 id serial primary key ,
                                 server text,
-                                type text)''')
+                                type text) engine=myisam''')
 
         # ost / mdt
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             sources (
                                 id serial primary key ,
-                                source text)''')
+                                source text) engine=myisam''')
 
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             ost_values (
@@ -181,12 +181,12 @@ class MySQLObject(object):
                                 rio integer,
                                 rb bigint,
                                 wio integer,
-                                wb bigint)''')
+                                wb bigint) engine=myisam''')
 
         self.c.execute(''' CREATE TABLE IF NOT EXISTS
                             mdt_values (
                                 id serial primary key ,
-                                reqs integer)''')
+                                reqs integer) engine=myisam''')
         
         self.c.execute('''CREATE TABLE IF NOT EXISTS 
                             samples_ost (
@@ -197,7 +197,7 @@ class MySQLObject(object):
                                 rio integer, 
                                 rb bigint, 
                                 wio integer, 
-                                wb bigint);''')
+                                wb bigint) engine=myisam;''')
         
         self.c.execute('''CREATE TABLE IF NOT EXISTS 
                             samples_mdt (
@@ -205,12 +205,12 @@ class MySQLObject(object):
                                   time integer, 
                                   source integer, 
                                   nid integer, 
-                                  reqs integer);''')
+                                  reqs integer) engine=myisam;''')
 
         self.c.execute(''' CREATE TABLE IF NOT EXISTS
                             users (
                                 id serial primary key,
-                                username text); ''')
+                                username text) engine=myisam; ''')
 
         self.c.execute(''' CREATE TABLE IF NOT EXISTS
                             jobs (
@@ -223,17 +223,17 @@ class MySQLObject(object):
                                 cmd text,
                                 r_sum bigint,
                                 w_sum bigint,
-                                reqs_sum bigint); ''')
+                                reqs_sum bigint) engine=myisam; ''')
 
         self.c.execute(''' CREATE TABLE IF NOT EXISTS
                             nodelist (
                                 id serial primary key,
                                 job integer,
-                                nid integer); ''')
+                                nid integer) engine=myisam; ''')
 
         self.c.execute(''' CREATE TABLE IF NOT EXISTS
                             hashes (
-                                hash varchar(63) primary key);''')
+                                hash varchar(63) primary key) engine=myisam;''')
 #------------------------------------------------------------------------------
 
         # create INDEX if not exists
@@ -263,6 +263,22 @@ class MySQLObject(object):
         except:
           pass
           
+#------------------------------------------------------------------------------
+
+    def check_version(self):
+        version = self.c.execute(''' select version from version
+                                        order by id
+                                        desc limit 1 ''').fetchone()
+        if version:
+            if version[0] == self.DB_VERSION:
+                return True
+            else:
+                return False
+        else:
+            self.c.execute(''' INSERT INTO version
+                                    VALUES (NULL, ?) ''', (self.DB_VERSION,))
+            self.conn.commit()
+            return self.check_version()
 
 #------------------------------------------------------------------------------
     def has_hash(self, hexdigest):
