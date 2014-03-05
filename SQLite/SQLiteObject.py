@@ -36,7 +36,7 @@ class SQLiteObject(object):
                                         order by id
                                         desc limit 1 ''').fetchone()
             version = v[0]
-            print ('\nThere is something with the Database\n' +
+            print ('\nThere is something wrong with the Database\n' +
                        'DB version is ' + str(version) +
                        ''' but expect version ''' +
                        str(self.DB_VERSION))
@@ -247,7 +247,7 @@ class SQLiteObject(object):
 
         self.c.execute(''' CREATE INDEX IF NOT EXISTS
                             samples_ost_index
-                            ON samples_ost (time, nid, rb, wb, rio, wio)''')
+                            ON samples_ost (time, nid)''')
 
         self.c.execute(''' CREATE INDEX IF NOT EXISTS
                             ost_values_index

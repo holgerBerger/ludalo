@@ -13,6 +13,7 @@ class MySQLObject(object):
         '''
         Constructor
         '''
+        self.DB_VERSION = 1
         self.dbFile = dbFile
         self.conn = MySQLdb.connect(passwd='sqlsucks',db="lustre")
         self.c = self.conn.cursor()
@@ -28,40 +29,50 @@ class MySQLObject(object):
         
         # init sqliteDB
         self.build_database()
-        
+        if not self.check_version():
+            v = self.c.execute(''' select version from version
+                                        order by id
+                                        desc limit 1 ''').fetchone()
+            version = v[0]
+            print ('\nThere is something wrong with the Database\n' +
+                       'DB version is ' + str(version) +
+                       ''' but expect version ''' +
+                       str(self.DB_VERSION))
+            sys.exit(0)
+
 #------------------------------------------------------------------------------
     def build_database(self):
         self._generateSQLite()
         # bild map's
-        
+
         # nid map
         self.c.execute('''SELECT * FROM nids;''')
         r = self.c.fetchall()
-        for (k,v) in r:
-          self.globalnidmap[str(v)]=k
+        for (k, v) in r:
+            self.globalnidmap[str(v)] = k
         print "read %s old nid mappings" % len(self.globalnidmap)
 
         # sources map
         self.c.execute('''SELECT * FROM sources;''')
         r = self.c.fetchall()
-        for (k,v) in r:
-          self.sources[str(v)]=k
+        for (k, v) in r:
+            self.sources[str(v)] = k
         print "read %s old sources" % len(self.sources)
 
         # server map
         self.c.execute('''SELECT * FROM servers;''')
         r = self.c.fetchall()
-        for (k,v,t) in r:
-          self.servermap[str(v)]=k
-          self.per_server_nids[str(v)] = []
-          self.servertype[str(v)]=t
-          print "known server:",v,t
-          
+        for (k, v, t) in r:
+            self.servermap[str(v)] = k
+            self.per_server_nids[str(v)] = []
+            self.servertype[str(v)] = t
+            print "known server:", v, t
+
         # time stamp map
         self.c.execute('''SELECT * FROM timestamps;''')
         r = self.c.fetchall()
-        for (k,v) in r:
-          self.timestamps[str(v)]=k
+        for (k, v) in r:
+            self.timestamps[str(v)] = k
         print "read %d old timestamps" % len(self.timestamps)
 
 
@@ -132,6 +143,11 @@ class MySQLObject(object):
     def _generateSQLite(self):
         # create table if not exist
 
+        self.c.execute('''CREATE TABLE IF NOT EXISTS
+                            version (
+                                id serial primary key,
+                                version integer); ''')
+
         # timestamp
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             timestamps (
@@ -167,16 +183,16 @@ class MySQLObject(object):
                                 wio integer,
                                 wb bigint)''')
 
-        self.c.execute('''CREATE TABLE IF NOT EXISTS
+        self.c.execute(''' CREATE TABLE IF NOT EXISTS
                             mdt_values (
                                 id serial primary key ,
                                 reqs integer)''')
         
         self.c.execute('''CREATE TABLE IF NOT EXISTS 
                             samples_ost (
-                                id serial primary key , 
+                                id serial primary key, 
                                 time integer, 
-                                source text, 
+                                source integer, 
                                 nid integer, 
                                 rio integer, 
                                 rb bigint, 
@@ -185,18 +201,53 @@ class MySQLObject(object):
         
         self.c.execute('''CREATE TABLE IF NOT EXISTS 
                             samples_mdt (
-                                id serial primary key , 
+                                id serial primary key, 
                                   time integer, 
-                                  source text, 
+                                  source integer, 
                                   nid integer, 
                                   reqs integer);''')
 
-        self.c.execute('''CREATE TABLE IF NOT EXISTS 
-                            hashes (hash varchar(63) primary key);''')
+        self.c.execute(''' CREATE TABLE IF NOT EXISTS
+                            users (
+                                id serial primary key,
+                                username text); ''')
 
+        self.c.execute(''' CREATE TABLE IF NOT EXISTS
+                            jobs (
+                                id serial primary key,
+                                jobid text,
+                                t_start integer,
+                                t_end integer,
+                                owner integer,
+                                nodelist text,
+                                cmd text,
+                                r_sum bigint,
+                                w_sum bigint,
+                                reqs_sum bigint); ''')
+
+        self.c.execute(''' CREATE TABLE IF NOT EXISTS
+                            nodelist (
+                                id serial primary key,
+                                job integer,
+                                nid integer); ''')
+
+        self.c.execute(''' CREATE TABLE IF NOT EXISTS
+                            hashes (
+                                hash varchar(63) primary key);''')
+#------------------------------------------------------------------------------
+
+        # create INDEX if not exists
         try:
+          self.c.execute('''CREATE INDEX
+                            jobid_index
+                            ON jobs (jobid,t_start,t_end,owner);''')
+
+          self.c.execute('''CREATE INDEX
+                            nodelist_index
+                            ON nodelist (job,nid);''')
+
           self.c.execute('''CREATE INDEX 
-                              samples_ost_index ON samples_ost (time, nid, rb, wb, rio, wio)''')
+                              samples_ost_index ON samples_ost (time, nid)''')
 
           self.c.execute('''CREATE INDEX
                               ost_values_index ON ost_values (time)''')
@@ -217,8 +268,8 @@ class MySQLObject(object):
     def has_hash(self, hexdigest):
         self.c.execute('''SELECT * FROM hashes WHERE hash=%s''', (hexdigest,))
         r = self.c.fetchall()
-        if r: 
-          return True
+        if r:
+            return True
         else:
           self.c.execute(''' INSERT INTO hashes VALUES (%s)''', (hexdigest,))
           return False
