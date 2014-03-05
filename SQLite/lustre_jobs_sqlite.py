@@ -10,6 +10,7 @@ import sqlite3
 
 
 class DB:
+
   def __init__(self, dbname=None):
     self.conn = sqlite3.connect(dbname)
     self.c = self.conn.cursor()
@@ -21,10 +22,11 @@ class DB:
 ### it is possible to remove this if db exist. this table will create in the
 ### SQLiteObject.
   def create_tables(self):
-    self.c.execute('''CREATE TABLE IF NOT EXISTS jobs (id integer primary key asc, 
-                                    jobid text, 
-                                    t_start integer, 
-                                    t_end integer, 
+    self.c.execute('''CREATE TABLE IF NOT EXISTS
+                        jobs (id integer primary key asc,
+                                    jobid text,
+                                    t_start integer,
+                                    t_end integer,
                                     owner integer,
                                     nodelist text,
                                     cmd text,
@@ -32,7 +34,8 @@ class DB:
                                     w_sum integer,
                                     reqs_sum integer
                                     )''')
-    self.c.execute('''CREATE TABLE IF NOT EXISTS users (id integer primary key asc, 
+    self.c.execute('''CREATE TABLE IF NOT EXISTS
+                        users (id integer primary key asc,
                                     username text
                                     )''')
     self.c.execute('''CREATE TABLE IF NOT EXISTS nodelist (id integer primary key asc, 
@@ -46,25 +49,25 @@ class DB:
   def insert_job(self, jobid, start, end, owner, nids, cmd):
     #print jobid, start, end, owner, nids, cmd
     # check if job is already in DB
-    self.c.execute('''SELECT jobid FROM jobs WHERE jobid = ?''',(jobid,))
+    self.c.execute('''SELECT jobid FROM jobs WHERE jobid = ?''', (jobid,))
     if not self.c.fetchone():
       # check if user is already in DB
-      self.c.execute('''SELECT id FROM users WHERE users.username = ?''',(owner,))
-      r=self.c.fetchone()
+      self.c.execute('''SELECT id FROM users WHERE users.username = ?''', (owner,))
+      r = self.c.fetchone()
       if r:
-        userid=r[0]
+        userid = r[0]
       else:
-        self.c.execute('''INSERT INTO users VALUES (NULL,?)''',(owner,))
+        self.c.execute('''INSERT INTO users VALUES (NULL,?)''', (owner,))
         userid = self.c.lastrowid
-      self.c.execute('''INSERT INTO jobs VALUES (NULL,?,?,?,?,?,?,NULL,NULL)''',(jobid,start,end,userid,nids,cmd))
+      self.c.execute('''INSERT INTO jobs VALUES (NULL,?,?,?,?,?,?,NULL,NULL)''', (jobid, start, end, userid, nids, cmd))
       jobkey = self.c.lastrowid
       # nodes - expand cray name compression with ranges 
       nl=[]
       for node in nids.split(','):
         if "-" in node:
-          (s,e) = node.split("-")
+          (s, e) = node.split("-")
           try:  # in case a hostname is not NUMERIC-NUMERIC, we assume it is just a hostname with a - and append it
-            nl.extend(map(str,range(int(s),int(e)+1)))
+            nl.extend(map(str, range(int(s), int(e) + 1)))
           except:
             nl.append(node)
         else:
@@ -72,12 +75,11 @@ class DB:
       # insert into db
       # check if node is already in DB
       for node in nl:
-        self.c.execute('''SELECT id FROM nids WHERE nid = ?''',(node,))
-        r=self.c.fetchone()
+        self.c.execute('''SELECT id FROM nids WHERE nid = ?''', (node,))
+        r = self.c.fetchone()
         if r:
-          nodeid=r[0]
+          nodeid = r[0]
         else:
-          self.c.execute('''INSERT INTO nids VALUES (NULL,?)''',(node,))
-          nodeid=self.c.lastrowid
-        self.c.execute('''INSERT INTO nodelist VALUES (NULL,?,?)''',(jobkey,nodeid))
-          
+          self.c.execute('''INSERT INTO nids VALUES (NULL,?)''', (node,))
+          nodeid = self.c.lastrowid
+        self.c.execute('''INSERT INTO nodelist VALUES (NULL,?,?)''', (jobkey, nodeid))
