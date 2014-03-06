@@ -4,11 +4,13 @@ Created on 18.02.2014
 @author: uwe
 '''
 
+import sys
 import time
 import datetime
-import sqlite3
+import MySQLdb
+
+sys.path.append("../Analysis")
 from plotGraph import plotGraph
-import sys
 
 
 class readDB(object):
@@ -19,7 +21,7 @@ class readDB(object):
         '''
         self.DB_VERSION = 1
         self.dbFile = dbFile
-        self.conn = sqlite3.connect(dbFile)
+        self.conn = MySQLdb.connect(passwd='sqlsucks',db="lustre_myisam")
         self.c = self.conn.cursor()
         if not self.check_version():
             self.c.execute(''' select
@@ -74,10 +76,10 @@ class readDB(object):
                             where
                                 nids.id = samples_ost.nid
                                     and timestamps.id = samples_ost.time
-                                    and timestamps.time between ? and ?
-                                    and nids.nid = ?''',
+                                    and timestamps.time between %s and %s
+                                    and nids.nid = %s''',
                                     (start, end, nidName))
-        tmp = self.c.execute.fechall()
+        tmp = self.c.fetchall()
 
         timeMapRB = {}
         timeMapWB = {}
@@ -89,7 +91,7 @@ class readDB(object):
                             from
                                 timestamps
                             where
-                                time between ? and ?''',
+                                time between %s and %s''',
                                 (start, end))
         tmp_time = self.c.fetchall()
         for timeStamp in tmp_time:
@@ -143,7 +145,7 @@ class readDB(object):
         self.c.execute('''
                         select t_start, t_end
                         from jobs
-                        where id = ? ''', (jobID,))
+                        where id = %s ''', (jobID,))
         start_end = self.c.fetchall()
 
         self.c.execute('''
@@ -173,7 +175,7 @@ class readDB(object):
                         From jobs, nids, nodelist
                         where nids.id = nodelist.nid
                         and jobs.id = nodelist.job
-                        and jobs.id = ?;
+                        and jobs.id = %s;
                         ''', (jobID,))
         nids = self.c.fetchall()
         nidReturn = []
@@ -208,7 +210,7 @@ class readDB(object):
                        select users.username
                        from users, jobs
                        where users.id = jobs.owner
-                       and jobid = ? ''', (jobID,))
+                       and jobid = %s ''', (jobID,))
         user = self.c.fetchall()
         return user
 #------------------------------------------------------------------------------
@@ -219,23 +221,23 @@ class readDB(object):
             select owner, nodelist.nid, jobs.jobid, jobs.t_start, jobs.t_end
             from jobs, nodelist
             where nodelist.job = jobs.id
-            and nodelist.nid = ?
-            and jobs.end > ?
-            and jobs.start < ?''', (nidID, timeStamp_start, timeStamp_end))
+            and nodelist.nid = %s
+            and jobs.end > %s
+            and jobs.start < %s''', (nidID, timeStamp_start, timeStamp_end))
         job_list = self.c.fetchall()
         return job_list
 #------------------------------------------------------------------------------
 
     def get_hi_lo_TimestampsID_Between(self, timeStamp_start, timeStamp_end):
         self.c.execute(''' SELECT * FROM timestamps
-                            WHERE TIME BETWEEN ? AND ?
+                            WHERE TIME BETWEEN %s AND %s
                             order by time desc
                             limit 1
                             ''', (timeStamp_start, timeStamp_end))
         t_end = self.c.fetchone()
 
         self.c.execute(''' SELECT * FROM timestamps
-                            WHERE TIME BETWEEN ? AND ?
+                            WHERE TIME BETWEEN %s AND %s
                             order by time
                             limit 1
                             ''', (timeStamp_start, timeStamp_end))
@@ -258,7 +260,7 @@ class readDB(object):
             timeStamp_start_id = timestamp[0]
 
             self.c.execute(''' SELECT nid, rb, wb FROM samples_ost
-                                WHERE TIME BETWEEN ? AND ?
+                                WHERE TIME BETWEEN %s AND %s
                                 ''', (timeStamp_start_id, timeStamp_end_id))
             c = self.c.fetchall()
             nidDictrb = {}
@@ -315,11 +317,11 @@ class readDB(object):
     def explainJob(self, jobID):
         query = ''' select jobs.jobid, jobs.t_start, jobs.t_end, users.username, jobs.nodelist
                         from jobs, users
-                        where jobs.id = ?
+                        where jobs.id = %s
                         and users.id = jobs.owner'''
         executer = self.c.execute(query, (jobID,))
-        head = executer.description
-        informations = zip(zip(*head)[0], executer.fetchall()[0])
+        head = self.c.description
+        informations = zip(zip(*head)[0], self.c.fetchall()[0])
         print informations[0][0], informations[0][1], informations[3][0], informations[3][1]
         print 'Duration:', (informations[2][1] - informations[1][1]) / 60, 'min'
         number_of_nodes = len(informations[4][1].split(','))
@@ -328,7 +330,7 @@ class readDB(object):
 
     def print_job(self, job):
         check_job = self.c.execute('''
-                        select * from jobs where id = ?
+                        select * from jobs where id = %s
                          ''', (job,))
 
         if not check_job:
@@ -343,7 +345,7 @@ class readDB(object):
             db.c.execute('''
                     select jobs.jobid, users.username
                     from jobs, users
-                    where jobs.id = ?
+                    where jobs.id = %s
                     and users.id = jobs.owner''', (jobid,))
             job_info = db.c.fetchone()
             title = 'Job_' + str(job_info[0]) + '__Owner_' + str(job_info[1])
@@ -390,8 +392,8 @@ class readDB(object):
             read_sum_b = sum(read_sum)
             io_sum_b = sum(io_sum)
             query = ''' UPDATE jobs
-                        SET r_sum = ?, w_sum = ?, reqs_sum = ?
-                        where jobs.id = ?  '''
+                        SET r_sum = %s, w_sum = %s, reqs_sum = %s
+                        where jobs.id = %s  '''
             self.c.execute(query, (read_sum_b, write_sum_b, io_sum_b, job))
             plotGraph(List_of_lists, title)
 
