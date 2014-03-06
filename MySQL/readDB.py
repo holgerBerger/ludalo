@@ -129,12 +129,84 @@ class readDB(object):
             start = start_end[0]
             end = start_end[1]
             if not (end - start < 900):
-                nids = self.get_nid_to_Job(jobID)   # moved here for performance
+                #nids = self.get_nid_to_Job(jobID)   # moved here for performance
                 #print 'find nids'
+                #colReturn = []
+                #for nid in nids:
+                #    colReturn.append(self.read_write_sum_to_Nid(start, end, nid))
+                #return colReturn
+
+                # Test of the job join
+                #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
+                query = '''select
+                                sum(samples_ost.rb),
+                                sum(samples_ost.wb),
+                                sum(samples_ost.rio),
+                                sum(samples_ost.wio),
+                                timestamps.time,
+                                nids.nid
+                            from
+                                nids
+                                    join
+                                nodelist ON nids.id = nodelist.nid
+                                    join
+                                jobs ON jobs.id = nodelist.job
+                                    and jobs.id = %s
+                                    join
+                                samples_ost ON nids.id = samples_ost.nid
+                                    join
+                                timestamps ON timestamps.id = samples_ost.time
+                                    and timestamps.time between %s and %s
+                            group by nids.nid , timestamps.time'''
+                self.c.execute(query, (jobID, start, end,))
+                query_result = self.c.fetchAll()
+                nidMap = {}
+
+                for row in query_result:
+                    rb_sum = row[0]
+                    wb_sum = row[1]
+                    rio_sum = row[2]
+                    wio_sum = row[3]
+                    timestamp = row[4]
+                    nid = row[5]
+                    value_tuple = nidMap[nid]
+
+                    if not value_tuple:
+                        timeMapRB = {}
+                        timeMapWB = {}
+                        timeMapRIO = {}
+                        timeMapWIO = {}
+
+                        timeMapRB[timestamp] = rb_sum
+                        timeMapWB[timestamp] = wb_sum
+                        timeMapRIO[timestamp] = rio_sum
+                        timeMapWIO[timestamp] = wio_sum
+
+                        nidMap[nid] = (timeMapRB, timeMapWB, timeMapRIO, timeMapWIO)
+                    else:
+                        timeMapRB = value_tuple[0]
+                        timeMapWB = value_tuple[1]
+                        timeMapRIO = value_tuple[2]
+                        timeMapWIO = value_tuple[3]
+
+                        timeMapRB[timestamp] = rb_sum
+                        timeMapWB[timestamp] = wb_sum
+                        timeMapRIO[timestamp] = rio_sum
+                        timeMapWIO[timestamp] = wio_sum
+
+                        nidMap[nid] = (timeMapRB, timeMapWB, timeMapRIO, timeMapWIO)
                 colReturn = []
-                for nid in nids:
-                    colReturn.append(self.read_write_sum_to_Nid(start, end, nid))
+                for nid in nidMap.keys():
+                    #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
+                    value_tuple = nidMap[nid]
+                    timeMapRB = value_tuple[0]
+                    timeMapWB = value_tuple[1]
+                    timeMapRIO = value_tuple[2]
+                    timeMapWIO = value_tuple[3]
+                    colReturn.append((start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO))
+
                 return colReturn
+
             else:
                 return None
         else:
