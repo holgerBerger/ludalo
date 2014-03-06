@@ -4,6 +4,7 @@ Created on 16.12.2013
 @author: Uwe Schilling
 '''
 import MySQLdb
+import sys
 
 
 class MySQLObject(object):
@@ -26,7 +27,7 @@ class MySQLObject(object):
         self.servertype = {}
         self.mdsmap = {}
         self.hostfilemap = {}
-        
+
         # init sqliteDB
         self.build_database()
         if not self.check_version():
@@ -74,8 +75,6 @@ class MySQLObject(object):
         for (k, v) in r:
             self.timestamps[str(v)] = k
         print "read %d old timestamps" % len(self.timestamps)
-
-
 #------------------------------------------------------------------------------
 
     def closeConnection(self):
@@ -176,7 +175,7 @@ class MySQLObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             ost_values (
                                 id serial primary key ,
-                                time integer, 
+                                time integer,
                                 source text,
                                 rio integer,
                                 rb bigint,
@@ -187,24 +186,24 @@ class MySQLObject(object):
                             mdt_values (
                                 id serial primary key ,
                                 reqs integer) engine=myisam''')
-        
-        self.c.execute('''CREATE TABLE IF NOT EXISTS 
+
+        self.c.execute('''CREATE TABLE IF NOT EXISTS
                             samples_ost (
-                                id serial primary key, 
-                                time integer, 
-                                source integer, 
-                                nid integer, 
-                                rio integer, 
-                                rb bigint, 
-                                wio integer, 
+                                id serial primary key,
+                                time integer,
+                                source integer,
+                                nid integer,
+                                rio integer,
+                                rb bigint,
+                                wio integer,
                                 wb bigint) engine=myisam;''')
-        
-        self.c.execute('''CREATE TABLE IF NOT EXISTS 
+
+        self.c.execute('''CREATE TABLE IF NOT EXISTS
                             samples_mdt (
-                                id serial primary key, 
-                                  time integer, 
-                                  source integer, 
-                                  nid integer, 
+                                id serial primary key,
+                                  time integer,
+                                  source integer,
+                                  nid integer,
                                   reqs integer) engine=myisam;''')
 
         self.c.execute(''' CREATE TABLE IF NOT EXISTS
@@ -235,52 +234,50 @@ class MySQLObject(object):
                             hashes (
                                 hash varchar(63) primary key) engine=myisam;''')
 #------------------------------------------------------------------------------
-
         # create INDEX if not exists
         try:
-          self.c.execute('''CREATE INDEX
+            self.c.execute('''CREATE INDEX
                             jobid_index
                             ON jobs (jobid,t_start,t_end,owner);''')
         except:
-          pass
+            pass
 
         try:
-          self.c.execute('''CREATE INDEX
+            self.c.execute('''CREATE INDEX
                             nodelist_index
                             ON nodelist (job,nid);''')
         except:
-          pass
+            pass
 
         try:
-          self.c.execute('''CREATE INDEX 
+            self.c.execute('''CREATE INDEX
                               samples_ost_index ON samples_ost (time, nid)''')
         except:
-          pass
+            pass
 
         try:
-          self.c.execute('''CREATE INDEX
+            self.c.execute('''CREATE INDEX
                               ost_values_index ON ost_values (time)''')
         except:
-          pass
+            pass
 
         try:
-          self.c.execute('''CREATE INDEX
+            self.c.execute('''CREATE INDEX
                               samples_mdt_time ON samples_mdt (time)''')
         except:
-          pass
+            pass
 
         try:
-          self.c.execute('''CREATE INDEX
+            self.c.execute('''CREATE INDEX
                               time_index ON timestamps (time)''')
         except:
-          pass
+            pass
 
         try:
-          self.c.execute('''CREATE INDEX
+            self.c.execute('''CREATE INDEX
                               nids_index ON nids (nid)''')
         except:
-          pass
-          
+            pass
 #------------------------------------------------------------------------------
 
     def check_version(self):
@@ -306,8 +303,8 @@ class MySQLObject(object):
         if r:
             return True
         else:
-          self.c.execute(''' INSERT INTO hashes VALUES (%s)''', (hexdigest,))
-          return False
+            self.c.execute(''' INSERT INTO hashes VALUES (%s)''', (hexdigest,))
+            return False
 #------------------------------------------------------------------------------
 
     def insert_ost_global(self, server, tup, timestamp):
@@ -316,10 +313,10 @@ class MySQLObject(object):
             insert_string = []
             insert_string.append(self.timestamps[timestamp])
             insert_string.append(server)
-            insert_string.append(tup[0]) # rio
-            insert_string.append(tup[1]) # rb
-            insert_string.append(tup[2]) # wio
-            insert_string.append(tup[3]) # wb
+            insert_string.append(tup[0])  # rio
+            insert_string.append(tup[1])  # rb
+            insert_string.append(tup[2])  # wio
+            insert_string.append(tup[3])  # wb
             self.c.execute(''' INSERT INTO ost_values VALUES (NULL, %s,%s,%s, %s,%s,%s)
                     ''', insert_string)
 #------------------------------------------------------------------------------
@@ -343,7 +340,7 @@ class MySQLObject(object):
             print "new server:", server
             self.per_server_nids[server] = []
             self.c.execute('''INSERT INTO servers VALUES (NULL,%s,%s)''',
-                                (server,stype,))
+                                (server, stype,))
             self.servermap[server] = self.c.lastrowid
             self.servertype[server] = stype
 #------------------------------------------------------------------------------
@@ -356,8 +353,8 @@ class MySQLObject(object):
             except KeyError:
                 pass
         if nid not in self.globalnidmap:
-            self.c.execute('''INSERT INTO nids VALUES (NULL,%s)''',(nid,))
-            self.globalnidmap[nid]=self.c.lastrowid
+            self.c.execute('''INSERT INTO nids VALUES (NULL,%s)''', (nid,))
+            self.globalnidmap[nid] = self.c.lastrowid
         if nid not in self.per_server_nids[server]:
             self.per_server_nids[server].append(nid)
 #------------------------------------------------------------------------------
