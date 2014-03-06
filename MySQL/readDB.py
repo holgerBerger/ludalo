@@ -159,7 +159,7 @@ class readDB(object):
                                     and timestamps.time between %s and %s
                             group by nids.nid , timestamps.time'''
                 self.c.execute(query, (jobID, start, end,))
-                query_result = self.c.fetchAll()
+                query_result = self.c.fetchall()
                 nidMap = {}
 
                 for row in query_result:
