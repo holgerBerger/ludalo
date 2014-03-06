@@ -77,6 +77,9 @@ class MySQLObject(object):
             self.timestamps[str(v)] = k
         print "read %d old timestamps" % len(self.timestamps)
 #------------------------------------------------------------------------------
+    def tune(self):
+        self.c.execute("ANALYZE TABLE samples_ost, timestamps, nids, jobs, nodelist;");
+#------------------------------------------------------------------------------
 
     def closeConnection(self):
         ''' Closing db connection '''
