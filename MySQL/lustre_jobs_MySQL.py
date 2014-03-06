@@ -21,15 +21,15 @@ class DB:
 
   def create_tables(self):
     self.c.execute('''CREATE TABLE IF NOT EXISTS jobs (id serial primary key, 
-                                    jobid text, 
+                                    jobid varchar(32), 
                                     t_start integer, 
                                     t_end integer, 
                                     owner integer,
                                     nodelist text,
                                     cmd text,
-                                    r_sum integer,
-                                    w_sum integer,
-                                    reqs_sum integer
+                                    r_sum bigint,
+                                    w_sum bigint,
+                                    reqs_sum bigint
                                     )''')
     self.c.execute('''CREATE TABLE IF NOT EXISTS users (id serial primary key, 
                                     username text

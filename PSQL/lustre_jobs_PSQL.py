@@ -21,12 +21,15 @@ class DB:
 
   def create_tables(self):
     self.c.execute('''CREATE TABLE IF NOT EXISTS jobs (id serial primary key, 
-                                    jobid varchar(30), 
+                                    jobid varchar(32), 
                                     t_start integer, 
                                     t_end integer, 
                                     owner integer,
                                     nodelist text,
-                                    cmd text
+                                    cmd text,
+                                    r_sum bigint,
+                                    w_sum bigint,
+                                    reqs_sum bigint
                                     )''')
     self.c.execute('''CREATE TABLE IF NOT EXISTS users (id serial primary key, 
                                     username text
@@ -36,7 +39,7 @@ class DB:
                                     nid integer
                                     )''')
     try:
-      self.c.execute('''CREATE INDEX jobid_index ON jobs (jobid,starttime,endtime,owner)''')
+      self.c.execute('''CREATE INDEX jobid_index ON jobs (jobid,t_start,t_end,owner)''')
     except:
       self.conn.rollback()
     try:
