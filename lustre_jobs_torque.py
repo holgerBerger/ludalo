@@ -7,9 +7,11 @@
 import sys,atexit,curses
 import os.path,time
 
-sys.path.append("MySQL")
-#import lustre_jobs_PSQL as lustre_jobs_db
+#sys.path.append("SQLite")
 #import lustre_jobs_sqlite as lustre_jobs_db
+#sys.path.append("PSQL")
+#import lustre_jobs_PSQL as lustre_jobs_db
+sys.path.append("MySQL")
 import lustre_jobs_MySQL as lustre_jobs_db
 
 def cleanup():

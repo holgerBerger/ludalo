@@ -30,9 +30,10 @@ class MySQLObject(object):
         # init sqliteDB
         self.build_database()
         if not self.check_version():
-            v = self.c.execute(''' select version from version
+            self.c.execute(''' select version from version
                                         order by id
-                                        desc limit 1 ''').fetchone()
+                                        desc limit 1 ''')
+			v = self.c.fetchone()
             version = v[0]
             print ('\nThere is something wrong with the Database\n' +
                        'DB version is ' + str(version) +
@@ -306,8 +307,8 @@ class MySQLObject(object):
         if r:
             return True
         else:
-          self.c.execute(''' INSERT INTO hashes VALUES (%s)''', (hexdigest,))
-          return False
+            self.c.execute(''' INSERT INTO hashes VALUES (%s)''', (hexdigest,))
+            return False
 #------------------------------------------------------------------------------
 
     def insert_ost_global(self, server, tup, timestamp):

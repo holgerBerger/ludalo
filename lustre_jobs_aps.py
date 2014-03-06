@@ -20,6 +20,8 @@ import time
 
 sys.path.append("MySQL")
 import lustre_jobs_MySQL as lustre_jobs_db
+#sys.path.append("PSQL")
+#import lustre_jobs_PSQL as lustre_jobs_db
 
 def read_pw(filename, usermap):
   f = open(filename, "r")
