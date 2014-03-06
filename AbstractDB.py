@@ -7,7 +7,7 @@ Created on 21.01.2014
 
 class AbstractDB(object):
     '''
-    classdocs
+    classdocs test
     '''
 
     def __init__(self):
