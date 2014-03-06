@@ -8,10 +8,12 @@ import sys
 import time
 import datetime
 import MySQLdb
+from threading import Thread,Lock
+from multiprocessing.pool import Pool
+
 
 sys.path.append("../Analysis")
 from plotGraph import plotGraph
-
 
 class readDB(object):
 
@@ -400,8 +402,11 @@ class readDB(object):
         print 'Number of Nodes:', number_of_nodes
 #------------------------------------------------------------------------------
 
-    def print_job(self, job):
-        check_job = self.c.execute('''
+def print_job(job):
+
+	db = readDB('sqlite_new.db')
+
+        check_job = db.c.execute('''
                         select * from jobs where id = %s
                          ''', (job,))
 
@@ -466,7 +471,7 @@ class readDB(object):
             query = ''' UPDATE jobs
                         SET r_sum = %s, w_sum = %s, reqs_sum = %s
                         where jobs.id = %s  '''
-            self.c.execute(query, (read_sum_b, write_sum_b, io_sum_b, job))
+            db.c.execute(query, (read_sum_b, write_sum_b, io_sum_b, job))
             plotGraph(List_of_lists, title)
 
 if __name__ == '__main__':
@@ -489,9 +494,12 @@ if __name__ == '__main__':
 
     print '# of valid jobs: ' + str(len(valid_jobs))
 
-    for job in valid_jobs:
-        db.explainJob(job)
-        db.print_job(job)
+    pool = Pool()
+    pool.map(print_job, valid_jobs)
+
+    #for job in valid_jobs:
+    #    db.explainJob(job)
+    #    db.print_job(job)
     db.conn.commit()
 
 #------------------------------------------------------------------------------
