@@ -34,7 +34,7 @@ class MySQLObject(object):
             self.c.execute(''' select version from version
                                         order by id
                                         desc limit 1 ''')
-			v = self.c.fetchone()
+            v = self.c.fetchone()
             version = v[0]
             print ('\nThere is something wrong with the Database\n' +
                        'DB version is ' + str(version) +
