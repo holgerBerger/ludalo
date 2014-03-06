@@ -169,7 +169,7 @@ class readDB(object):
                     wio_sum = row[3]
                     timestamp = row[4]
                     nid = row[5]
-                    value_tuple = nidMap[nid]
+                    value_tuple = nidMap.get(nid, None)
 
                     if not value_tuple:
                         timeMapRB = {}
