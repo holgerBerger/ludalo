@@ -16,7 +16,7 @@ class MySQLObject(object):
         '''
         self.DB_VERSION = 1
         self.dbFile = dbFile
-        self.conn = MySQLdb.connect(passwd='sqlsucks',db="lustre_myisam")
+        self.conn = MySQLdb.connect(passwd='sqlsucks', db="lustre_myisam")
         self.c = self.conn.cursor()
 
         self.globalnidmap = {}
@@ -372,7 +372,7 @@ class MySQLObject(object):
         self.c.executemany('''INSERT INTO samples_mdt VALUES (NULL,%s,%s,%s,%s)''',il_mdt)
 #------------------------------------------------------------------------------
 
-    def insert_SERVER_values(self, mds_name, REQS, timeStamp, type):
+    def insert_SERVER_values(self, mds_name, REQS, timeStamp, s_type):
         ''' type 0->ost 1->mdt 2->oss 3->mds '''
         c = self.c
         timeid = self.timestamps[timeStamp]
@@ -383,4 +383,4 @@ class MySQLObject(object):
         self.c.execute('''INSERT INTO samples VALUES
                                         (NULL,%s,%s,%s,NULL,%s)''',
                                         # time  typ  mdsID    values
-                                        (timeid, type, mdsID, lastID))
+                                        (timeid, s_type, mdsID, lastID))

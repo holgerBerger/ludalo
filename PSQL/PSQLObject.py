@@ -375,7 +375,7 @@ class PSQLObject(object):
         self.c.executemany('''INSERT INTO samples_mdt VALUES (DEFAULT,%s,%s,%s,%s)''',il_mdt)
 #------------------------------------------------------------------------------
 
-    def insert_SERVER_values(self, mds_name, REQS, timeStamp, type):
+    def insert_SERVER_values(self, mds_name, REQS, timeStamp, s_type):
         ''' type 0->ost 1->mdt 2->oss 3->mds '''
         c = self.c
         timeid = self.timestamps[timeStamp]
@@ -386,4 +386,4 @@ class PSQLObject(object):
         self.c.execute('''INSERT INTO samples VALUES
                                         (DEFAULT,%s,%s,%s,NULL,%s)''',
                                         # time  typ  mdsID    values
-                                        (timeid, type, mdsID, lastID))
+                                        (timeid, s_type, mdsID, lastID))
