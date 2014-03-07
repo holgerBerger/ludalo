@@ -8,12 +8,12 @@ import sys
 import time
 import datetime
 import MySQLdb
-from threading import Thread,Lock
+from threading import Thread, Lock
 from multiprocessing.pool import Pool
-
 
 sys.path.append("../Analysis")
 from plotGraph import plotGraph
+
 
 class readDB(object):
 
@@ -23,7 +23,7 @@ class readDB(object):
         '''
         self.DB_VERSION = 1
         self.dbFile = dbFile
-        self.conn = MySQLdb.connect(passwd='sqlsucks',db="lustre_myisam")
+        self.conn = MySQLdb.connect(passwd='sqlsucks', db="lustre_myisam")
         self.c = self.conn.cursor()
         if not self.check_version():
             self.c.execute(''' select
@@ -199,7 +199,7 @@ class readDB(object):
                         nidMap[nid] = (timeMapRB, timeMapWB, timeMapRIO, timeMapWIO)
                 colReturn = []
                 for nid in nidMap.keys():
-                    #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
+        #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
                     value_tuple = nidMap[nid]
                     timeMapRB = value_tuple[0]
                     timeMapWB = value_tuple[1]
@@ -234,7 +234,7 @@ class readDB(object):
         samples_min = self.c.fetchall()
 
         # out of sample range
-        if not (start_end[0][0] < samples_min[0][0] or start_end[0][1] >  samples_max[0][0]):
+        if not (start_end[0][0] < samples_min[0][0] or start_end[0][1] > samples_max[0][0]):
             if start_end:
                 return start_end[0]
             else:
@@ -402,77 +402,78 @@ class readDB(object):
         print 'Number of Nodes:', number_of_nodes
 #------------------------------------------------------------------------------
 
+
 def print_job(job):
 
-	db = readDB('sqlite_new.db')
+    db = readDB('sqlite_new.db')
 
-        check_job = db.c.execute('''
-                        select * from jobs where id = %s
-                         ''', (job,))
+    check_job = db.c.execute('''
+                    select * from jobs where id = %s
+                     ''', (job,))
 
-        if not check_job:
-            print 'No such job: ', job
-            sys.exit(0)
+    if not check_job:
+        print 'No such job: ', job
+        sys.exit(0)
 
-        sum_nid = db.get_sum_nids_to_job(job)
+    sum_nid = db.get_sum_nids_to_job(job)
 
-        if sum_nid:
-            jobid = job
+    if sum_nid:
+        jobid = job
 
-            db.c.execute('''
-                    select jobs.jobid, users.username
-                    from jobs, users
-                    where jobs.id = %s
-                    and users.id = jobs.owner''', (jobid,))
-            job_info = db.c.fetchone()
-            title = 'Job_' + str(job_info[0]) + '__Owner_' + str(job_info[1])
-            List_of_lists = []
-            read_sum = []
-            write_sum = []
-            io_sum = []
-            for nid in sum_nid:
-                #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
-                start = nid[0]
-                end = nid[1]
-                readDic = nid[2]
-                writeDic = nid[3]
-                rioDic = nid[4]
-                wioDic = nid[5]
+        db.c.execute('''
+                select jobs.jobid, users.username
+                from jobs, users
+                where jobs.id = %s
+                and users.id = jobs.owner''', (jobid,))
+        job_info = db.c.fetchone()
+        title = 'Job_' + str(job_info[0]) + '__Owner_' + str(job_info[1])
+        List_of_lists = []
+        read_sum = []
+        write_sum = []
+        io_sum = []
+        for nid in sum_nid:
+            #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
+            start = nid[0]
+            end = nid[1]
+            readDic = nid[2]
+            writeDic = nid[3]
+            rioDic = nid[4]
+            wioDic = nid[5]
 
-                #print 'dic keys =',sorted(rioDic.keys()) == sorted(writeDic.keys())  
-                readY = []
-                writeY = []
-                ioread = []
-                iowrite = []
-                writeX = sorted(writeDic.keys())
-                readX = sorted(readDic.keys())
+            #print 'dic keys =',sorted(rioDic.keys()) == sorted(writeDic.keys())  
+            readY = []
+            writeY = []
+            ioread = []
+            iowrite = []
+            writeX = sorted(writeDic.keys())
+            readX = sorted(readDic.keys())
 
-                for timeStamp in readX:
-                    readY.append(float(-readDic[timeStamp]) / (60 * 1000000))
-                    writeY.append(float(writeDic[timeStamp]) / (60 * 1000000))
+            for timeStamp in readX:
+                readY.append(float(-readDic[timeStamp]) / (60 * 1000000))
+                writeY.append(float(writeDic[timeStamp]) / (60 * 1000000))
 
-                    read_sum.append(readDic[timeStamp])
-                    write_sum.append(writeDic[timeStamp])
-                    io_sum.append(rioDic[timeStamp] + wioDic[timeStamp])
+                read_sum.append(readDic[timeStamp])
+                write_sum.append(writeDic[timeStamp])
+                io_sum.append(rioDic[timeStamp] + wioDic[timeStamp])
 
-                    ioread.append(-rioDic[timeStamp])
-                    iowrite.append(wioDic[timeStamp])
+                ioread.append(-rioDic[timeStamp])
+                iowrite.append(wioDic[timeStamp])
 
-                if readX and readY and writeY and writeX:
-                    List_of_lists.append(readX)
-                    List_of_lists.append(readY)
+            if readX and readY and writeY and writeX:
+                List_of_lists.append(readX)
+                List_of_lists.append(readY)
 
-                    List_of_lists.append(writeX)
-                    List_of_lists.append(writeY)
-            print 'Plot: ', title
-            write_sum_b = sum(write_sum)
-            read_sum_b = sum(read_sum)
-            io_sum_b = sum(io_sum)
-            query = ''' UPDATE jobs
-                        SET r_sum = %s, w_sum = %s, reqs_sum = %s
-                        where jobs.id = %s  '''
-            db.c.execute(query, (read_sum_b, write_sum_b, io_sum_b, job))
-            plotGraph(List_of_lists, title)
+                List_of_lists.append(writeX)
+                List_of_lists.append(writeY)
+        print 'Plot: ', title
+        write_sum_b = sum(write_sum)
+        read_sum_b = sum(read_sum)
+        io_sum_b = sum(io_sum)
+        query = ''' UPDATE jobs
+                    SET r_sum = %s, w_sum = %s, reqs_sum = %s
+                    where jobs.id = %s  '''
+        db.c.execute(query, (read_sum_b, write_sum_b, io_sum_b, job))
+        plotGraph(List_of_lists, title)
 
 if __name__ == '__main__':
     time_start = time.time()
