@@ -195,5 +195,8 @@ if __name__ == "__main__":
   for filename in sys.argv[2:]:
     o = Logfile(filename, hostfile)
     o.read()
+    print "optimizing DB...",
+    sys.stdout.flush()
     o.myDB.tune()
+    print " done"
     o.myDB.closeConnection()
