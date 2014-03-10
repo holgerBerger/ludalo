@@ -8,11 +8,20 @@
 # so in case of torque, it is hostnames, not IP addresses.
 
 import psycopg2
+from ConfigParser import ConfigParser
 
 
 class DB:
   def __init__(self, dbname=None):
-    self.conn = psycopg2.connect("dbname=lustre user=berger")
+    self.config = ConfigParser()
+    try:
+        self.config.readfp(open("db.conf"))
+    except IOError:
+        print "no db.conf file found."
+        sys.exit()
+    self.dbname = self.config.get("database","name")
+    self.dbpassword = self.config.get("database","password")
+    self.conn = psycopg2.connect("dbname=%s"%self.dbname)
     self.c = self.conn.cursor()
 
   def close(self):

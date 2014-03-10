@@ -4,6 +4,7 @@ Created on 16.12.2013
 @author: Uwe Schilling
 '''
 import psycopg2
+from ConfigParser import ConfigParser
 
 
 class PSQLObject(object):
@@ -15,7 +16,15 @@ class PSQLObject(object):
         '''
         self.DB_VERSION = 1
         self.dbFile = dbFile
-        self.conn = psycopg2.connect("dbname=lustre user=berger")
+        self.config = ConfigParser()
+        try:
+            self.config.readfp(open("db.conf"))
+        except IOError:
+            print "no db.conf file found."
+            sys.exit()
+        self.dbname = self.config.get("database","name")
+        self.dbpassword = self.config.get("database","password")
+        self.conn = psycopg2.connect("dbname=%s" % self.dbname)
         self.c = self.conn.cursor()
 
         self.globalnidmap = {}

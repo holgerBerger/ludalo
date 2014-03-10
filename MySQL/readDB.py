@@ -10,6 +10,7 @@ import datetime
 import MySQLdb
 from threading import Thread, Lock
 from multiprocessing.pool import Pool
+from ConfigParser import ConfigParser
 
 sys.path.append("../Analysis")
 from plotGraph import plotGraph
@@ -23,7 +24,17 @@ class readDB(object):
         '''
         self.DB_VERSION = 1
         self.dbFile = dbFile
-        self.conn = MySQLdb.connect(passwd='sqlsucks', db="lustre_myisam")
+        self.config = ConfigParser()
+        try:
+            self.config.readfp(open("db.conf"))
+        except IOError:
+            print "no db.conf file found."
+            sys.exit()
+        self.dbname = self.config.get("database","name")
+        self.dbpassword = self.config.get("database","password")
+        self.dbhost = self.config.get("database","host")
+        self.dbuser = self.config.get("database","user")
+        self.conn = MySQLdb.connect(passwd=self.dbpassword, db=self.dbname, host=self.dbhost, user=self.dbuser)
         self.c = self.conn.cursor()
         if not self.check_version():
             self.c.execute(''' select

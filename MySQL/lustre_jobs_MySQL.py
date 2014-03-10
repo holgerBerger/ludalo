@@ -8,11 +8,22 @@
 # so in case of torque, it is hostnames, not IP addresses.
 
 import MySQLdb
+from ConfigParser import ConfigParser
 
 
 class DB:
     def __init__(self, dbname=None):
-        self.conn = MySQLdb.connect(passwd='sqlsucks', db="lustre_myisam")
+        self.config = ConfigParser()
+        try:
+            self.config.readfp(open("db.conf"))
+        except IOError:
+            print "no db.conf file found."
+            sys.exit()
+        self.dbname = self.config.get("database","name")
+        self.dbpassword = self.config.get("database","password")
+        self.dbhost = self.config.get("database","host")
+        self.dbuser = self.config.get("database","user")
+        self.conn = MySQLdb.connect(passwd=self.dbpassword, db=self.dbname, host=self.dbhost, user=self.dbuser)
         self.c = self.conn.cursor()
 
     def close(self):
