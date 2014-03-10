@@ -4,5 +4,6 @@ Config File Syntax
 [database]
 name = lustre_performance_database
 password = a_secret_password
-
+user = username
+host = dbhost
 
