@@ -9,6 +9,7 @@
 
 import MySQLdb
 from ConfigParser import ConfigParser
+import sys
 
 
 class DB:

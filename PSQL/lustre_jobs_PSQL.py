@@ -9,7 +9,7 @@
 
 import psycopg2
 from ConfigParser import ConfigParser
-
+import sys
 
 class DB:
   def __init__(self, dbname=None):

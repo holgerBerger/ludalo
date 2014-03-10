@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Created on 18.02.2014
 
@@ -516,4 +517,4 @@ if __name__ == '__main__':
 
 #------------------------------------------------------------------------------
     time_end = time.time()
-    print "end with no errors in: " + str(time_end - time_start)
+    print "end with no errors in:" , str(time_end - time_start), "sec"
