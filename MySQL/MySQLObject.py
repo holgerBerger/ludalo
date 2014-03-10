@@ -38,8 +38,9 @@ class MySQLObject(object):
         self.servertype = {}
         self.mdsmap = {}
         self.hostfilemap = {}
+        self.insertfile = None
 
-        # init sqliteDB
+        # init DB
         self.build_database()
         if not self.check_version():
             self.c.execute(''' select version from version
@@ -88,12 +89,14 @@ class MySQLObject(object):
             self.timestamps[str(v)] = k
         print "read %d old timestamps" % len(self.timestamps)
 #------------------------------------------------------------------------------
-    def tune(self):
-        self.c.execute("ANALYZE TABLE samples_ost, timestamps, nids, jobs, nodelist;");
-#------------------------------------------------------------------------------
 
     def closeConnection(self):
         ''' Closing db connection '''
+        if self.insertfile:
+            print "completing insert by reading previously created CSV file..."
+            self.c.execute("""load data infile '/tmp/samples_ost.txt' into table samples_ost COLUMNS TERMINATED BY ',';""")
+        print "analyzing database for better performance..."
+        self.c.execute("ANALYZE TABLE samples_ost, timestamps, nids, jobs, nodelist;");
         self.conn.commit()
         self.conn.close()
 #------------------------------------------------------------------------------
@@ -379,7 +382,15 @@ class MySQLObject(object):
 #------------------------------------------------------------------------------
 
     def insert_ost_samples(self, il_ost):
-        self.c.executemany('''INSERT INTO samples_ost VALUES (NULL,%s,%s,%s,%s,%s,%s,%s)''',il_ost)
+        if self.dbhost == 'localhost':
+            #print "shortcut possible", len(il_ost)
+            if not self.insertfile:
+                self.insertfile=open("/tmp/samples_ost.txt","w")
+            for v in il_ost:
+                #print v
+                self.insertfile.write("NULL,%d,%d,%d,%s,%s,%s,%s\n" % tuple(v))
+        else:
+            self.c.executemany('''INSERT INTO samples_ost VALUES (NULL,%s,%s,%s,%s,%s,%s,%s)''',il_ost)
 #------------------------------------------------------------------------------
 
     def insert_mdt_samples(self, il_mdt):

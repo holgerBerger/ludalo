@@ -1,35 +1,22 @@
 #!/usr/bin/env python
 
 
-# small test if SQL is an option, inserts data into a sqlite database
+# inserts data into a sqlite database
 # Holger Berger 2014
 #
 # TODO
-#  - read old values for some hashes from database (to update a database)
 #  - insert OST and MDS values as well 
 #  - add job data/user mapping
-#  - MySQL/PSQL Support??
 #
 # fist argument is hosts file for name mapping, following arguments is files
-#
 #
 # addition form Uwe Schilling 2014:
 # to manage more then one database added an db abstraction layer
 # this manages all the query for the db. (abstaction layer removed)
 # 
 # 
-# supported db at this moment, sqlite
+# supported db at this moment, sqlite, mysql, psql
 #
-
-# nice benchmark query is
-'''
- SELECT nids.nid FROM samples
-   INNER JOIN timestamps
-   ON timestamps.time BETWEEN 1390912496 AND 1390912596
-    AND samples.time = timestamps.id
- INNER JOIN nids
- ON samples.nid = nids.id;
-'''
 
 
 
@@ -197,6 +184,5 @@ if __name__ == "__main__":
     o.read()
     print "optimizing DB...",
     sys.stdout.flush()
-    o.myDB.tune()
     print " done"
     o.myDB.closeConnection()
