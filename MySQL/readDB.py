@@ -140,8 +140,8 @@ class readDB(object):
     def get_sum_nids_to_job(self, jobID):
         start_end = self.get_job_start_end(jobID)
         if start_end:
-            start = start_end[0]
-            end = start_end[1]
+            start = start_end[0] - 60
+            end = start_end[1] + 60
             if not (end - start < 900):
                 #nids = self.get_nid_to_Job(jobID)   # moved here for performance
                 #print 'find nids'
