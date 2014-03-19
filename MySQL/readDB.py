@@ -175,7 +175,7 @@ class readDB(object):
                 self.c.execute(query, (jobID, start, end,))
                 query_result = self.c.fetchall()
                 nidMap = {}
-
+                test_time = time.time()
                 for row in query_result:
                     rb_sum = row[0]
                     wb_sum = row[1]
@@ -209,6 +209,7 @@ class readDB(object):
                         timeMapWIO[timestamp] = wio_sum
 
                         nidMap[nid] = (timeMapRB, timeMapWB, timeMapRIO, timeMapWIO)
+                print time.time() - test_time
                 colReturn = []
                 for nid in nidMap.keys():
         #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
@@ -401,11 +402,19 @@ class readDB(object):
 #------------------------------------------------------------------------------
 
     def explainJob(self, jobID):
-        query = ''' select jobs.jobid, jobs.t_start, jobs.t_end, users.username, jobs.nodelist
-                        from jobs, users
-                        where jobs.id = %s
+        query = ''' select
+                        jobs.jobid,
+                        jobs.t_start,
+                        jobs.t_end,
+                        users.username,
+                        jobs.nodelist
+                    from
+                        jobs,
+                        users
+                    where
+                        jobs.id = %s
                         and users.id = jobs.owner'''
-        executer = self.c.execute(query, (jobID,))
+        self.c.execute(query, (jobID,))
         head = self.c.description
         informations = zip(zip(*head)[0], self.c.fetchall()[0])
         print informations[0][0], informations[0][1], informations[3][0], informations[3][1]
@@ -444,7 +453,7 @@ def print_job(job):
         write_sum = []
         io_sum = []
         for nid in sum_nid:
-            #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
+        #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
             start = nid[0]
             end = nid[1]
             readDic = nid[2]
@@ -452,7 +461,7 @@ def print_job(job):
             rioDic = nid[4]
             wioDic = nid[5]
 
-            #print 'dic keys =',sorted(rioDic.keys()) == sorted(writeDic.keys())  
+        #print 'dic keys =',sorted(rioDic.keys()) == sorted(writeDic.keys())
             readY = []
             writeY = []
             ioread = []
@@ -517,4 +526,4 @@ if __name__ == '__main__':
 
 #------------------------------------------------------------------------------
     time_end = time.time()
-    print "end with no errors in:" , str(time_end - time_start), "sec"
+    print "end with no errors in:", str(time_end - time_start), "sec"
