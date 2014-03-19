@@ -463,9 +463,9 @@ def print_job(job):
                 and users.id = jobs.owner''', (jobid,))
         job_info = db.c.fetchone()
 
-        db.c.execute('''select nid from nodelist where job = 1820''')
+        db.c.execute('''select nid from nodelist where job = %s''', (jobid,))
         nids = db.c.fetchall()
-        title = 'Job_' + str(job_info[0])+ 'NoN_' + str(len(nids)) + '__Owner_' + str(job_info[1])
+        title = 'Job_' + str(job_info[0])+ '_NoN_' + str(len(nids)) + '__Owner_' + str(job_info[1])
         List_of_lists = []
         read_sum = []
         write_sum = []
