@@ -190,15 +190,16 @@ class MySQLObject(object):
                                 id serial primary key ,
                                 source text) engine=myisam''')
 
-        self.c.execute('''CREATE TABLE IF NOT EXISTS
-                            ost_values (
-                                id serial primary key ,
-                                time integer,
-                                source text,
-                                rio integer,
-                                rb bigint,
-                                wio integer,
-                                wb bigint) engine=myisam''')
+        self.c.execute('''
+                        CREATE TABLE IF NOT EXISTS ost_values (
+                            id serial primary key,
+                            time integer,
+                            source text,
+                            rio integer,
+                            rb bigint,
+                            wio integer,
+                            wb bigint
+                        )  engine=myisam''')
 
         self.c.execute(''' CREATE TABLE IF NOT EXISTS
                             mdt_values (
