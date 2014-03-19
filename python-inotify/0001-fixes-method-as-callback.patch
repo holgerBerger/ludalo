@@ -1,0 +1,58 @@
+From 21ed5668952473cc32af1caefd660d938eac6a49 Mon Sep 17 00:00:00 2001
+From: Holger Berger <holger.berger@googlemail.com>
+Date: Wed, 19 Mar 2014 15:04:29 +0100
+Subject: [PATCH] fixes + method as callback
+
+---
+ inotify.c |   15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/inotify.c b/inotify.c
+index afb69b8..cabb136 100644
+--- a/inotify.c
++++ b/inotify.c
+@@ -1,6 +1,7 @@
+ #include <Python.h>
+ #include <sys/inotify.h>
+ #include <sys/epoll.h>
++#include <unistd.h>
+ 
+ PyDoc_STRVAR(inotify_create_doc, "initializes a new inotify instance and returns a file descriptor associated with a new inotify event queue");
+ 
+@@ -72,24 +73,28 @@ inotify_read_event(PyObject *object, PyObject *args)
+ 	PyObject *callback;
+ 	PyObject *event_dict; 
+ 	struct inotify_event *event;
++	long maxfilename;
++
++	maxfilename = pathconf(".", _PC_NAME_MAX);
+ 
+ 	if (!PyArg_ParseTuple(args, "IO", &fd, &callback)) {
+ 		return NULL;
+ 	}
+ 
+-	if (!PyFunction_Check(callback)) {
+-		PyErr_SetString(PyExc_TypeError, "callback must be a function");
++	if (!(PyFunction_Check(callback) || PyMethod_Check(callback))) {
++		PyErr_SetString(PyExc_TypeError, "callback must be a function or method");
+ 		return NULL;
+ 	} 
+ 
+-	event = PyMem_Malloc(sizeof(*event) + 513);
++
++	event = PyMem_Malloc(sizeof(*event) + maxfilename);
+ 	if (!event) {
+ 		goto failed;	
+ 	}
+ 
+-	ret = read(fd, event, sizeof(*event)); 
++	ret = read(fd, event, sizeof(*event) + maxfilename); 
+ 
+-	if (ret != sizeof(*event)) { 
++	if (ret <=0) { 
+ 		goto failed; 
+ 	}
+ 
+-- 
+1.7.9.5
+
