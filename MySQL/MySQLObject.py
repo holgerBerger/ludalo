@@ -93,10 +93,18 @@ class MySQLObject(object):
     def closeConnection(self):
         ''' Closing db connection '''
         if self.insertfile:
-            print "completing insert by reading previously created CSV file..."
+            print "completing insert by reading previously created CSV file...",
+            sys.stdout.flush()
+            t1=time.time()
             self.c.execute("""load data infile '/tmp/samples_ost.txt' into table samples_ost COLUMNS TERMINATED BY ',';""")
-        print "analyzing database for better performance..."
+            t2=time.time()
+            print t2-t1,"secs"
+        print "analyzing database for better performance...",
+        sys.stdout.flush()
+        t1=time.time()
         self.c.execute("ANALYZE TABLE samples_ost, timestamps, nids, jobs, nodelist;");
+        t2=time.time()
+        print t2-t1,"secs"
         self.conn.commit()
         self.conn.close()
 #------------------------------------------------------------------------------
