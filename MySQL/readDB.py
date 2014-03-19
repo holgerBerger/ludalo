@@ -462,7 +462,10 @@ def print_job(job):
                 where jobs.id = %s
                 and users.id = jobs.owner''', (jobid,))
         job_info = db.c.fetchone()
-        title = 'Job_' + str(job_info[0])+ 'NoN_' +  + '__Owner_' + str(job_info[1])
+
+        db.c.execute('''select nid from nodelist where job = 1820''')
+        nids = db.c.fetchall()
+        title = 'Job_' + str(job_info[0])+ 'NoN_' + len(nids) + '__Owner_' + str(job_info[1])
         List_of_lists = []
         read_sum = []
         write_sum = []
@@ -517,12 +520,6 @@ if __name__ == '__main__':
     db.c.execute('''select id, jobid from jobs''')
     jobs = db.c.fetchall()
     valid_jobs = []
-
-    db.c.execute('''select nid from nodelist where job = 1820''')
-    nids = jobs = db.c.fetchall()
-
-    print len(nids)
-    exit()
 
     print '# of jobs: ' + str(len(jobs))
     db.conn.commit()
