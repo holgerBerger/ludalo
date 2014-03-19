@@ -31,10 +31,10 @@ class readDB(object):
         except IOError:
             print "no db.conf file found."
             sys.exit()
-        self.dbname = self.config.get("database","name")
-        self.dbpassword = self.config.get("database","password")
-        self.dbhost = self.config.get("database","host")
-        self.dbuser = self.config.get("database","user")
+        self.dbname = self.config.get("database", "name")
+        self.dbpassword = self.config.get("database", "password")
+        self.dbhost = self.config.get("database", "host")
+        self.dbuser = self.config.get("database", "user")
         self.conn = MySQLdb.connect(passwd=self.dbpassword, db=self.dbname, host=self.dbhost, user=self.dbuser)
         self.c = self.conn.cursor()
         if not self.check_version():
@@ -174,8 +174,18 @@ class readDB(object):
                             group by nids.nid , timestamps.time'''
                 self.c.execute(query, (jobID, start, end,))
                 query_result = self.c.fetchall()
+
+                self.c.execute('''
+                    select
+                        time
+                    from
+                        timestamps
+                    where
+                        time between %s and %s''',
+                        (start, end))
+                tmp_time = self.c.fetchall()
+
                 nidMap = {}
-                test_time = time.time()
                 for row in query_result:
                     rb_sum = row[0]
                     wb_sum = row[1]
@@ -190,6 +200,12 @@ class readDB(object):
                         timeMapWB = {}
                         timeMapRIO = {}
                         timeMapWIO = {}
+                        # init with 0
+                        for timeStamp in tmp_time:
+                            timeMapRB[timeStamp[0]] = 0
+                            timeMapWB[timeStamp[0]] = 0
+                            timeMapRIO[timeStamp[0]] = 0
+                            timeMapWIO[timeStamp[0]] = 0
 
                         timeMapRB[timestamp] = rb_sum
                         timeMapWB[timestamp] = wb_sum
@@ -209,7 +225,6 @@ class readDB(object):
                         timeMapWIO[timestamp] = wio_sum
 
                         nidMap[nid] = (timeMapRB, timeMapWB, timeMapRIO, timeMapWIO)
-                print time.time() - test_time
                 colReturn = []
                 for nid in nidMap.keys():
         #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
@@ -461,7 +476,6 @@ def print_job(job):
             rioDic = nid[4]
             wioDic = nid[5]
 
-        #print 'dic keys =',sorted(rioDic.keys()) == sorted(writeDic.keys())
             readY = []
             writeY = []
             ioread = []
@@ -519,9 +533,6 @@ if __name__ == '__main__':
     pool = Pool()
     pool.map(print_job, valid_jobs)
 
-    #for job in valid_jobs:
-    #    db.explainJob(job)
-    #    db.print_job(job)
     db.conn.commit()
 
 #------------------------------------------------------------------------------
