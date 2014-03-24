@@ -31,6 +31,7 @@ class MySQLObject(object):
         self.c = self.conn.cursor()
 
         self.globalnidmap = {}
+        self.filesystemmap = {}
         self.servermap = {}
         self.per_server_nids = {}
         self.timestamps = {}
@@ -58,6 +59,13 @@ class MySQLObject(object):
     def build_database(self):
         self._generateSQLite()
         # bild map's
+
+        # fs map
+        self.c.execute('''SELECT * FROM filesystems;''')
+        r = self.c.fetchall()
+        for (k, v) in r:
+            self.filesystemmap[str(v)] = k
+        print "read %s old filesystemmap mappings" % len(self.filesystemmap)
 
         # nid map
         self.c.execute('''SELECT * FROM nids;''')
@@ -373,7 +381,15 @@ class MySQLObject(object):
             self.timestamps[timestamp] = self.c.lastrowid
 #------------------------------------------------------------------------------
 
-    def insert_source(self, source, fsid):
+    def insert_source(self, source, fsName):
+        if fsName not in self.filesystemmap:
+            self.c.execute('''INSERT INTO filesystems VALUES (NULL,%s)''',
+                                (fsName,))
+            fsid = self.c.lastrowid
+            self.filesystemmap[fsName] = fsid
+        else:
+            fsid = self.filesystemmap[fsName]
+
         if source not in self.sources:
             self.c.execute('''INSERT INTO targets VALUES (NULL,%s,%s)''',
                                 (source, fsid))

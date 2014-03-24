@@ -85,7 +85,10 @@ class Logfile:
         value_tupel = sp[3]  # values for ost
 
         self.myDB.insert_timestamp(timestamp)
-        self.myDB.insert_source(source)
+        # source = univ_1-OST0001
+        fs = source.split('-')[0]
+        source = source.split('-')[1]
+        self.myDB.insert_source(source, fs)
 
         # add ost global
         self.insert_ost_global(server, value_tupel, timestamp)
