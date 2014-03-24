@@ -4,8 +4,11 @@ import time
 import select
 import _inotify
 
-ROOTDIR="/var/spool/torque/server_priv/accounting"
+sys.path.append("MySQL")
+import lustre_jobs_MySQL as lustre_jobs_db
 
+
+ROOTDIR="/var/spool/torque/server_priv/accounting"
 
 class Logfile:
     def __init__(self, prefix, path, filename):
@@ -18,6 +21,8 @@ class Logfile:
         self.filename = self.path+"/"+filename
         self.f = open(self.filename,"r")
         self.read_from_last_pos_to_end()
+
+        self.db = lustre_jobs_db.DB()
 
     def read_from_last_pos_to_end(self):
         '''read from file from current position to current end, build lists for inserts and updates
@@ -61,26 +66,25 @@ class Logfile:
             if i not in jobstarts:
                 updates.append(jobends[i])
        
-        #FIXME do executemany here for insert and update
-        print inserts
-        print updates
+        # insert into DB - executemany is hard to achieve, as we need to insert users as well
+        for j in inserts:
+            self.db.insert_job(j)
+        for j in updates:
+            self.db.update_job(j)
 
     def switch_file(self,filename):
-        # FIXME check for prefix + current date filename pattern, otherwise ignore it
-        self.read_from_last_pos_to_end()
-        self.f.close()
-        self.filename = self.path+"/"+filename
-        self.f = open(self.filename, "r")
+        todayfile = time.strftime("%Y%m%d")
+        if filename.startswith(self.prefix) and todayfile in filename:
+            self.read_from_last_pos_to_end()
+            self.f.close()
+            self.filename = self.path+"/"+filename
+            self.f = open(self.filename, "r")
         #print "new file", self.filename
 
     def action(self, e):
-        #print e
-        #print "changed"
         if e["mask"] & _inotify.CREATE:
-            #print "create"
             self.switch_file(e["name"])
         if e["mask"] & _inotify.MODIFY:
-            #print "modify"
             self.read_from_last_pos_to_end()
         
 
@@ -90,6 +94,7 @@ def mainloop():
   wddir = _inotify.add(fd, "watchdir", _inotify.CREATE | _inotify.MODIFY) 
 
   todayfile = time.strftime("%Y%m%d")
+  todayfile = "20140320"
   lf = Logfile("","watchdir",todayfile)
 
   while True:
