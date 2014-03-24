@@ -196,7 +196,7 @@ class MySQLObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             targets (
                                 id serial primary key ,
-                                target text
+                                target text,
                                 fsid integer) engine=myisam''')
 
         self.c.execute('''

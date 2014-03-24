@@ -22,10 +22,10 @@ class Job(object):
 
         self.nidList = []
 
-        self.WR_dict = {}
-        self.RD_dict = {}
-        self.WQ_dict = {}
-        self.RQ_dict = {}
+        self.WR_dict = WR_dict
+        self.RD_dict = RD_dict
+        self.WQ_dict = WQ_dict
+        self.RQ_dict = RQ_dict
 
     def getReadList(self):
         'returns read values'
