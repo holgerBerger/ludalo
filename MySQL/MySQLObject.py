@@ -5,7 +5,7 @@ Created on 16.12.2013
 '''
 import MySQLdb
 from ConfigParser import ConfigParser
-import sys
+import sys,time
 
 
 class MySQLObject(object):
@@ -171,32 +171,32 @@ class MySQLObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             version (
                                 id serial primary key,
-                                version integer) engine=myisam''')
+                                version integer) engine=innodb''')
 
         # timestamp
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             timestamps (
                                 id serial primary key ,
-                                time integer) engine=myisam''')
+                                time integer) engine=innodb''')
 
         # name vom clienten
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             nids (
                                 id serial primary key ,
-                                nid varchar(64)) engine=myisam''')
+                                nid varchar(64)) engine=innodb''')
 
         # oss/mds server name
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             servers (
                                 id serial primary key ,
                                 server text,
-                                type text) engine=myisam''')
+                                type text) engine=innodb''')
 
         # ost / mdt
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             sources (
                                 id serial primary key ,
-                                source text) engine=myisam''')
+                                source text) engine=innodb''')
 
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             ost_values (
@@ -206,12 +206,12 @@ class MySQLObject(object):
                                 rio integer,
                                 rb bigint,
                                 wio integer,
-                                wb bigint) engine=myisam''')
+                                wb bigint) engine=innodb''')
 
         self.c.execute(''' CREATE TABLE IF NOT EXISTS
                             mdt_values (
                                 id serial primary key ,
-                                reqs integer) engine=myisam''')
+                                reqs integer) engine=innodb''')
 
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             samples_ost (
@@ -222,7 +222,7 @@ class MySQLObject(object):
                                 rio integer,
                                 rb bigint,
                                 wio integer,
-                                wb bigint) engine=myisam;''')
+                                wb bigint) engine=innodb;''')
 
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             samples_mdt (
@@ -230,12 +230,12 @@ class MySQLObject(object):
                                   time integer,
                                   source integer,
                                   nid integer,
-                                  reqs integer) engine=myisam;''')
+                                  reqs integer) engine=innodb;''')
 
         self.c.execute(''' CREATE TABLE IF NOT EXISTS
                             users (
                                 id serial primary key,
-                                username text) engine=myisam; ''')
+                                username text) engine=innodb; ''')
 
         self.c.execute(''' CREATE TABLE IF NOT EXISTS
                             jobs (
@@ -248,17 +248,17 @@ class MySQLObject(object):
                                 cmd text,
                                 r_sum bigint,
                                 w_sum bigint,
-                                reqs_sum bigint) engine=myisam; ''')
+                                reqs_sum bigint) engine=innodb; ''')
 
         self.c.execute(''' CREATE TABLE IF NOT EXISTS
                             nodelist (
                                 id serial primary key,
                                 job integer,
-                                nid integer) engine=myisam; ''')
+                                nid integer) engine=innodb; ''')
 
         self.c.execute(''' CREATE TABLE IF NOT EXISTS
                             hashes (
-                                hash varchar(63) primary key) engine=myisam;''')
+                                hash varchar(63) primary key) engine=innodb;''')
 #------------------------------------------------------------------------------
         # create INDEX if not exists
         try:
