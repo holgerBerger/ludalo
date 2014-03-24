@@ -373,10 +373,10 @@ class MySQLObject(object):
             self.timestamps[timestamp] = self.c.lastrowid
 #------------------------------------------------------------------------------
 
-    def insert_source(self, source):
+    def insert_source(self, source, fsid):
         if source not in self.sources:
-            self.c.execute('''INSERT INTO sources VALUES (NULL,%s)''',
-                                (source,))
+            self.c.execute('''INSERT INTO targets VALUES (NULL,%s,%s)''',
+                                (source, fsid))
             self.sources[source] = self.c.lastrowid
 #------------------------------------------------------------------------------
 
