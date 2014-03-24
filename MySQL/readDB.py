@@ -23,7 +23,7 @@ class readDB(object):
         '''
         Constructor
         '''
-        self.DB_VERSION = 1
+        self.DB_VERSION = 2
         self.dbFile = dbFile
         self.config = ConfigParser()
         try:
@@ -79,7 +79,7 @@ class readDB(object):
         self.c.execute('''  select
                                 samples_ost.rb,
                                 samples_ost.wb,
-                                timestamps.time,
+                                timestamps.timestamp,
                                 nids.nid,
                                 samples_ost.rio,
                                 samples_ost.wio
@@ -89,8 +89,8 @@ class readDB(object):
                                 timestamps
                             where
                                 nids.id = samples_ost.nid
-                                    and timestamps.id = samples_ost.time
-                                    and timestamps.time between %s and %s
+                                    and timestamps.id = samples_ost.timestamp
+                                    and timestamps.timestamp between %s and %s
                                     and nids.nid = %s''',
                                     (start, end, nidName))
         tmp = self.c.fetchall()
@@ -101,11 +101,11 @@ class readDB(object):
         timeMapWIO = {}
         self.c.execute('''
                             select
-                                time
+                                timestamp
                             from
                                 timestamps
                             where
-                                time between %s and %s''',
+                                timestamp between %s and %s''',
                                 (start, end))
         tmp_time = self.c.fetchall()
         for timeStamp in tmp_time:
@@ -157,7 +157,7 @@ class readDB(object):
                                 sum(samples_ost.wb),
                                 sum(samples_ost.rio),
                                 sum(samples_ost.wio),
-                                timestamps.time,
+                                timestamps.timestamp,
                                 nids.nid
                             from
                                 nids
@@ -169,19 +169,19 @@ class readDB(object):
                                     join
                                 samples_ost ON nids.id = samples_ost.nid
                                     join
-                                timestamps ON timestamps.id = samples_ost.time
-                                    and timestamps.time between %s and %s
-                            group by nids.nid , timestamps.time'''
+                                timestamps ON timestamps.id = samples_ost.timestamp
+                                    and timestamps.timestamp between %s and %s
+                            group by nids.nid , timestamps.timestamp'''
                 self.c.execute(query, (jobID, start, end,))
                 query_result = self.c.fetchall()
 
                 self.c.execute('''
                     select
-                        time
+                        timestamp
                     from
                         timestamps
                     where
-                        time between %s and %s''',
+                        timestamp between %s and %s''',
                         (start, end))
                 tmp_time = self.c.fetchall()
 
@@ -251,13 +251,13 @@ class readDB(object):
         start_end = self.c.fetchall()
 
         self.c.execute('''
-                        select time from timestamps
-                        order by time desc
+                        select timestamp from timestamps
+                        order by timestamp desc
                         limit 1 ''')
         samples_max = self.c.fetchall()
         self.c.execute('''
-                        select time from timestamps
-                        order by time
+                        select timestamp from timestamps
+                        order by timestamp
                         limit 1 ''')
         samples_min = self.c.fetchall()
 
@@ -332,15 +332,15 @@ class readDB(object):
 
     def get_hi_lo_TimestampsID_Between(self, timeStamp_start, timeStamp_end):
         self.c.execute(''' SELECT * FROM timestamps
-                            WHERE TIME BETWEEN %s AND %s
-                            order by time desc
+                            WHERE timestamp BETWEEN %s AND %s
+                            order by timestamp desc
                             limit 1
                             ''', (timeStamp_start, timeStamp_end))
         t_end = self.c.fetchone()
 
         self.c.execute(''' SELECT * FROM timestamps
-                            WHERE TIME BETWEEN %s AND %s
-                            order by time
+                            WHERE timestamp BETWEEN %s AND %s
+                            order by timestamp
                             limit 1
                             ''', (timeStamp_start, timeStamp_end))
         t_start = self.c.fetchone()
@@ -362,7 +362,7 @@ class readDB(object):
             timeStamp_start_id = timestamp[0]
 
             self.c.execute(''' SELECT nid, rb, wb FROM samples_ost
-                                WHERE TIME BETWEEN %s AND %s
+                                WHERE timestamp BETWEEN %s AND %s
                                 ''', (timeStamp_start_id, timeStamp_end_id))
             c = self.c.fetchall()
             nidDictrb = {}
