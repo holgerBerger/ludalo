@@ -5,7 +5,7 @@ Created on 16.12.2013
 '''
 import MySQLdb
 from ConfigParser import ConfigParser
-import sys
+import sys,time
 
 
 class MySQLObject(object):

@@ -298,12 +298,12 @@ class readDB(object):
 
         volume = rw_in_MB * 1000 * 1000
 
-        p1 = db.getAll_Nid_IDs_Between(timestamp_start, timestamp_end, volume)
+        p1 = self.getAll_Nid_IDs_Between(timestamp_start, timestamp_end, volume)
         userList = set()
         for p in p1:
-            tmp = db.getAll_Jobs_to_Nid_ID_Between(timestamp_start, timestamp_end, p)
+            tmp = self.getAll_Jobs_to_Nid_ID_Between(timestamp_start, timestamp_end, p)
             if tmp:
-                userList.add(db.get_User_To_Job(tmp[0][2])[0][0])
+                userList.add(self.get_User_To_Job(tmp[0][2])[0][0])
         return userList
 #------------------------------------------------------------------------------
 
@@ -465,7 +465,7 @@ def print_job(job):
 
         db.c.execute('''select nid from nodelist where job = %s''', (jobid,))
         nids = db.c.fetchall()
-        title = 'Job_' + str(job_info[0])+ '_NoN_' + str(len(nids)) + '__Owner_' + str(job_info[1])
+        title = 'Job_' + str(job_info[0]) + '_NoN_' + str(len(nids)) + '__Owner_' + str(job_info[1])
         List_of_lists = []
         read_sum = []
         write_sum = []

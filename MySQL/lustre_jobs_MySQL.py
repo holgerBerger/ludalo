@@ -32,6 +32,7 @@ class DB:
         self.conn.close()
 
     def create_tables(self):
+        '''create tables and indices needed for job insertion'''
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                                 jobs (
                                         id serial primary key,
@@ -69,7 +70,12 @@ class DB:
         except:
             pass
 
+    def update_job(self, jobid, start, end, owner, nids, cmd):
+        '''insert end time for job started before'''
+        self.c.execute('''UPDATE jobs SET t_end=%s WHERE jobid=%s''',(end, jobid))
+
     def insert_job(self, jobid, start, end, owner, nids, cmd):
+        '''insert complete job with all dependencies'''
         #print jobid, start, end, owner, nids, cmd
         # check if job is already in DB
         self.c.execute('''SELECT jobid FROM jobs WHERE jobid = %s''', (jobid,))
