@@ -31,10 +31,10 @@ class readDB(object):
         except IOError:
             print "no db.conf file found."
             sys.exit()
-        self.dbname = self.config.get("database","name")
-        self.dbpassword = self.config.get("database","password")
-        self.dbhost = self.config.get("database","host")
-        self.dbuser = self.config.get("database","user")
+        self.dbname = self.config.get("database", "name")
+        self.dbpassword = self.config.get("database", "password")
+        self.dbhost = self.config.get("database", "host")
+        self.dbuser = self.config.get("database", "user")
         self.conn = MySQLdb.connect(passwd=self.dbpassword, db=self.dbname, host=self.dbhost, user=self.dbuser)
         self.c = self.conn.cursor()
         if not self.check_version():
@@ -140,8 +140,8 @@ class readDB(object):
     def get_sum_nids_to_job(self, jobID):
         start_end = self.get_job_start_end(jobID)
         if start_end:
-            start = start_end[0]
-            end = start_end[1]
+            start = start_end[0] - 60
+            end = start_end[1] + 60
             if not (end - start < 900):
                 #nids = self.get_nid_to_Job(jobID)   # moved here for performance
                 #print 'find nids'
@@ -174,8 +174,18 @@ class readDB(object):
                             group by nids.nid , timestamps.time'''
                 self.c.execute(query, (jobID, start, end,))
                 query_result = self.c.fetchall()
-                nidMap = {}
 
+                self.c.execute('''
+                    select
+                        time
+                    from
+                        timestamps
+                    where
+                        time between %s and %s''',
+                        (start, end))
+                tmp_time = self.c.fetchall()
+
+                nidMap = {}
                 for row in query_result:
                     rb_sum = row[0]
                     wb_sum = row[1]
@@ -190,6 +200,12 @@ class readDB(object):
                         timeMapWB = {}
                         timeMapRIO = {}
                         timeMapWIO = {}
+                        # init with 0
+                        for timeStamp in tmp_time:
+                            timeMapRB[timeStamp[0]] = 0
+                            timeMapWB[timeStamp[0]] = 0
+                            timeMapRIO[timeStamp[0]] = 0
+                            timeMapWIO[timeStamp[0]] = 0
 
                         timeMapRB[timestamp] = rb_sum
                         timeMapWB[timestamp] = wb_sum
@@ -282,12 +298,12 @@ class readDB(object):
 
         volume = rw_in_MB * 1000 * 1000
 
-        p1 = db.getAll_Nid_IDs_Between(timestamp_start, timestamp_end, volume)
+        p1 = self.getAll_Nid_IDs_Between(timestamp_start, timestamp_end, volume)
         userList = set()
         for p in p1:
-            tmp = db.getAll_Jobs_to_Nid_ID_Between(timestamp_start, timestamp_end, p)
+            tmp = self.getAll_Jobs_to_Nid_ID_Between(timestamp_start, timestamp_end, p)
             if tmp:
-                userList.add(db.get_User_To_Job(tmp[0][2])[0][0])
+                userList.add(self.get_User_To_Job(tmp[0][2])[0][0])
         return userList
 #------------------------------------------------------------------------------
 
@@ -401,11 +417,19 @@ class readDB(object):
 #------------------------------------------------------------------------------
 
     def explainJob(self, jobID):
-        query = ''' select jobs.jobid, jobs.t_start, jobs.t_end, users.username, jobs.nodelist
-                        from jobs, users
-                        where jobs.id = %s
+        query = ''' select
+                        jobs.jobid,
+                        jobs.t_start,
+                        jobs.t_end,
+                        users.username,
+                        jobs.nodelist
+                    from
+                        jobs,
+                        users
+                    where
+                        jobs.id = %s
                         and users.id = jobs.owner'''
-        executer = self.c.execute(query, (jobID,))
+        self.c.execute(query, (jobID,))
         head = self.c.description
         informations = zip(zip(*head)[0], self.c.fetchall()[0])
         print informations[0][0], informations[0][1], informations[3][0], informations[3][1]
@@ -433,18 +457,21 @@ def print_job(job):
         jobid = job
 
         db.c.execute('''
-                select jobs.jobid, users.username
+                select jobs.jobid, users.username , jobs.nodelist
                 from jobs, users
                 where jobs.id = %s
                 and users.id = jobs.owner''', (jobid,))
         job_info = db.c.fetchone()
-        title = 'Job_' + str(job_info[0]) + '__Owner_' + str(job_info[1])
+
+        db.c.execute('''select nid from nodelist where job = %s''', (jobid,))
+        nids = db.c.fetchall()
+        title = 'Job_' + str(job_info[0]) + '_NoN_' + str(len(nids)) + '__Owner_' + str(job_info[1])
         List_of_lists = []
         read_sum = []
         write_sum = []
         io_sum = []
         for nid in sum_nid:
-            #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
+        #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
             start = nid[0]
             end = nid[1]
             readDic = nid[2]
@@ -452,7 +479,6 @@ def print_job(job):
             rioDic = nid[4]
             wioDic = nid[5]
 
-            #print 'dic keys =',sorted(rioDic.keys()) == sorted(writeDic.keys())  
             readY = []
             writeY = []
             ioread = []
@@ -494,6 +520,7 @@ if __name__ == '__main__':
     db.c.execute('''select id, jobid from jobs''')
     jobs = db.c.fetchall()
     valid_jobs = []
+
     print '# of jobs: ' + str(len(jobs))
     db.conn.commit()
 
@@ -510,11 +537,8 @@ if __name__ == '__main__':
     pool = Pool()
     pool.map(print_job, valid_jobs)
 
-    #for job in valid_jobs:
-    #    db.explainJob(job)
-    #    db.print_job(job)
     db.conn.commit()
 
 #------------------------------------------------------------------------------
     time_end = time.time()
-    print "end with no errors in:" , str(time_end - time_start), "sec"
+    print "end with no errors in:", str(time_end - time_start), "sec"

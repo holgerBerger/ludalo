@@ -16,7 +16,7 @@ import binomialCoeff
 
 
 class MovingAverage(object):
-    def __init__(self, size = None, filterArry = None):
+    def __init__(self, size=None, filterArry=None):
         if not size:
             if not filterArry:
                 print 'pleas check the values for the MovingAverage init'
