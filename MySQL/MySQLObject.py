@@ -5,7 +5,7 @@ Created on 16.12.2013
 '''
 import MySQLdb
 from ConfigParser import ConfigParser
-import sys,time
+import sys, time
 
 
 class MySQLObject(object):
@@ -15,7 +15,7 @@ class MySQLObject(object):
         '''
         Constructor
         '''
-        self.DB_VERSION = 1
+        self.DB_VERSION = 2
         self.dbFile = dbFile
         self.config = ConfigParser()
         try:
@@ -23,10 +23,10 @@ class MySQLObject(object):
         except IOError:
             print "no db.conf file found."
             sys.exit()
-        self.dbname = self.config.get("database","name")
-        self.dbpassword = self.config.get("database","password")
-        self.dbhost = self.config.get("database","host")
-        self.dbuser = self.config.get("database","user")
+        self.dbname = self.config.get("database", "name")
+        self.dbpassword = self.config.get("database", "password")
+        self.dbhost = self.config.get("database", "host")
+        self.dbuser = self.config.get("database", "user")
         self.conn = MySQLdb.connect(passwd=self.dbpassword, db=self.dbname, host=self.dbhost, user=self.dbuser)
         self.c = self.conn.cursor()
 
@@ -95,16 +95,16 @@ class MySQLObject(object):
         if self.insertfile:
             print "completing insert by reading previously created CSV file...",
             sys.stdout.flush()
-            t1=time.time()
+            t1 = time.time()
             self.c.execute("""load data infile '/tmp/samples_ost.txt' into table samples_ost COLUMNS TERMINATED BY ',';""")
-            t2=time.time()
-            print t2-t1,"secs"
+            t2 = time.time()
+            print t2 - t1, "secs"
         print "analyzing database for better performance...",
         sys.stdout.flush()
-        t1=time.time()
+        t1 = time.time()
         self.c.execute("ANALYZE TABLE samples_ost, timestamps, nids, jobs, nodelist;");
-        t2=time.time()
-        print t2-t1,"secs"
+        t2 = time.time()
+        print t2 - t1, "secs"
         self.conn.commit()
         self.conn.close()
 #------------------------------------------------------------------------------
@@ -177,7 +177,7 @@ class MySQLObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             timestamps (
                                 id serial primary key ,
-                                time integer) engine=myisam''')
+                                timestamp integer) engine=myisam''')
 
         # name vom clienten
         self.c.execute('''CREATE TABLE IF NOT EXISTS
@@ -190,19 +190,20 @@ class MySQLObject(object):
                             servers (
                                 id serial primary key ,
                                 server text,
-                                type text) engine=myisam''')
+                                server_type text) engine=myisam''')
 
         # ost / mdt
         self.c.execute('''CREATE TABLE IF NOT EXISTS
-                            sources (
+                            targets (
                                 id serial primary key ,
-                                source text) engine=myisam''')
+                                target text
+                                fsid integer) engine=myisam''')
 
         self.c.execute('''
                         CREATE TABLE IF NOT EXISTS ost_values (
                             id serial primary key,
-                            time integer,
-                            source text,
+                            timestamp integer,
+                            target text,
                             rio integer,
                             rb bigint,
                             wio integer,
@@ -217,8 +218,8 @@ class MySQLObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             samples_ost (
                                 id serial primary key,
-                                time integer,
-                                source integer,
+                                timestamp integer,
+                                target integer,
                                 nid integer,
                                 rio integer,
                                 rb bigint,
@@ -228,8 +229,8 @@ class MySQLObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             samples_mdt (
                                 id serial primary key,
-                                  time integer,
-                                  source integer,
+                                  timestamp integer,
+                                  target integer,
                                   nid integer,
                                   reqs integer) engine=myisam;''')
 
@@ -260,8 +261,25 @@ class MySQLObject(object):
         self.c.execute(''' CREATE TABLE IF NOT EXISTS
                             hashes (
                                 hash varchar(63) primary key) engine=myisam;''')
+
+        self.c.execute('''CREATE TABLE IF NOT EXISTS
+                    filesystems (
+                        id serial primary key ,
+                        filesystem text) engine=myisam''')
 #------------------------------------------------------------------------------
         # create INDEX if not exists
+        try:
+            self.c.execute('''CREATE INDEX
+                            targets_index
+                            ON targets (target);''')
+        except:
+            pass
+        try:
+            self.c.execute('''CREATE INDEX
+                            filesystems_index
+                            ON filesystems (filesystem);''')
+        except:
+            pass
         try:
             self.c.execute('''CREATE INDEX
                             jobid_index
@@ -394,16 +412,16 @@ class MySQLObject(object):
         if self.dbhost == 'localhost':
             #print "shortcut possible", len(il_ost)
             if not self.insertfile:
-                self.insertfile=open("/tmp/samples_ost.txt","w")
+                self.insertfile = open("/tmp/samples_ost.txt", "w")
             for v in il_ost:
                 #print v
                 self.insertfile.write("NULL,%d,%d,%d,%s,%s,%s,%s\n" % tuple(v))
         else:
-            self.c.executemany('''INSERT INTO samples_ost VALUES (NULL,%s,%s,%s,%s,%s,%s,%s)''',il_ost)
+            self.c.executemany('''INSERT INTO samples_ost VALUES (NULL,%s,%s,%s,%s,%s,%s,%s)''', il_ost)
 #------------------------------------------------------------------------------
 
     def insert_mdt_samples(self, il_mdt):
-        self.c.executemany('''INSERT INTO samples_mdt VALUES (NULL,%s,%s,%s,%s)''',il_mdt)
+        self.c.executemany('''INSERT INTO samples_mdt VALUES (NULL,%s,%s,%s,%s)''', il_mdt)
 #------------------------------------------------------------------------------
 
     def insert_SERVER_values(self, mds_name, REQS, timeStamp, s_type):
