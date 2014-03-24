@@ -67,7 +67,7 @@ class MySQLObject(object):
         print "read %s old nid mappings" % len(self.globalnidmap)
 
         # sources map
-        self.c.execute('''SELECT * FROM sources;''')
+        self.c.execute('''SELECT * FROM targets;''')
         r = self.c.fetchall()
         for (k, v) in r:
             self.sources[str(v)] = k
