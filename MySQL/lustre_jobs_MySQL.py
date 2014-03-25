@@ -72,13 +72,13 @@ class DB:
 
     def update_job(self, jobid, start, end, owner, nids, cmd):
         '''insert end time for job started before'''
-        self.c.execute('''UPDATE jobs SET t_end=%s WHERE jobid=%s''',(end, jobid))
+        self.c.execute('''UPDATE jobs SET t_end=%s WHERE jobid=%s AND t_start=%s''',(end, jobid, start))
 
     def insert_job(self, jobid, start, end, owner, nids, cmd):
         '''insert complete job with all dependencies'''
         #print jobid, start, end, owner, nids, cmd
         # check if job is already in DB
-        self.c.execute('''SELECT jobid FROM jobs WHERE jobid = %s''', (jobid,))
+        self.c.execute('''SELECT jobid FROM jobs WHERE jobid = %s and t_start = %s''', (jobid,start))
         if not self.c.fetchone():
             # check if user is already in DB
             self.c.execute('''SELECT id
