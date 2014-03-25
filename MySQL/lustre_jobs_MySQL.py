@@ -20,10 +20,10 @@ class DB:
         except IOError:
             print "no db.conf file found."
             sys.exit()
-        self.dbname = self.config.get("database","name")
-        self.dbpassword = self.config.get("database","password")
-        self.dbhost = self.config.get("database","host")
-        self.dbuser = self.config.get("database","user")
+        self.dbname = self.config.get("database", "name")
+        self.dbpassword = self.config.get("database", "password")
+        self.dbhost = self.config.get("database", "host")
+        self.dbuser = self.config.get("database", "user")
         self.conn = MySQLdb.connect(passwd=self.dbpassword, db=self.dbname, host=self.dbhost, user=self.dbuser)
         self.c = self.conn.cursor()
 
@@ -72,13 +72,30 @@ class DB:
 
     def update_job(self, jobid, start, end, owner, nids, cmd):
         '''insert end time for job started before'''
-        self.c.execute('''UPDATE jobs SET t_end=%s WHERE jobid=%s AND t_start=%s''',(end, jobid, start))
+        self.c.execute('''
+                        UPDATE
+                            jobs
+                        SET
+                            t_end=%s
+                        WHERE
+                            jobid=%s
+                        AND
+                            t_start=%s''', (end, jobid, start))
 
     def insert_job(self, jobid, start, end, owner, nids, cmd):
         '''insert complete job with all dependencies'''
         #print jobid, start, end, owner, nids, cmd
         # check if job is already in DB
-        self.c.execute('''SELECT jobid FROM jobs WHERE jobid = %s and t_start = %s''', (jobid,start))
+        self.c.execute('''
+                        SELECT
+                            jobid
+                        FROM
+                            jobs
+                        WHERE
+                            jobid = %s
+                        AND
+                            t_start = %s''', (jobid, start))
+
         if not self.c.fetchone():
             # check if user is already in DB
             self.c.execute('''SELECT id
