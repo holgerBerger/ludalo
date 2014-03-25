@@ -12,6 +12,8 @@ import MySQLdb
 from threading import Thread, Lock
 from multiprocessing.pool import Pool
 from ConfigParser import ConfigParser
+from User import User
+from Job import Job
 
 sys.path.append("../Analysis")
 from plotGraph import plotGraph
