@@ -204,7 +204,7 @@ class MySQLObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             targets (
                                 id serial primary key ,
-                                target text,
+                                target varchar(32),
                                 fsid integer) engine=myisam''')
 
         self.c.execute('''
@@ -273,7 +273,7 @@ class MySQLObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                     filesystems (
                         id serial primary key ,
-                        filesystem text) engine=myisam''')
+                        filesystem varchar(32)) engine=myisam''')
 #------------------------------------------------------------------------------
         # create INDEX if not exists
         try:
@@ -304,31 +304,31 @@ class MySQLObject(object):
 
         try:
             self.c.execute('''CREATE INDEX
-                              samples_ost_index ON samples_ost (time, nid)''')
+                              samples_ost_index ON samples_ost (timestamp, nid, target);''')
         except:
             pass
 
         try:
             self.c.execute('''CREATE INDEX
-                              ost_values_index ON ost_values (time)''')
+                              ost_values_index ON ost_values (timestamp);''')
         except:
             pass
 
         try:
             self.c.execute('''CREATE INDEX
-                              samples_mdt_time ON samples_mdt (time)''')
+                              samples_mdt_time ON samples_mdt (timestamp);''')
         except:
             pass
 
         try:
             self.c.execute('''CREATE INDEX
-                              time_index ON timestamps (time)''')
+                              time_index ON timestamps (timestamp);''')
         except:
             pass
 
         try:
             self.c.execute('''CREATE INDEX
-                              nids_index ON nids (nid)''')
+                              nids_index ON nids (nid);''')
         except:
             pass
 #------------------------------------------------------------------------------
