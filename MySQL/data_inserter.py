@@ -28,10 +28,9 @@ import hashlib
 
 class Logfile:
 
-    def __init__(self, filename, hostfile=None, dbFile='sqlite_new.db'):
+    def __init__(self, filename, hostfile=None):
 
         self.filename = filename
-        self.myDB = MySQLObject(dbFile)
         self.filesize = os.path.getsize(filename)
 
         if hostfile:
