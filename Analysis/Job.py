@@ -4,6 +4,8 @@ Created on 24.03.2014
 @author: uwe.schilling[at]hlrs.de
 '''
 
+import time
+
 
 class Job(object):
     '''
@@ -57,3 +59,16 @@ class Job(object):
 
     def getName(self):
         return self.Name
+
+    def isValid(self):
+        returnValue = False
+        if self.t_End == -1:
+            t_End = time.time()
+        else:
+            t_End = time.time()
+
+        duration = t_End - self.t_Start
+        if duration > 15 * 60:
+            returnValue = True
+
+        return returnValue
