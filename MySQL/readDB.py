@@ -6,6 +6,7 @@ Created on 18.02.2014
 '''
 
 import sys
+sys.path.append("./Analysis")
 import time
 import datetime
 import MySQLdb
