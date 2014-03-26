@@ -21,12 +21,11 @@ from plotGraph import plotGraph
 
 class readDB(object):
 
-    def __init__(self, dbFile):
+    def __init__(self):
         '''
         Constructor
         '''
         self.DB_VERSION = 2
-        self.dbFile = dbFile
         self.config = ConfigParser()
         try:
             self.config.readfp(open("db.conf"))
@@ -518,7 +517,63 @@ def print_job(job):
 if __name__ == '__main__':
     time_start = time.time()
 #------------------------------------------------------------------------------
-    db = readDB('sqlite_db.db')
+    db = readDB()
+
+    db.c.execute('''
+            select
+                timestamps.timestamp, sum(wb), sum(rb), filesystem
+            from
+                samples_ost,
+                targets,
+                filesystems,
+                timestamps
+            where
+                samples_ost.target = targets.id
+                    and targets.fsid = filesystems.id
+                    and samples_ost.timestamp = timestamps.id
+                    and filesystems.filesystem = univ_1
+            group by timestamps.timestamp
+            order by timestamps.timestamp''')
+    rows = db.c.fetchall()
+
+    db.c.execute(''' select timestamp from  timestamps''')
+    allTimestamps = db.c.fetchall()
+
+    rbmap = {}
+    wbmap = {}
+
+    for time in allTimestamps:
+        rbmap[time[0]] = 0
+        wbmap[time[0]] = 0
+
+    for row in rows:
+        timestap = row[0]
+        wb = row[1]
+        rb = row[2]
+
+        rbmap[timestap] = rb
+        wbmap[timestap] = wb
+    timestamps_list = sorted(rbmap.keys())
+
+    r_list = []
+    w_list = []
+
+    for t in timestamps_list:
+        r_list.append(-rbmap[t])
+        w_list.append(wbmap[t])
+
+    list_of_list = []
+    list_of_list.append(timestamps_list)
+    list_of_list.append(r_list)
+    list_of_list.append(timestamps_list)
+    list_of_list.append(w_list)
+
+    title = 'univ_1'
+    plotGraph(list_of_list, title)
+
+    exit()
+    # ------------- End test ---------------
+
     db.c.execute('''select id, jobid from jobs''')
     jobs = db.c.fetchall()
     valid_jobs = []
