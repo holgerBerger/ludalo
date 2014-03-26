@@ -60,15 +60,29 @@ class Job(object):
     def getName(self):
         return self.Name
 
-    def isValid(self):
-        returnValue = False
-        if self.t_End == -1:
+    def getEndTime(self):
+        if not self.isEnded():
             t_End = time.time()
         else:
-            t_End = time.time()
+            t_End = self.t_End
+        return t_End
 
-        duration = t_End - self.t_Start
-        if duration > 15 * 60:
+    def getDuration(self):
+        t_End = self.getEndTime()
+        return  t_End - self.t_Start
+
+    def isEnded(self):
+        if self.t_End < 0:
+            return False
+        else:
+            return True
+
+    def isValid(self):
+        returnValue = False
+        minMinutes = 15 * 60
+        duration = self.getDuration()
+
+        if duration > minMinutes:
             returnValue = True
 
         return returnValue
