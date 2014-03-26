@@ -532,7 +532,7 @@ if __name__ == '__main__':
                 samples_ost.target = targets.id
                     and targets.fsid = filesystems.id
                     and samples_ost.timestamp = timestamps.id
-                    and filesystems.filesystem = univ_1
+                    and filesystems.filesystem = 'univ_1'
             group by timestamps.timestamp
             order by timestamps.timestamp''')
     rows = db.c.fetchall()
