@@ -4,6 +4,8 @@ Created on 24.03.2014
 @author: uwe.schilling[at]hlrs.de
 '''
 
+import time
+
 
 class Job(object):
     '''
@@ -57,3 +59,30 @@ class Job(object):
 
     def getName(self):
         return self.Name
+
+    def getEndTime(self):
+        if not self.isEnded():
+            t_End = time.time()
+        else:
+            t_End = self.t_End
+        return t_End
+
+    def getDuration(self):
+        t_End = self.getEndTime()
+        return  t_End - self.t_Start
+
+    def isEnded(self):
+        if self.t_End < 0:
+            return False
+        else:
+            return True
+
+    def isValid(self):
+        returnValue = False
+        minMinutes = 15 * 60
+        duration = self.getDuration()
+
+        if duration > minMinutes:
+            returnValue = True
+
+        return returnValue
