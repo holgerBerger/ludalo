@@ -487,8 +487,8 @@ class readDB(object):
         w_list = []
 
         for t in timestampList:
-            r_list.append(-rbmap[t])
-            w_list.append(wbmap[t])
+            r_list.append(float(-rbmap[t]) / (60 * 1000000))
+            w_list.append(float(wbmap[t]) / (60 * 1000000))
 
         list_of_list = []
         list_of_list.append(timestampList)
