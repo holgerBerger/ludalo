@@ -485,7 +485,7 @@ class readDB(object):
 
         r_list = []
         w_list = []
-        timestampList = sorted(wbmap.keys())
+        timestampList = float(sorted(wbmap.keys()))
         print timestampList
         for t in timestampList:
             r_list.append(float(-rbmap[t]) / (60 * 1000000))
