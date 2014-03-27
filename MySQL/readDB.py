@@ -486,6 +486,7 @@ class readDB(object):
         r_list = []
         w_list = []
         timestampList = sorted(wbmap.keys())
+        print timestampList
         for t in timestampList:
             r_list.append(float(-rbmap[t]) / (60 * 1000000))
             w_list.append(float(wbmap[t]) / (60 * 1000000))
@@ -580,7 +581,7 @@ if __name__ == '__main__':
     time_start = time.time()
 #------------------------------------------------------------------------------
     db = readDB()
-    title = 'univ_1'
+    title = 'univ_2'
     db.printFilesystem(title)
     exit()
     # ------------- End test ---------------

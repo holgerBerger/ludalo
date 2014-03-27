@@ -24,7 +24,7 @@ class ArgMismatch(Exception):
 
 def plotGraph(list_of_list, diagramName=''):
     ''' [[xValues],[yValues]]
-        Thist Plotes all given values and a his filtert line.
+        This Plots all given values and his filtered line.
     '''
     if not len(list_of_list) % 2 == 0:
         raise ArgMismatch('Please provide [[xValues],[yValues], ...] as arguments')
