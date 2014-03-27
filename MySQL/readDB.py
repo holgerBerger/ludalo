@@ -5,7 +5,7 @@ Created on 18.02.2014
 @author: uwe
 '''
 
-import sys
+import sys, os
 sys.path.append("../Analysis")
 import time
 import datetime
@@ -441,7 +441,7 @@ class readDB(object):
     def fillMapWithZero(self, timestamps):
         returnMap = {}
         for t in timestamps:
-            rbmap[t] = 0
+            returnMap[t] = 0
         return returnMap
 #------------------------------------------------------------------------------
 
@@ -498,6 +498,8 @@ class readDB(object):
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
+
+
 def print_job(job):
 
     db = readDB('sqlite_new.db')
@@ -574,6 +576,11 @@ def print_job(job):
 
 if __name__ == '__main__':
     time_start = time.time()
+    f = 'plt'
+    d = os.path.dirname(f)
+    if not os.path.exists(d):
+        os.makedirs(d)
+        print 'create dir:', d
 #------------------------------------------------------------------------------
     db = readDB()
     title = 'univ_1'
