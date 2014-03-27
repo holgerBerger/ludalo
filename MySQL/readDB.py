@@ -576,11 +576,6 @@ def print_job(job):
 
 if __name__ == '__main__':
     time_start = time.time()
-    f = 'plt'
-    d = os.path.dirname(f)
-    if not os.path.exists(d):
-        os.makedirs(d)
-        print 'create dir:', d
 #------------------------------------------------------------------------------
     db = readDB()
     title = 'univ_1'
