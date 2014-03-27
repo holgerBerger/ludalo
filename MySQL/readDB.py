@@ -467,8 +467,8 @@ class readDB(object):
         allTimestamps = db.c.fetchall()
         timestampList = []
 
-        for time in allTimestamps:
-            timestampList.append(time[0])
+        for t in allTimestamps:
+            timestampList.append(t[0])
 
         timestampList = sorted(timestampList)
 
