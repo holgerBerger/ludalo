@@ -57,8 +57,8 @@ class readDB(object):
                        ''' but expect version ''' +
                        str(self.DB_VERSION))
             sys.exit(0)
-
 #------------------------------------------------------------------------------
+
     def check_version(self):
         self.c.execute(''' select
                                 version
@@ -74,7 +74,6 @@ class readDB(object):
                 return False
         else:
             return False
-
 #------------------------------------------------------------------------------
 
     def read_write_sum_to_Nid(self, start, end, nidName):
@@ -137,8 +136,8 @@ class readDB(object):
 
         return (start, end, timeMapRB, timeMapWB,
                     timeMapRIO, timeMapWIO, nidList)
-
 #------------------------------------------------------------------------------
+
     def get_sum_nids_to_job(self, jobID):
         start_end = self.get_job_start_end(jobID)
         if start_end:
@@ -287,7 +286,6 @@ class readDB(object):
             nidReturn.append(nid[0])
 
         return nidReturn
-
 #------------------------------------------------------------------------------
 
     def get_All_Users_r_w(self, houers, rw_in_MB=1):
@@ -440,7 +438,66 @@ class readDB(object):
         print 'Number of Nodes:', number_of_nodes
 #------------------------------------------------------------------------------
 
+    def fillMapWithZero(self, timestamps):
+        returnMap = {}
+        for t in timestamps:
+            rbmap[t] = 0
+        return returnMap
+#------------------------------------------------------------------------------
 
+    def printFilesystem(self, fs):
+        db.c.execute('''
+                select
+                    timestamps.timestamp, sum(wb), sum(rb), filesystem
+                from
+                    samples_ost,
+                    targets,
+                    filesystems,
+                    timestamps
+                where
+                    samples_ost.target = targets.id
+                        and targets.fsid = filesystems.id
+                        and samples_ost.timestamp = timestamps.id
+                        and filesystems.filesystem = %s
+                group by timestamps.timestamp
+                order by timestamps.timestamp''', (fs, ))
+        rows = db.c.fetchall()
+
+        db.c.execute(''' select timestamp from  timestamps''')
+        allTimestamps = db.c.fetchall()
+        timestampList = []
+
+        for time in allTimestamps:
+            timestampList.append(time[0])
+
+        timestampList = sorted(timestampList)
+
+        rbmap = db.fillMapWithZero(allTimestamps)
+        wbmap = db.fillMapWithZero(allTimestamps)
+
+        for row in rows:
+            timestap = row[0]
+            wb = row[1]
+            rb = row[2]
+
+            rbmap[timestap] = rb
+            wbmap[timestap] = wb
+
+        r_list = []
+        w_list = []
+
+        for t in timestampList:
+            r_list.append(-rbmap[t])
+            w_list.append(wbmap[t])
+
+        list_of_list = []
+        list_of_list.append(timestampList, r_list)
+        list_of_list.append(timestampList, w_list)
+
+        plotGraph(list_of_list, fs)
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def print_job(job):
 
     db = readDB('sqlite_new.db')
@@ -519,59 +576,8 @@ if __name__ == '__main__':
     time_start = time.time()
 #------------------------------------------------------------------------------
     db = readDB()
-
-    db.c.execute('''
-            select
-                timestamps.timestamp, sum(wb), sum(rb), filesystem
-            from
-                samples_ost,
-                targets,
-                filesystems,
-                timestamps
-            where
-                samples_ost.target = targets.id
-                    and targets.fsid = filesystems.id
-                    and samples_ost.timestamp = timestamps.id
-                    and filesystems.filesystem = 'univ_1'
-            group by timestamps.timestamp
-            order by timestamps.timestamp''')
-    rows = db.c.fetchall()
-
-    db.c.execute(''' select timestamp from  timestamps''')
-    allTimestamps = db.c.fetchall()
-
-    rbmap = {}
-    wbmap = {}
-
-    for time in allTimestamps:
-        rbmap[time[0]] = 0
-        wbmap[time[0]] = 0
-
-    for row in rows:
-        timestap = row[0]
-        wb = row[1]
-        rb = row[2]
-
-        rbmap[timestap] = rb
-        wbmap[timestap] = wb
-    timestamps_list = sorted(rbmap.keys())
-
-    r_list = []
-    w_list = []
-
-    for t in timestamps_list:
-        r_list.append(-rbmap[t])
-        w_list.append(wbmap[t])
-
-    list_of_list = []
-    list_of_list.append(timestamps_list)
-    list_of_list.append(r_list)
-    list_of_list.append(timestamps_list)
-    list_of_list.append(w_list)
-
     title = 'univ_1'
-    plotGraph(list_of_list, title)
-
+    db.printFilesystem(title)
     exit()
     # ------------- End test ---------------
 
