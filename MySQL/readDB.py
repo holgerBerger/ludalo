@@ -491,8 +491,10 @@ class readDB(object):
             w_list.append(wbmap[t])
 
         list_of_list = []
-        list_of_list.append(timestampList, r_list)
-        list_of_list.append(timestampList, w_list)
+        list_of_list.append(timestampList)
+        list_of_list.append(r_list)
+        list_of_list.append(timestampList)
+        list_of_list.append(w_list)
 
         plotGraph(list_of_list, fs)
 #------------------------------------------------------------------------------
