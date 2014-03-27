@@ -441,7 +441,7 @@ class readDB(object):
     def fillMapWithZero(self, timestamps):
         returnMap = {}
         for t in timestamps:
-            returnMap[t] = 0
+            returnMap[t] = float(0)
         return returnMap
 #------------------------------------------------------------------------------
 
@@ -485,7 +485,7 @@ class readDB(object):
 
         r_list = []
         w_list = []
-        timestampList = float(sorted(wbmap.keys()))
+        timestampList = sorted(wbmap.keys())
         print timestampList
         for t in timestampList:
             r_list.append(float(-rbmap[t]) / (60 * 1000000))
