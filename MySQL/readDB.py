@@ -453,9 +453,9 @@ class readDB(object):
                     samples_ost.target = targets.id
                         and targets.fsid = filesystems.id
                         and samples_ost.timestamp = timestamps.id
-                        and filesystems.filesystem = '%s'
+                        and filesystems.filesystem = %s
                 group by timestamps.timestamp
-                order by timestamps.timestamp''', (fs, ))
+                order by timestamps.timestamp''', (fs))
         rows = db.c.fetchall()
 
         self.c.execute(''' select timestamp from  timestamps''')
