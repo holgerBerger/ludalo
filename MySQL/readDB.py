@@ -37,7 +37,10 @@ class readDB(object):
         self.dbpassword = self.config.get("database", "password")
         self.dbhost = self.config.get("database", "host")
         self.dbuser = self.config.get("database", "user")
-        self.conn = MySQLdb.connect(passwd=self.dbpassword, db=self.dbname, host=self.dbhost, user=self.dbuser)
+        self.conn = MySQLdb.connect(passwd=self.dbpassword,
+                                    db=self.dbname,
+                                    host=self.dbhost,
+                                    user=self.dbuser)
         self.c = self.conn.cursor()
         if not self.check_version():
             self.c.execute(''' select
@@ -145,15 +148,9 @@ class readDB(object):
             start = start_end[0] - 60
             end = start_end[1] + 60
             if not (end - start < 900):
-                #nids = self.get_nid_to_Job(jobID)   # moved here for performance
-                #print 'find nids'
-                #colReturn = []
-                #for nid in nids:
-                #    colReturn.append(self.read_write_sum_to_Nid(start, end, nid))
-                #return colReturn
 
-                # Test of the job join
-                #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
+        # Test of the job join
+        #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
                 query = '''select
                                 sum(samples_ost.rb),
                                 sum(samples_ost.wb),
@@ -214,7 +211,10 @@ class readDB(object):
                         timeMapRIO[timestamp] = rio_sum
                         timeMapWIO[timestamp] = wio_sum
 
-                        nidMap[nid] = (timeMapRB, timeMapWB, timeMapRIO, timeMapWIO)
+                        nidMap[nid] = (timeMapRB,
+                                       timeMapWB,
+                                       timeMapRIO,
+                                       timeMapWIO)
                     else:
                         timeMapRB = value_tuple[0]
                         timeMapWB = value_tuple[1]
@@ -226,7 +226,10 @@ class readDB(object):
                         timeMapRIO[timestamp] = rio_sum
                         timeMapWIO[timestamp] = wio_sum
 
-                        nidMap[nid] = (timeMapRB, timeMapWB, timeMapRIO, timeMapWIO)
+                        nidMap[nid] = (timeMapRB,
+                                       timeMapWB,
+                                       timeMapRIO,
+                                       timeMapWIO)
                 colReturn = []
                 for nid in nidMap.keys():
         #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
@@ -235,7 +238,12 @@ class readDB(object):
                     timeMapWB = value_tuple[1]
                     timeMapRIO = value_tuple[2]
                     timeMapWIO = value_tuple[3]
-                    colReturn.append((start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO))
+                    colReturn.append((start,
+                                      end,
+                                      timeMapRB,
+                                      timeMapWB,
+                                      timeMapRIO,
+                                      timeMapWIO))
 
                 return colReturn
 
@@ -300,10 +308,13 @@ class readDB(object):
 
         volume = rw_in_MB * 1000 * 1000
 
-        p1 = self.getAll_Nid_IDs_Between(timestamp_start, timestamp_end, volume)
+        p1 = self.getAll_Nid_IDs_Between(timestamp_start,
+                                         timestamp_end,
+                                         volume)
         userList = set()
         for p in p1:
-            tmp = self.getAll_Jobs_to_Nid_ID_Between(timestamp_start, timestamp_end, p)
+            tmp = self.getAll_Jobs_to_Nid_ID_Between(timestamp_start,
+                                                     timestamp_end, p)
             if tmp:
                 userList.add(self.get_User_To_Job(tmp[0][2])[0][0])
         return userList
@@ -357,7 +368,8 @@ class readDB(object):
         ''' get all nids between two timestamps  if thershold only nids with
             more rb or wb between this timestamps'''
 
-        timestamp = self.get_hi_lo_TimestampsID_Between(timeStamp_start, timeStamp_end)
+        timestamp = self.get_hi_lo_TimestampsID_Between(timeStamp_start,
+                                                        timeStamp_end)
 
         if timestamp:
             timeStamp_end_id = timestamp[1]
@@ -434,13 +446,20 @@ class readDB(object):
         self.c.execute(query, (jobID,))
         head = self.c.description
         informations = zip(zip(*head)[0], self.c.fetchall()[0])
-        print informations[0][0], informations[0][1], informations[3][0], informations[3][1]
-        print 'Duration:', (informations[2][1] - informations[1][1]) / 60, 'min'
+        print (informations[0][0],
+               informations[0][1],
+               informations[3][0],
+               informations[3][1])
+        print ('Duration:',
+               (informations[2][1] - informations[1][1]) / 60,
+               'min')
+
         number_of_nodes = len(informations[4][1].split(','))
         print 'Number of Nodes:', number_of_nodes
 #------------------------------------------------------------------------------
 
     def print_Filesystem(self, fs='univ_1'):
+        # getting all informations out of the database
         self.c.execute('''
                 select
                     timestamps.timestamp, sum(wb), sum(rb), filesystem
@@ -464,10 +483,12 @@ class readDB(object):
         rbmap = {}
         wbmap = {}
 
+        # init maps with zeros
         for time in allTimestamps:
             rbmap[time[0]] = 0
             wbmap[time[0]] = 0
 
+        # inserting rows into the maps
         for row in rows:
             timestap = row[0]
             wb = row[1]
@@ -480,9 +501,11 @@ class readDB(object):
         r_list = []
         w_list = []
 
+        # filling the lists for plotting
+        # calculating byte per minute in megabyte per second
         for t in timestamps_list:
-            r_list.append(-rbmap[t])
-            w_list.append(wbmap[t])
+            r_list.append(float(-rbmap[t]) / (60 * 1000000))
+            w_list.append(float(wbmap[t]) / (60 * 1000000))
 
         list_of_list = []
         list_of_list.append(timestamps_list)
@@ -529,8 +552,8 @@ def print_job(job):
         io_sum = []
         for nid in sum_nid:
         #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
-            start = nid[0]
-            end = nid[1]
+            # start = nid[0]
+            # end = nid[1]
             readDic = nid[2]
             writeDic = nid[3]
             rioDic = nid[4]
