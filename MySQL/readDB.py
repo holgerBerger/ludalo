@@ -608,10 +608,12 @@ if __name__ == '__main__':
                 jobs.owner = users.id
             and
                 users.username = 'xhcmarku';''')
+    rows = db.c.fetchall
     jobID_list = []
-    jobID_list = db.c.fetchall
-
+    for row in rows:
+        jobID_list.append(row[0])
     print jobID_list
+
 #------------------------------------------------------------------------------
     time_end = time.time()
     print "end with no errors in:", str(time_end - time_start), "sec"
