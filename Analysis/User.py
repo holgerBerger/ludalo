@@ -42,7 +42,7 @@ class User(object):
         self.Jobs[jobObject.getName()] = jobObject
 
     def __str__(self):
-        print 'user name = ', self.Name
+        return 'user name = ', self.Name
 
     def __repr__(self):
         return self.__str__()
