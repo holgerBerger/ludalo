@@ -597,23 +597,27 @@ if __name__ == '__main__':
     time_start = time.time()
 #------------------------------------------------------------------------------
     db = readDB()
-    print 'univ_1'
-    db.print_Filesystem('univ_1')
+    testUser = 'xhcmarku'  # 13 Jobs 38.54 Days Jobs runtime
+    db.c.execute('''
+            select
+                jobid
+            from
+                jobs,
+                users
+            where
+                jobs.owner = users.id
+            and
+                users.username = 'xhcmarku';''')
+    jobID_list = []
+    jobID_list = db.c.fetchall
 
-    print 'univ_2'
-    db.print_Filesystem('univ_2')
+    print jobID_list
+#------------------------------------------------------------------------------
+    time_end = time.time()
+    print "end with no errors in:", str(time_end - time_start), "sec"
 
-    print 'ind_1'
-    db.print_Filesystem('ind_1')
 
-    print 'ind_2'
-    db.print_Filesystem('ind_2')
-
-    print 'res_1'
-    db.print_Filesystem('res_1')
-
-    exit()
-
+def print_all_jobs_test():
     db.c.execute('''select id, jobid from jobs''')
     jobs = db.c.fetchall()
     valid_jobs = []
@@ -636,6 +640,19 @@ if __name__ == '__main__':
 
     db.conn.commit()
 
-#------------------------------------------------------------------------------
-    time_end = time.time()
-    print "end with no errors in:", str(time_end - time_start), "sec"
+
+def print_all_filesystems_test():
+    print 'univ_1'
+    db.print_Filesystem('univ_1')
+
+    print 'univ_2'
+    db.print_Filesystem('univ_2')
+
+    print 'ind_1'
+    db.print_Filesystem('ind_1')
+
+    print 'ind_2'
+    db.print_Filesystem('ind_2')
+
+    print 'res_1'
+    db.print_Filesystem('res_1')
