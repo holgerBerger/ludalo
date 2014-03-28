@@ -12,22 +12,22 @@ class Job(object):
     classdocs
     '''
 
-    def __init__(self, JobName, WR_dict, WQ_dict, RD_dict, RQ_dict):
+    def __init__(self, JobName):
         '''
         Constructor
         '''
-        tmp_list = WR_dict.keys()
 
         self.Name = JobName
-        self.t_Start = min(tmp_list)
-        self.t_End = max(tmp_list)
+        self.t_Start
+        self.t_End
 
         self.nidList = []
+        self.perNidMap = {}
 
-        self.WR_dict = WR_dict
-        self.RD_dict = RD_dict
-        self.WQ_dict = WQ_dict
-        self.RQ_dict = RQ_dict
+        self.WR_dict = {}
+        self.RD_dict = {}
+        self.WQ_dict = {}
+        self.RQ_dict = {}
 
     def getReadList(self):
         'returns read values'
@@ -81,8 +81,29 @@ class Job(object):
         returnValue = False
         minMinutes = 15 * 60
         duration = self.getDuration()
-
         if duration > minMinutes:
             returnValue = True
-
         return returnValue
+
+    def addNidName(self, nidName):
+        self.nidList.append(nidName)
+
+    def insertValusToDict(self, dict_org, dict_insert):
+        if not dict_insert:
+            dict_insert = dict_org
+        else:
+            dict_org = dict(dict_org)
+            for key in dict_org.keys():
+                insert = dict_insert(key, 0) + dict_org.get(key)
+                dict_insert[key] = insert
+        return dict_insert
+
+    def add_Values(self, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName):
+
+        self.perNidMap[nidName] = (timeMapRB, timeMapWB, timeMapRIO, timeMapWIO)
+        self.nidList.append(nidName)
+
+        self.WR_dict = self.insertValusToDict(self.WR_dict, timeMapWB)
+        self.WQ_dict = self.insertValusToDict(self.WQ_dict, timeMapWIO)
+        self.RD_dict = self.insertValusToDict(self.RD_dict, timeMapRB)
+        self.RQ_dict = self.insertValusToDict(self.RQ_dict, timeMapRIO)

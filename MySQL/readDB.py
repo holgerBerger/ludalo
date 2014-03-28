@@ -200,11 +200,11 @@ class readDB(object):
                         timeMapRIO = {}
                         timeMapWIO = {}
                         # init with 0
-                        for timeStamp in tmp_time:
-                            timeMapRB[timeStamp[0]] = 0
-                            timeMapWB[timeStamp[0]] = 0
-                            timeMapRIO[timeStamp[0]] = 0
-                            timeMapWIO[timeStamp[0]] = 0
+                        for timeStamps in tmp_time:
+                            timeMapRB[timeStamps[0]] = 0
+                            timeMapWB[timeStamps[0]] = 0
+                            timeMapRIO[timeStamps[0]] = 0
+                            timeMapWIO[timeStamps[0]] = 0
 
                         timeMapRB[timestamp] = rb_sum
                         timeMapWB[timestamp] = wb_sum
@@ -232,18 +232,20 @@ class readDB(object):
                                        timeMapWIO)
                 colReturn = []
                 for nid in nidMap.keys():
-        #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
+        #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList, nidName)
                     value_tuple = nidMap[nid]
                     timeMapRB = value_tuple[0]
                     timeMapWB = value_tuple[1]
                     timeMapRIO = value_tuple[2]
                     timeMapWIO = value_tuple[3]
+                    nidName = nid
                     colReturn.append((start,
                                       end,
                                       timeMapRB,
                                       timeMapWB,
                                       timeMapRIO,
-                                      timeMapWIO))
+                                      timeMapWIO,
+                                      nidName))
 
                 return colReturn
 
@@ -614,7 +616,7 @@ if __name__ == '__main__':
         jobID_list.append(row[0])
 
     user = User(testUser)
-
+  #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName)
     print user
 
 #------------------------------------------------------------------------------
