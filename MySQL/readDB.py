@@ -440,6 +440,59 @@ class readDB(object):
         print 'Number of Nodes:', number_of_nodes
 #------------------------------------------------------------------------------
 
+    def print_Filesystem(self, fs='univ_1'):
+        self.c.execute('''
+                select
+                    timestamps.timestamp, sum(wb), sum(rb), filesystem
+                from
+                    samples_ost,
+                    targets,
+                    filesystems,
+                    timestamps
+                where
+                    samples_ost.target = targets.id
+                        and targets.fsid = filesystems.id
+                        and samples_ost.timestamp = timestamps.id
+                        and filesystems.filesystem = '%fs'
+                group by timestamps.timestamp
+                order by timestamps.timestamp''', (fs, ))
+        rows = db.c.fetchall()
+
+        self.c.execute(''' select timestamp from  timestamps''')
+        allTimestamps = db.c.fetchall()
+
+        rbmap = {}
+        wbmap = {}
+
+        for time in allTimestamps:
+            rbmap[time[0]] = 0
+            wbmap[time[0]] = 0
+
+        for row in rows:
+            timestap = row[0]
+            wb = row[1]
+            rb = row[2]
+
+            rbmap[timestap] = rb
+            wbmap[timestap] = wb
+        timestamps_list = sorted(rbmap.keys())
+
+        r_list = []
+        w_list = []
+
+        for t in timestamps_list:
+            r_list.append(-rbmap[t])
+            w_list.append(wbmap[t])
+
+        list_of_list = []
+        list_of_list.append(timestamps_list)
+        list_of_list.append(r_list)
+        list_of_list.append(timestamps_list)
+        list_of_list.append(w_list)
+
+        plotGraph(list_of_list, fs)
+#------------------------------------------------------------------------------
+
 
 def print_job(job):
 
@@ -467,7 +520,9 @@ def print_job(job):
 
         db.c.execute('''select nid from nodelist where job = %s''', (jobid,))
         nids = db.c.fetchall()
-        title = 'Job_' + str(job_info[0]) + '_NoN_' + str(len(nids)) + '__Owner_' + str(job_info[1])
+        title = ('Job_' + str(job_info[0]) +
+                 '_NoN_' + str(len(nids)) +
+                 '__Owner_' + str(job_info[1]))
         List_of_lists = []
         read_sum = []
         write_sum = []
@@ -519,61 +574,22 @@ if __name__ == '__main__':
     time_start = time.time()
 #------------------------------------------------------------------------------
     db = readDB()
+    print 'univ_1'
+    db.print_Filesystem('univ_1')
 
-    db.c.execute('''
-            select
-                timestamps.timestamp, sum(wb), sum(rb), filesystem
-            from
-                samples_ost,
-                targets,
-                filesystems,
-                timestamps
-            where
-                samples_ost.target = targets.id
-                    and targets.fsid = filesystems.id
-                    and samples_ost.timestamp = timestamps.id
-                    and filesystems.filesystem = 'univ_1'
-            group by timestamps.timestamp
-            order by timestamps.timestamp''')
-    rows = db.c.fetchall()
+    print 'univ_2'
+    db.print_Filesystem('univ_2')
 
-    db.c.execute(''' select timestamp from  timestamps''')
-    allTimestamps = db.c.fetchall()
+    print 'ind_1'
+    db.print_Filesystem('ind_1')
 
-    rbmap = {}
-    wbmap = {}
+    print 'ind_2'
+    db.print_Filesystem('ind_2')
 
-    for time in allTimestamps:
-        rbmap[time[0]] = 0
-        wbmap[time[0]] = 0
-
-    for row in rows:
-        timestap = row[0]
-        wb = row[1]
-        rb = row[2]
-
-        rbmap[timestap] = rb
-        wbmap[timestap] = wb
-    timestamps_list = sorted(rbmap.keys())
-
-    r_list = []
-    w_list = []
-
-    for t in timestamps_list:
-        r_list.append(-rbmap[t])
-        w_list.append(wbmap[t])
-
-    list_of_list = []
-    list_of_list.append(timestamps_list)
-    list_of_list.append(r_list)
-    list_of_list.append(timestamps_list)
-    list_of_list.append(w_list)
-
-    title = 'univ_1'
-    plotGraph(list_of_list, title)
+    print 'res_1'
+    db.print_Filesystem('res_1')
 
     exit()
-    # ------------- End test ---------------
 
     db.c.execute('''select id, jobid from jobs''')
     jobs = db.c.fetchall()
