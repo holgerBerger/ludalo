@@ -608,7 +608,7 @@ if __name__ == '__main__':
                 jobs.owner = users.id
             and
                 users.username = 'xhcmarku';''')
-    rows = db.c.fetchall
+    rows = db.c.fetchall()
     jobID_list = []
     for row in rows:
         jobID_list.append(row[0])
