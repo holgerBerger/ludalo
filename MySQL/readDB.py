@@ -607,12 +607,15 @@ if __name__ == '__main__':
             where
                 jobs.owner = users.id
             and
-                users.username = 'xhcmarku';''')
+                users.username = %s;''', testUser)
     rows = db.c.fetchall()
     jobID_list = []
     for row in rows:
         jobID_list.append(row[0])
-    print jobID_list
+
+    user = User(testUser)
+
+    print user
 
 #------------------------------------------------------------------------------
     time_end = time.time()
