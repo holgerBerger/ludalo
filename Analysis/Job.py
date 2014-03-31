@@ -89,14 +89,15 @@ class Job(object):
         self.nidList.append(nidName)
 
     def insertValusToDict(self, dict_org, dict_insert):
-        if not dict_insert:
-            dict_insert = dict_org
+        if not dict_org:
+            dict_org = dict_insert
         else:
+            dict_insert = dict(dict_insert)
             dict_org = dict(dict_org)
-            for key in dict_org.keys():
-                insert = dict_insert(key, 0) + dict_org.get(key)
-                dict_insert[key] = insert
-        return dict_insert
+            for key in dict_insert.keys():
+                insert = dict_insert.get(key, 0) + dict_org.get(key, 0)
+                dict_org[key] = insert
+        return dict_org
 
     def add_Values(self, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName):
 

@@ -16,7 +16,6 @@ from ConfigParser import ConfigParser
 from User import User
 from Job import Job
 
-sys.path.append("../Analysis")
 from plotGraph import plotGraph
 
 
@@ -616,7 +615,16 @@ if __name__ == '__main__':
         jobID_list.append(row[0])
 
     user = User(testUser)
-  #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName)
+    testjob = Job(jobID_list[0])
+    # (start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName)
+    job_valuse = db.get_sum_nids_to_job(jobID_list[0])
+    timeMapRB = job_valuse[2]
+    timeMapWB = job_valuse[3]
+    timeMapRIO = job_valuse[4]
+    timeMapWIO = job_valuse[5]
+    nidName = job_valuse[6]
+    testjob.add_Values(timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName)
+    user.addJob(testjob)
     print user
 
 #------------------------------------------------------------------------------
