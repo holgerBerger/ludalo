@@ -15,6 +15,7 @@ from multiprocessing.pool import Pool
 from ConfigParser import ConfigParser
 from User import User
 from Job import Job
+import argparse
 
 from plotGraph import plotGraph
 
@@ -516,6 +517,34 @@ class readDB(object):
 
         plotGraph(list_of_list, fs)
 #------------------------------------------------------------------------------
+    def print_user(self):
+        testUser = 'xhcmarku'  # 13 Jobs 38.54 Days Jobs runtime
+        db.c.execute('''
+                select
+                    jobs.id
+                from
+                    jobs,
+                    users
+                where
+                    jobs.owner = users.id
+                and
+                    users.username = %s;''', testUser)
+        rows = db.c.fetchall()
+        jobID_list = []
+        for row in rows:
+            jobID_list.append(row[0])
+
+        user = User(testUser)
+        testjob = Job(jobID_list[0])
+        # (start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName)
+        job_valuse = db.get_sum_nids_to_job(jobID_list[0])
+        timeMapRB = job_valuse[2]
+        timeMapWB = job_valuse[3]
+        timeMapRIO = job_valuse[4]
+        timeMapWIO = job_valuse[5]
+        nidName = job_valuse[6]
+        testjob.add_Values(timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName)
+        user.addJob(testjob)
 
 
 def print_job(job):
@@ -598,34 +627,30 @@ if __name__ == '__main__':
     time_start = time.time()
 #------------------------------------------------------------------------------
     db = readDB()
-    testUser = 'xhcmarku'  # 13 Jobs 38.54 Days Jobs runtime
-    db.c.execute('''
-            select
-                jobs.id
-            from
-                jobs,
-                users
-            where
-                jobs.owner = users.id
-            and
-                users.username = %s;''', testUser)
-    rows = db.c.fetchall()
-    jobID_list = []
-    for row in rows:
-        jobID_list.append(row[0])
 
-    user = User(testUser)
-    testjob = Job(jobID_list[0])
-    # (start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName)
-    job_valuse = db.get_sum_nids_to_job(jobID_list[0])
-    timeMapRB = job_valuse[2]
-    timeMapWB = job_valuse[3]
-    timeMapRIO = job_valuse[4]
-    timeMapWIO = job_valuse[5]
-    nidName = job_valuse[6]
-    testjob.add_Values(timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName)
-    user.addJob(testjob)
-    print user
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-u", "--user",
+                        help="print one specific user", type=str)
+    parser.add_argument("-fs", "--filesystem",
+                        help="print one filesystem", type=str)
+    parser.add_argument("-j", "--job",
+                        help="print one specific job", type=str)
+    args = parser.parse_args()
+    if args.filesystem:
+        print 'fs=', args.filesystem
+        db.print_Filesystem(args.filesystem)
+        exit()
+    elif args.user:
+        print 'user=', args.user
+        print 'Not implemented yet'
+        exit()
+    elif args.job:
+        print 'job=', args.job
+        print_job(args.job)
+        exit()
+    else:
+        parser.print_help()
+        exit()
 
 #------------------------------------------------------------------------------
     time_end = time.time()
