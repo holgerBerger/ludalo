@@ -31,7 +31,7 @@ class Logfile:
     def __init__(self, filename, hostfile=None):
 
         self.filename = filename
-        self.myDB = MySQLObject(dbFile)
+        self.myDB = MySQLObject(None)
         self.filesize = os.path.getsize(filename)
 
         if hostfile:
