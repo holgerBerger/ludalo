@@ -18,8 +18,8 @@ class Job(object):
         '''
 
         self.Name = JobName
-        self.t_Start
-        self.t_End
+        self.t_Start = -2
+        self.t_End = -2
 
         self.nidList = []
         self.perNidMap = {}

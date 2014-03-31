@@ -601,7 +601,7 @@ if __name__ == '__main__':
     testUser = 'xhcmarku'  # 13 Jobs 38.54 Days Jobs runtime
     db.c.execute('''
             select
-                jobid
+                jobs.id
             from
                 jobs,
                 users
