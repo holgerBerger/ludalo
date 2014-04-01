@@ -517,7 +517,12 @@ class readDB(object):
 
         plotGraph(list_of_list, fs)
 #------------------------------------------------------------------------------
-    def print_user(self):
+
+    def print_user(self, user):
+        db.c.execute('''select count(*) form users; ''')
+        userCounter = db.c.fetchone()
+        print userCounter, ' users total'
+
         testUser = 'xhcmarku'  # 13 Jobs 38.54 Days Jobs runtime
         db.c.execute('''
                 select
@@ -549,7 +554,7 @@ class readDB(object):
 
 def print_job(job):
 
-    db = readDB('sqlite_new.db')
+    db = readDB(None)
 
     check_job = db.c.execute('''
                     select * from jobs where id = %s
@@ -639,18 +644,19 @@ if __name__ == '__main__':
     if args.filesystem:
         print 'fs=', args.filesystem
         db.print_Filesystem(args.filesystem)
-        exit()
+        #exit()
     elif args.user:
         print 'user=', args.user
         print 'Not implemented yet'
-        exit()
+        db.print_user(args.user)
+        #exit()
     elif args.job:
         print 'job=', args.job
         print_job(args.job)
-        exit()
+        #exit()
     else:
         parser.print_help()
-        exit()
+        #exit()
 
 #------------------------------------------------------------------------------
     time_end = time.time()
