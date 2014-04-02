@@ -77,7 +77,7 @@ class MySQLObject(object):
         # sources map
         self.c.execute('''SELECT * FROM targets;''')
         r = self.c.fetchall()
-        for (k, v, b) in r:
+        for (k, v, b, c) in r:
             self.sources[str(v)] = k
         print "read %s old sources" % len(self.sources)
 
