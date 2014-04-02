@@ -15,7 +15,7 @@ class MySQLObject(object):
         '''
         Constructor
         '''
-        self.DB_VERSION = 2
+        self.DB_VERSION = 3
         self.dbFile = dbFile
         self.config = ConfigParser()
         try:
@@ -185,7 +185,7 @@ class MySQLObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             timestamps (
                                 id serial primary key ,
-                                timestamp integer) engine=myisam''')
+                                c_timestamp integer) engine=myisam''')
 
         # name vom clienten
         self.c.execute('''CREATE TABLE IF NOT EXISTS
@@ -210,7 +210,7 @@ class MySQLObject(object):
         self.c.execute('''
                         CREATE TABLE IF NOT EXISTS ost_values (
                             id serial primary key,
-                            timestamp integer,
+                             integer,
                             target text,
                             rio integer,
                             rb bigint,
@@ -226,7 +226,7 @@ class MySQLObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             samples_ost (
                                 id serial primary key,
-                                timestamp integer,
+                                timestamp_id integer,
                                 target integer,
                                 nid integer,
                                 rio integer,
@@ -237,7 +237,7 @@ class MySQLObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             samples_mdt (
                                 id serial primary key,
-                                  timestamp integer,
+                                  timestamp_id integer,
                                   target integer,
                                   nid integer,
                                   reqs integer) engine=myisam;''')
@@ -304,25 +304,25 @@ class MySQLObject(object):
 
         try:
             self.c.execute('''CREATE INDEX
-                              samples_ost_index ON samples_ost (timestamp, nid, target);''')
+                              samples_ost_index ON samples_ost (timestamp_id, nid, target);''')
         except:
             pass
 
         try:
             self.c.execute('''CREATE INDEX
-                              ost_values_index ON ost_values (timestamp);''')
+                              ost_values_index ON ost_values (timestamp_id);''')
         except:
             pass
 
         try:
             self.c.execute('''CREATE INDEX
-                              samples_mdt_time ON samples_mdt (timestamp);''')
+                              samples_mdt_time ON samples_mdt (timestamp_id);''')
         except:
             pass
 
         try:
             self.c.execute('''CREATE INDEX
-                              time_index ON timestamps (timestamp);''')
+                              time_index ON timestamps (c_timestamp);''')
         except:
             pass
 
