@@ -515,7 +515,7 @@ class readDB(object):
         list_of_list.append(timestamps_list)
         list_of_list.append(w_list)
 
-        plotGraph(list_of_list, fs)
+        plotGraph(list_of_list, fs, 81)
 #------------------------------------------------------------------------------
 
     def print_user(self, user):
