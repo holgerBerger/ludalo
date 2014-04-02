@@ -521,7 +521,7 @@ class readDB(object):
     def print_user(self, user):
         db.c.execute('''select count(*) form users; ''')
         userCounter = db.c.fetchone()
-        print userCounter, ' users total'
+        print userCounter[0], ' users total'
 
         testUser = 'xhcmarku'  # 13 Jobs 38.54 Days Jobs runtime
         db.c.execute('''
