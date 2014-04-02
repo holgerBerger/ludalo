@@ -205,7 +205,8 @@ class MySQLObject(object):
                             targets (
                                 id serial primary key ,
                                 target varchar(32),
-                                fsid integer) engine=myisam''')
+                                fsid integer,
+                                server_id) engine=myisam''')
 
         self.c.execute('''
                         CREATE TABLE IF NOT EXISTS ost_values (
@@ -381,7 +382,7 @@ class MySQLObject(object):
             self.timestamps[timestamp] = self.c.lastrowid
 #------------------------------------------------------------------------------
 
-    def insert_source(self, source, fsName):
+    def insert_source(self, source, fsName, server):
         if fsName not in self.filesystemmap:
             self.c.execute('''INSERT INTO filesystems VALUES (NULL,%s)''',
                                 (fsName,))
@@ -391,8 +392,9 @@ class MySQLObject(object):
             fsid = self.filesystemmap[fsName]
 
         if source not in self.sources:
-            self.c.execute('''INSERT INTO targets VALUES (NULL,%s,%s)''',
-                                (source, fsid))
+            server = self.servermap[server]
+            self.c.execute('''INSERT INTO targets VALUES (NULL,%s,%s,%s)''',
+                                (source, fsid, server))
             self.sources[source] = self.c.lastrowid
 #------------------------------------------------------------------------------
 

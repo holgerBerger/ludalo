@@ -86,7 +86,7 @@ class Logfile:
                 self.myDB.insert_timestamp(timestamp)
                 # source = univ_1-OST0001
                 fs = source.split('-')[0]
-                self.myDB.insert_source(source, fs)
+                self.myDB.insert_source(source, fs, server)
 
                 # add ost global
                 self.insert_ost_global(server, value_tupel, timestamp)
