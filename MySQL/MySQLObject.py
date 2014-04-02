@@ -211,7 +211,7 @@ class MySQLObject(object):
         self.c.execute('''
                         CREATE TABLE IF NOT EXISTS ost_values (
                             id serial primary key,
-                            c_timestamp integer,
+                            timestamp_id integer,
                             target text,
                             rio integer,
                             rb bigint,
