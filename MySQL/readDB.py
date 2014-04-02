@@ -84,7 +84,7 @@ class readDB(object):
         self.c.execute('''  select
                                 samples_ost.rb,
                                 samples_ost.wb,
-                                timestamps.timestamp,
+                                timestamps.c_timestamp,
                                 nids.nid,
                                 samples_ost.rio,
                                 samples_ost.wio
@@ -94,8 +94,8 @@ class readDB(object):
                                 timestamps
                             where
                                 nids.id = samples_ost.nid
-                                    and timestamps.id = samples_ost.timestamp
-                                    and timestamps.timestamp between %s and %s
+                                    and timestamps.id = samples_ost.timestamp_id
+                                    and timestamps.c_timestamp between %s and %s
                                     and nids.nid = %s''',
                                     (start, end, nidName))
         tmp = self.c.fetchall()
@@ -106,11 +106,11 @@ class readDB(object):
         timeMapWIO = {}
         self.c.execute('''
                             select
-                                timestamp
+                                c_timestamp
                             from
                                 timestamps
                             where
-                                timestamp between %s and %s''',
+                                c_timestamp between %s and %s''',
                                 (start, end))
         tmp_time = self.c.fetchall()
         for timeStamp in tmp_time:
@@ -156,7 +156,7 @@ class readDB(object):
                                 sum(samples_ost.wb),
                                 sum(samples_ost.rio),
                                 sum(samples_ost.wio),
-                                timestamps.timestamp,
+                                timestamps.c_timestamp,
                                 nids.nid
                             from
                                 nids
@@ -168,19 +168,19 @@ class readDB(object):
                                     join
                                 samples_ost ON nids.id = samples_ost.nid
                                     join
-                                timestamps ON timestamps.id = samples_ost.timestamp
-                                    and timestamps.timestamp between %s and %s
-                            group by nids.nid , timestamps.timestamp'''
+                                timestamps ON timestamps.id = samples_ost.timestamp_id
+                                    and timestamps.c_timestamp between %s and %s
+                            group by nids.nid , timestamps.c_timestamp'''
                 self.c.execute(query, (jobID, start, end,))
                 query_result = self.c.fetchall()
 
                 self.c.execute('''
                     select
-                        timestamp
+                        c_timestamp
                     from
                         timestamps
                     where
-                        timestamp between %s and %s''',
+                        c_timestamp between %s and %s''',
                         (start, end))
                 tmp_time = self.c.fetchall()
 
@@ -263,13 +263,13 @@ class readDB(object):
         start_end = self.c.fetchall()
 
         self.c.execute('''
-                        select timestamp from timestamps
-                        order by timestamp desc
+                        select c_timestamp from timestamps
+                        order by c_timestamp desc
                         limit 1 ''')
         samples_max = self.c.fetchall()
         self.c.execute('''
-                        select timestamp from timestamps
-                        order by timestamp
+                        select c_timestamp from timestamps
+                        order by c_timestamp
                         limit 1 ''')
         samples_min = self.c.fetchall()
 
@@ -347,15 +347,15 @@ class readDB(object):
 
     def get_hi_lo_TimestampsID_Between(self, timeStamp_start, timeStamp_end):
         self.c.execute(''' SELECT * FROM timestamps
-                            WHERE timestamp BETWEEN %s AND %s
-                            order by timestamp desc
+                            WHERE c_timestamp BETWEEN %s AND %s
+                            order by c_timestamp desc
                             limit 1
                             ''', (timeStamp_start, timeStamp_end))
         t_end = self.c.fetchone()
 
         self.c.execute(''' SELECT * FROM timestamps
-                            WHERE timestamp BETWEEN %s AND %s
-                            order by timestamp
+                            WHERE c_timestamp BETWEEN %s AND %s
+                            order by c_timestamp
                             limit 1
                             ''', (timeStamp_start, timeStamp_end))
         t_start = self.c.fetchone()
@@ -378,7 +378,7 @@ class readDB(object):
             timeStamp_start_id = timestamp[0]
 
             self.c.execute(''' SELECT nid, rb, wb FROM samples_ost
-                                WHERE timestamp BETWEEN %s AND %s
+                                WHERE timestamp_id BETWEEN %s AND %s
                                 ''', (timeStamp_start_id, timeStamp_end_id))
             c = self.c.fetchall()
             nidDictrb = {}
@@ -464,7 +464,7 @@ class readDB(object):
         # getting all informations out of the database
         self.c.execute('''
                 select
-                    timestamps.timestamp, sum(wb), sum(rb), filesystem
+                    timestamps.c_timestamp, sum(wb), sum(rb), filesystem
                 from
                     samples_ost,
                     targets,
@@ -473,13 +473,13 @@ class readDB(object):
                 where
                     samples_ost.target = targets.id
                         and targets.fsid = filesystems.id
-                        and samples_ost.timestamp = timestamps.id
+                        and samples_ost.timestamp_id = timestamps.id
                         and filesystems.filesystem = %s
-                group by timestamps.timestamp
-                order by timestamps.timestamp''', (fs))
+                group by timestamps.c_timestamp
+                order by timestamps.c_timestamp''', (fs))
         rows = db.c.fetchall()
 
-        self.c.execute(''' select timestamp from  timestamps''')
+        self.c.execute(''' select c_timestamp from  timestamps''')
         allTimestamps = db.c.fetchall()
 
         rbmap = {}
