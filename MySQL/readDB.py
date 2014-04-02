@@ -26,7 +26,7 @@ class readDB(object):
         '''
         Constructor
         '''
-        self.DB_VERSION = 2
+        self.DB_VERSION = 3
         self.config = ConfigParser()
         try:
             self.config.readfp(open("db.conf"))
@@ -58,7 +58,7 @@ class readDB(object):
             print ('\nThere is something wrong with the Database\n' +
                        'DB version is ' + str(version) +
                        ''' but expect version ''' +
-                       str(self.DB_VERSION))
+                       str(self.DB_VERSION)+ '\n')
             sys.exit(0)
 
 #------------------------------------------------------------------------------
