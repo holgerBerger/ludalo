@@ -57,7 +57,7 @@ class MySQLObject(object):
 
 #------------------------------------------------------------------------------
     def build_database(self):
-        self._generateSQLite()
+        self._generateDatabase()
         # bild map's
 
         # fs map
@@ -173,7 +173,7 @@ class MySQLObject(object):
         self.c.execute(exeString, collection)
 #------------------------------------------------------------------------------
 
-    def _generateSQLite(self):
+    def _generateDatabase(self):
         # create table if not exist
 
         self.c.execute('''CREATE TABLE IF NOT EXISTS
@@ -206,7 +206,7 @@ class MySQLObject(object):
                                 id serial primary key ,
                                 target varchar(32),
                                 fsid integer,
-                                server_id) engine=myisam''')
+                                server_id integer) engine=myisam''')
 
         self.c.execute('''
                         CREATE TABLE IF NOT EXISTS ost_values (
