@@ -128,8 +128,8 @@ class Logfile:
         f.close()
 #------------------------------------------------------------------------------
 
-    def insert_ost_global(self, server, d_tuple, timestamp):
-        self.myDB.insert_ost_global(server, d_tuple, timestamp)
+    def insert_ost_global(self, source, d_tuple, timestamp, server):
+        self.myDB.insert_ost_global(source, d_tuple, timestamp, server)
 
     def insert_nid_server(self, server, one_nid):
         self.myDB.add_nid_server(server, one_nid)
