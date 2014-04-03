@@ -395,9 +395,8 @@ class MySQLObject(object):
             fsid = self.filesystemmap[fsName]
 
         if source not in self.sources:
-            server = self.servermap[server]
-            self.c.execute('''INSERT INTO targets VALUES (NULL,%s,%s,%s)''',
-                                (source, fsid, server))
+            self.c.execute('''INSERT INTO targets VALUES (NULL,%s,%s)''',
+                                (source, fsid))
             self.sources[source] = self.c.lastrowid
 #------------------------------------------------------------------------------
 
