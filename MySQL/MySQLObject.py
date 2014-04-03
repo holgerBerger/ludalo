@@ -368,12 +368,13 @@ class MySQLObject(object):
             server = self.servermap[server]
             insert_string = []
             insert_string.append(self.timestamps[timestamp])
+            insert_string.append(target)
             insert_string.append(server)
             insert_string.append(tup[0])  # rio
             insert_string.append(tup[1])  # rb
             insert_string.append(tup[2])  # wio
             insert_string.append(tup[3])  # wb
-            self.c.execute(''' INSERT INTO ost_values VALUES (NULL, %s,%s,%s,%s,%s,%s)
+            self.c.execute(''' INSERT INTO ost_values VALUES (NULL, %s,%s,%s,%s,%s,%s,%s)
                     ''', insert_string)
 #------------------------------------------------------------------------------
 
