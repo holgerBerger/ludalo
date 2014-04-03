@@ -373,7 +373,7 @@ class MySQLObject(object):
             insert_string.append(tup[1])  # rb
             insert_string.append(tup[2])  # wio
             insert_string.append(tup[3])  # wb
-            self.c.execute(''' INSERT INTO ost_values VALUES (NULL, %s,%s,%s,%s, %s,%s,%s)
+            self.c.execute(''' INSERT INTO ost_values VALUES (NULL, %s,%s,%s,%s,%s,%s)
                     ''', insert_string)
 #------------------------------------------------------------------------------
 
