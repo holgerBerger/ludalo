@@ -15,7 +15,7 @@ class MySQLObject(object):
         '''
         Constructor
         '''
-        self.DB_VERSION = 3
+        self.DB_VERSION = 4
         self.dbFile = dbFile
         self.config = ConfigParser()
         try:
@@ -212,7 +212,8 @@ class MySQLObject(object):
                         CREATE TABLE IF NOT EXISTS ost_values (
                             id serial primary key,
                             timestamp_id integer,
-                            target text,
+                            target integer,
+                            server integer,
                             rio integer,
                             rb bigint,
                             wio integer,
@@ -361,9 +362,11 @@ class MySQLObject(object):
             return False
 #------------------------------------------------------------------------------
 
-    def insert_ost_global(self, server, tup, timestamp):
+    def insert_ost_global(self, target, tup, timestamp, server):
         if self.servertype[server] == 'ost':
             tup = tup.split(',')
+            target = self.sources[target]
+            server = self.servermap[server]
             insert_string = []
             insert_string.append(self.timestamps[timestamp])
             insert_string.append(server)
@@ -371,7 +374,7 @@ class MySQLObject(object):
             insert_string.append(tup[1])  # rb
             insert_string.append(tup[2])  # wio
             insert_string.append(tup[3])  # wb
-            self.c.execute(''' INSERT INTO ost_values VALUES (NULL, %s,%s,%s, %s,%s,%s)
+            self.c.execute(''' INSERT INTO ost_values VALUES (NULL, %s,%s,%s,%s, %s,%s,%s)
                     ''', insert_string)
 #------------------------------------------------------------------------------
 
