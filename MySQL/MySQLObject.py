@@ -205,8 +205,7 @@ class MySQLObject(object):
                             targets (
                                 id serial primary key ,
                                 target varchar(32),
-                                fsid integer,
-                                server_id integer) engine=myisam''')
+                                fsid integer) engine=myisam''')
 
         self.c.execute('''
                         CREATE TABLE IF NOT EXISTS ost_values (
