@@ -15,7 +15,7 @@ class MySQLObject(object):
         '''
         Constructor
         '''
-        self.DB_VERSION = 3
+        self.DB_VERSION = 4
         self.dbFile = dbFile
         self.config = ConfigParser()
         try:
@@ -77,7 +77,7 @@ class MySQLObject(object):
         # sources map
         self.c.execute('''SELECT * FROM targets;''')
         r = self.c.fetchall()
-        for (k, v, b, c) in r:
+        for (k, v, b) in r:
             self.sources[str(v)] = k
         print "read %s old sources" % len(self.sources)
 
@@ -205,14 +205,14 @@ class MySQLObject(object):
                             targets (
                                 id serial primary key ,
                                 target varchar(32),
-                                fsid integer,
-                                server_id integer) engine=myisam''')
+                                fsid integer) engine=myisam''')
 
         self.c.execute('''
                         CREATE TABLE IF NOT EXISTS ost_values (
                             id serial primary key,
                             timestamp_id integer,
-                            target text,
+                            target integer,
+                            server integer,
                             rio integer,
                             rb bigint,
                             wio integer,
@@ -361,17 +361,20 @@ class MySQLObject(object):
             return False
 #------------------------------------------------------------------------------
 
-    def insert_ost_global(self, server, tup, timestamp):
+    def insert_ost_global(self, target, tup, timestamp, server):
         if self.servertype[server] == 'ost':
             tup = tup.split(',')
+            target = self.sources[target]
+            server = self.servermap[server]
             insert_string = []
             insert_string.append(self.timestamps[timestamp])
+            insert_string.append(target)
             insert_string.append(server)
             insert_string.append(tup[0])  # rio
             insert_string.append(tup[1])  # rb
             insert_string.append(tup[2])  # wio
             insert_string.append(tup[3])  # wb
-            self.c.execute(''' INSERT INTO ost_values VALUES (NULL, %s,%s,%s, %s,%s,%s)
+            self.c.execute(''' INSERT INTO ost_values VALUES (NULL, %s,%s,%s,%s,%s,%s,%s)
                     ''', insert_string)
 #------------------------------------------------------------------------------
 
@@ -382,7 +385,7 @@ class MySQLObject(object):
             self.timestamps[timestamp] = self.c.lastrowid
 #------------------------------------------------------------------------------
 
-    def insert_source(self, source, fsName, server):
+    def insert_source(self, source, fsName):
         if fsName not in self.filesystemmap:
             self.c.execute('''INSERT INTO filesystems VALUES (NULL,%s)''',
                                 (fsName,))
@@ -392,9 +395,8 @@ class MySQLObject(object):
             fsid = self.filesystemmap[fsName]
 
         if source not in self.sources:
-            server = self.servermap[server]
-            self.c.execute('''INSERT INTO targets VALUES (NULL,%s,%s,%s)''',
-                                (source, fsid, server))
+            self.c.execute('''INSERT INTO targets VALUES (NULL,%s,%s)''',
+                                (source, fsid))
             self.sources[source] = self.c.lastrowid
 #------------------------------------------------------------------------------
 

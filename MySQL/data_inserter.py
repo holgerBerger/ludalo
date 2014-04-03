@@ -86,10 +86,10 @@ class Logfile:
                 self.myDB.insert_timestamp(timestamp)
                 # source = univ_1-OST0001
                 fs = source.split('-')[0]
-                self.myDB.insert_source(source, fs, server)
+                self.myDB.insert_source(source, fs)
 
                 # add ost global
-                self.insert_ost_global(server, value_tupel, timestamp)
+                self.insert_ost_global(source, value_tupel, timestamp, server)
                 self.insert_nids(server, timestamp, source, sp[4:])
 
 #--------------------- progress bar -------------------------------------------
@@ -128,8 +128,8 @@ class Logfile:
         f.close()
 #------------------------------------------------------------------------------
 
-    def insert_ost_global(self, server, d_tuple, timestamp):
-        self.myDB.insert_ost_global(server, d_tuple, timestamp)
+    def insert_ost_global(self, source, d_tuple, timestamp, server):
+        self.myDB.insert_ost_global(source, d_tuple, timestamp, server)
 
     def insert_nid_server(self, server, one_nid):
         self.myDB.add_nid_server(server, one_nid)
