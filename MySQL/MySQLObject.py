@@ -385,7 +385,7 @@ class MySQLObject(object):
             self.timestamps[timestamp] = self.c.lastrowid
 #------------------------------------------------------------------------------
 
-    def insert_source(self, source, fsName, server):
+    def insert_source(self, source, fsName):
         if fsName not in self.filesystemmap:
             self.c.execute('''INSERT INTO filesystems VALUES (NULL,%s)''',
                                 (fsName,))
