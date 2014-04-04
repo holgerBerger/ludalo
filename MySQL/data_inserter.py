@@ -43,7 +43,45 @@ class Logfile:
         else:
             return "%d min %2.2d sec" % (secs / 60, secs % 60)
 
+    def readHead(self, line):
+        sp = line[:-1].split(";")  # ignore the line break at the end
+        server = sp[1]
+        timestamp = sp[2]
+        stype = sp[3]  # mdt or ost
+
+        # add server and type to the db
+        self.myDB.insert_server(server, stype)
+
+        # add nids to the database
+        for nid in sp[5:]:
+            self.insert_nid_server(server, nid)
 #------------------------------------------------------------------------------
+
+    def readData(self, line):
+        sp = line[:-1].split(";")  # ignore the line break at the end
+    # form a hash digest of the line and check if line is already in database,
+    # if so, do not add line again to avoid bloat and wrong results for
+    # sums over data
+        hexdigest = hashlib.sha224(line).hexdigest()
+        if self.myDB.has_hash(hexdigest):
+            #print "line collision"
+            continue
+
+        server = sp[0]
+        timestamp = sp[1]
+        source = sp[2]
+        value_tupel = sp[3]  # values for ost
+
+        self.myDB.insert_timestamp(timestamp)
+        # source = univ_1-OST0001
+        fs = source.split('-')[0]
+        self.myDB.insert_source(source, fs)
+
+        # add ost global
+        self.insert_ost_global(source, value_tupel, timestamp, server)
+        self.insert_nids(server, timestamp, source, sp[4:])
+#------------------------------------------------------------------------------
+
     def read(self):
         ''' action is HERE'''
         f = open(self.filename, "r")
@@ -54,43 +92,11 @@ class Logfile:
         #1.0;hmds1;time;mdt;reqs;
         #1.0;hoss3;time;ost;rio,rb,wio,wb;
         for line in f:
-            sp = line[:-1].split(";")  # ignore the line break at the end
-
             if line.startswith("#"):  # this is a head line
-                server = sp[1]
-                timestamp = sp[2]
-                stype = sp[3]  # mdt or ost
-
-                # add server and type to the db
-                self.myDB.insert_server(server, stype)
-
-                # add nids to the database
-                for nid in sp[5:]:
-                    self.insert_nid_server(server, nid)
-
+                self.readHead(line)
             else:
 #--------------------- if not headline ----------------------------------------
-    # form a hash digest of the line and check if line is already in database,
-    # if so, do not add line again to avoid bloat and wrong results for
-    # sums over data
-                hexdigest = hashlib.sha224(line).hexdigest()
-                if self.myDB.has_hash(hexdigest):
-                    #print "line collision"
-                    continue
-
-                server = sp[0]
-                timestamp = sp[1]
-                source = sp[2]
-                value_tupel = sp[3]  # values for ost
-
-                self.myDB.insert_timestamp(timestamp)
-                # source = univ_1-OST0001
-                fs = source.split('-')[0]
-                self.myDB.insert_source(source, fs)
-
-                # add ost global
-                self.insert_ost_global(source, value_tupel, timestamp, server)
-                self.insert_nids(server, timestamp, source, sp[4:])
+                self.readData(line)
 
 #--------------------- progress bar -------------------------------------------
             counter += 1

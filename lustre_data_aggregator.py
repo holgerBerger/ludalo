@@ -5,9 +5,13 @@
 # tested with lustre 1.8 and python 2.4
 # Holger Berger 2014
 
+import sys
+sys.path.append("/MySQL")
+
 import xmlrpclib, time, socket
 import sys, signal, os
 from threading import Thread, Lock
+from data_inserter import Logfile
 
 SLEEP = 60   # > 10 sec
 TIMEOUT = 30  # has to be < SLEEP
@@ -16,6 +20,7 @@ FILEVERSION = "1.0"
 servers = sys.argv[1:]
 
 out = open("data_file", "w")
+db = Logfile()
 
 rpcs = {}
 types = {}
@@ -62,9 +67,12 @@ def worker(srv):
     nids[srv] = r[0].split(";")
     if first or nids[srv] != oldnids[srv]:
         iolock.acquire()
-        out.write("#" + FILEVERSION + ";" + hostnames[srv] + ";")
-        out.write(nids[srv][0] + ";")
-        out.write(";".join(nids[srv][1:]) + "\n")
+# --------- switch to db here ---------
+        #out.write("#" + FILEVERSION + ";" + hostnames[srv] + ";")
+        #out.write(nids[srv][0] + ";")
+        #out.write(";".join(nids[srv][1:]) + "\n")
+        line = ("#" + FILEVERSION + ";" + hostnames[srv] + ";" + nids[srv][0] + ";" + ";".join(nids[srv][1:]) + "\n")
+        db.readHead(line)
         iolock.release()
     oldnids[srv] = nids[srv]
     for ost in r[1:]:
@@ -76,7 +84,10 @@ def worker(srv):
             else:
                 l.append(i)
         iolock.acquire()
-        out.write(hostnames[srv] + ";" + str(int(sample)) + ";" + ";" .join(map(str, l))+"\n")
+# --------- switch to db here ---------
+        #out.write(hostnames[srv] + ";" + str(int(sample)) + ";" + ";" .join(map(str, l))+"\n")
+        line = (hostnames[srv] + ";" + str(int(sample)) + ";" + ";" .join(map(str, l))+"\n")
+        db.readData(line)
         iolock.release()
         vs = sp[1].split(',')
         if len(vs) == 1:
@@ -85,6 +96,7 @@ def worker(srv):
             (wb, rb) = bws.setdefault(srv, (0, 0))
             bws[srv] = (wb + int(vs[1]), rb + int(vs[3]))
 
+#------------------------------------------------------------------------------
 
 socket.setdefaulttimeout(TIMEOUT)
 
@@ -127,13 +139,13 @@ while True:
     twbs = 0
     for oss in bws:
         print "  oss data bandwidth %s: read %7.1f MB/s - write %7.1f MB/s" % (
-                                 oss, bws[oss][0] / (1024.0 * 1024.0 * float(SLEEP)),
-                                 bws[oss][1] / (1024.0 * 1024.0 * float(SLEEP)))
+                        oss, bws[oss][0] / (1024.0 * 1024.0 * float(SLEEP)),
+                        bws[oss][1] / (1024.0 * 1024.0 * float(SLEEP)))
         trbs += bws[oss][0]
         twbs += bws[oss][1]
         bws[oss] = (0, 0)
     print "  === total bandwidth === : read %7.1f MB/s - write %7.1f MB/s" % (
-                                 trbs / (1024.0 * 1024.0 * float(SLEEP)),
-                                 twbs / (1024.0 * 1024.0 * float(SLEEP)))
+                        trbs / (1024.0 * 1024.0 * float(SLEEP)),
+                        twbs / (1024.0 * 1024.0 * float(SLEEP)))
 
     time.sleep(SLEEP - ((e - sample) % SLEEP))
