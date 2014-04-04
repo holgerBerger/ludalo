@@ -26,7 +26,7 @@ class readDB(object):
         '''
         Constructor
         '''
-        self.DB_VERSION = 3
+        self.DB_VERSION = 4
         self.config = ConfigParser()
         try:
             self.config.readfp(open("db.conf"))
