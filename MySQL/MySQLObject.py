@@ -179,44 +179,77 @@ class MySQLObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             version (
                                 id serial primary key,
-                                version integer) engine=myisam''')
+                                version integer
+                                COMMENT
+                                'This describe the Version of the Database'
+                                    ) engine=myisam''')
 
         # timestamp
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             timestamps (
                                 id serial primary key ,
-                                c_timestamp integer) engine=myisam''')
+                                c_timestamp integer
+                                COMMENT
+                                'This is an time stamp of one Sample'
+                                ) engine=myisam''')
 
         # name vom clienten
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             nids (
                                 id serial primary key ,
-                                nid varchar(64)) engine=myisam''')
+                                nid varchar(64)
+                                COMMENT
+                                'This is the name of one nid'
+                                ) engine=myisam''')
 
         # oss/mds server name
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             servers (
                                 id serial primary key ,
-                                server text,
-                                server_type text) engine=myisam''')
+                                server text
+                                COMMENT
+                                'name of the server',
+                                server_type text
+                                COMMENT
+                                'describes the server type'
+                                ) engine=myisam''')
 
         # ost / mdt
-        self.c.execute('''CREATE TABLE IF NOT EXISTS
-                            targets (
-                                id serial primary key ,
-                                target varchar(32),
-                                fsid integer) engine=myisam''')
+        self.c.execute('''
+                        CREATE TABLE IF NOT EXISTS targets (
+                            id serial primary key ,
+                            target varchar(32)
+                            COMMENT
+                            'name of the target like lnec-OST000c or lnec-MDT0000',
+                            fsid integer
+                            COMMENT
+                            'map to the filesystem'
+                            ) engine=myisam''')
 
         self.c.execute('''
                         CREATE TABLE IF NOT EXISTS ost_values (
                             id serial primary key,
-                            timestamp_id integer,
-                            target integer,
-                            server integer,
-                            rio integer,
-                            rb bigint,
-                            wio integer,
+                            timestamp_id integer
+                            COMMENT
+                            'map to the timestamps table',
+                            target integer
+                            COMMENT
+                            'map to the targets table',
+                            server integer
+                            COMMENT
+                            'map to the servers table',
+                            rio integer
+                            COMMENT
+                            'read io value in byte',
+                            rb bigint
+                            COMMENT
+                            'read value in byte',
+                            wio integer
+                            COMMENT
+                            'write io value in byte',
                             wb bigint
+                            COMMENT
+                            'write value in byte'
                         )  engine=myisam''')
 
         self.c.execute(''' CREATE TABLE IF NOT EXISTS

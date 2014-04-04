@@ -26,7 +26,7 @@ class readDB(object):
         '''
         Constructor
         '''
-        self.DB_VERSION = 3
+        self.DB_VERSION = 4
         self.config = ConfigParser()
         try:
             self.config.readfp(open("db.conf"))
@@ -466,14 +466,14 @@ class readDB(object):
                 select
                     timestamps.c_timestamp, sum(wb), sum(rb), filesystem
                 from
-                    samples_ost,
+                    ost_values,
                     targets,
                     filesystems,
                     timestamps
                 where
-                    samples_ost.target = targets.id
+                    ost_values.target = targets.id
                         and targets.fsid = filesystems.id
-                        and samples_ost.timestamp_id = timestamps.id
+                        and ost_values.timestamp_id = timestamps.id
                         and filesystems.filesystem = %s
                 group by timestamps.c_timestamp
                 order by timestamps.c_timestamp''', (fs))
