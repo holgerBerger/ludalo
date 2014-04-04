@@ -5,17 +5,17 @@
 # tested with lustre 1.8 and python 2.4
 # Holger Berger 2014
 
-import xmlrpclib,time,socket
+import xmlrpclib, time, socket
 import sys, signal, os
-from threading import Thread,Lock
+from threading import Thread, Lock
 
 SLEEP = 60   # > 10 sec
 TIMEOUT = 30  # has to be < SLEEP
-FILEVERSION="1.0"
+FILEVERSION = "1.0"
 
 servers = sys.argv[1:]
 
-out = open("data_file","w")
+out = open("data_file", "w")
 
 rpcs = {}
 types = {}
@@ -32,25 +32,26 @@ bws = {}
 reqs = {}
 
 def signalhandler(signum, frame):
-  global out,first,iolock
+  global out, first, iolock
   if signum == signal.SIGUSR1:
     iolock.acquire()
     out.close()
-    print "switching file to","data_file_"+str(int(time.time()))
-    os.rename("data_file", "data_file_"+str(int(time.time())))
-    out = open("data_file","w")
+    print "switching file to", "data_file_" + str(int(time.time()))
+    os.rename("data_file", "data_file_" + str(int(time.time())))
+    out = open("data_file", "w")
     iolock.release()
-    first=True
+    first = True
+
 
 def worker(srv):
-    global oldnids,first,timings,bws,reqs
-
+    global oldnids, first, timings, bws, reqs
 
     t1 = time.time()
+
     try:
       r=rpcs[srv].get_sample()
     except:
-      print >>sys.stderr,"failed to connect to server:",srv
+      print >>sys.stderr, "failed to connect to server:", srv
       timings[srv] = time.time() - t1
       return
     timings[srv] = time.time() - t1
@@ -78,7 +79,7 @@ def worker(srv):
       iolock.release()
       vs = sp[1].split(',')
       if len(vs)==1:
-        reqs[srv]= reqs.setdefault(srv, 0) + int(sp[1])
+        reqs[srv] = reqs.setdefault(srv, 0) + int(sp[1])
       else:
         (wb,rb) = bws.setdefault(srv, (0,0))
         bws[srv]=(wb+int(vs[1]) , rb+int(vs[3]))
@@ -95,10 +96,10 @@ for srv in servers:
 signal.signal(signal.SIGUSR1, signalhandler)
 
 while True:
-  sample=time.time()
+  sample = time.time()
 
   for srv in servers:
-    threads[srv] = Thread( target = worker, args = (srv,)) 
+    threads[srv] = Thread( target = worker, args = (srv, )) 
     threads[srv].start()
 
   for srv in servers:
@@ -114,21 +115,21 @@ while True:
     if v < minT[1]: minT = (s,v)
     if v > maxT[1]: maxT = (s,v)
     avg += float(v)
-  print "transfer times - max: %s %3.3fs" % maxT,"- min: %s %3.3fs"% minT, "- avg: %3.3fs" % (avg/len(timings))
+  print "transfer times - max: %s %3.3fs" % maxT, "- min: %s %3.3fs"% minT, "- avg: %3.3fs" % (avg/len(timings))
   for mdt in reqs:
-    print "  metadata requests  %s: %6.1f/s" % (mdt,reqs[mdt]/float(SLEEP))
+    print "  metadata requests  %s: %6.1f/s" % (mdt, reqs[mdt] / float(SLEEP))
     reqs[mdt] = 0
   trbs = 0
   twbs = 0
   for oss in bws:
     print "  oss data bandwidth %s: read %7.1f MB/s - write %7.1f MB/s" % (
-                                 oss, bws[oss][0]/(1024.0*1024.0*float(SLEEP)), 
-                                 bws[oss][1]/(1024.0*1024.0*float(SLEEP)))
+                                 oss, bws[oss][0] / (1024.0 * 1024.0 * float(SLEEP)), 
+                                 bws[oss][1] / (1024.0 * 1024.0 * float(SLEEP)))
     trbs += bws[oss][0]
     twbs += bws[oss][1]
     bws[oss] = (0,0)
   print "  === total bandwidth === : read %7.1f MB/s - write %7.1f MB/s" % (
-                                 trbs/(1024.0*1024.0*float(SLEEP)), 
-                                 twbs/(1024.0*1024.0*float(SLEEP)))
-  
+                                 trbs / (1024.0 * 1024.0 * float(SLEEP)),
+                                 twbs / (1024.0 * 1024.0 * float(SLEEP)))
+
   time.sleep(SLEEP-((e-sample)%SLEEP))
