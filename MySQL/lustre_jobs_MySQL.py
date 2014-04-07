@@ -23,8 +23,9 @@ class DB:
         self.dbname = self.config.get("database", "name")
         self.dbpassword = self.config.get("database", "password")
         self.dbhost = self.config.get("database", "host")
+        self.dbport = int(self.config.get("database", "port"))
         self.dbuser = self.config.get("database", "user")
-        self.conn = MySQLdb.connect(passwd=self.dbpassword, db=self.dbname, host=self.dbhost, user=self.dbuser)
+        self.conn = MySQLdb.connect(passwd=self.dbpassword, db=self.dbname, host=self.dbhost, port=self.dbport, user=self.dbuser)
         self.c = self.conn.cursor()
 
     def close(self):

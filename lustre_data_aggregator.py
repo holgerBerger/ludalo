@@ -6,7 +6,7 @@
 # Holger Berger 2014
 
 import sys
-sys.path.append("/MySQL")
+sys.path.append("MySQL")
 
 import xmlrpclib, time, socket
 import sys, signal, os

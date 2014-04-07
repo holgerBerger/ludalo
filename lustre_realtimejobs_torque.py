@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import time
 import select
 import _inotify
@@ -20,9 +21,8 @@ class Logfile:
         self.prefix = prefix
         self.filename = self.path+"/"+filename
         self.f = open(self.filename,"r")
-        self.read_from_last_pos_to_end()
-
         self.db = lustre_jobs_db.DB()
+        self.read_from_last_pos_to_end()
 
     def read_from_last_pos_to_end(self):
         '''read from file from current position to current end, build lists for inserts and updates
@@ -68,9 +68,9 @@ class Logfile:
        
         # insert into DB - executemany is hard to achieve, as we need to insert users as well
         for j in inserts:
-            self.db.insert_job(j)
+            self.db.insert_job(*j)
         for j in updates:
-            self.db.update_job(j)
+            self.db.update_job(*j)
 
     def switch_file(self,filename):
         todayfile = time.strftime("%Y%m%d")
@@ -91,11 +91,11 @@ class Logfile:
 def mainloop():
 
   fd = _inotify.create()
-  wddir = _inotify.add(fd, "watchdir", _inotify.CREATE | _inotify.MODIFY) 
+  wddir = _inotify.add(fd, ROOTDIR, _inotify.CREATE | _inotify.MODIFY) 
 
   todayfile = time.strftime("%Y%m%d")
-  todayfile = "20140320"
-  lf = Logfile("","watchdir",todayfile)
+  #todayfile = "20140320"
+  lf = Logfile("",ROOTDIR,todayfile)
 
   while True:
     # blocking wait

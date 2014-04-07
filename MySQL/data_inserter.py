@@ -28,11 +28,12 @@ import hashlib
 
 class Logfile:
 
-    def __init__(self, filename, hostfile=None):
+    def __init__(self, filename=None, hostfile=None):
 
         self.filename = filename
         self.myDB = MySQLObject(None)
-        self.filesize = os.path.getsize(filename)
+	if filename:
+           self.filesize = os.path.getsize(filename)
 
         if hostfile:
             self.readhostfile(hostfile)
@@ -65,7 +66,7 @@ class Logfile:
         hexdigest = hashlib.sha224(line).hexdigest()
         if self.myDB.has_hash(hexdigest):
             #print "line collision"
-            continue
+            return
 
         server = sp[0]
         timestamp = sp[1]
