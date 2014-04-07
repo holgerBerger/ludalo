@@ -556,10 +556,11 @@ def print_job(job):
 
     db = readDB()
 
-    check_job = db.c.execute('''
+    db.c.execute('''
                     select * from jobs where jobid = %s
-                     ''', (str(job),))
+                    ''', (str(job),))
 
+    check_job = db.c.fetchone()
     if not check_job:
         print 'No such job: ', job
         sys.exit(0)
