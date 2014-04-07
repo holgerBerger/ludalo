@@ -250,8 +250,10 @@ class readDB(object):
                 return colReturn
 
             else:
+                print 'duration error ', str(end - start)
                 return None
         else:
+            print 'start end time error'
             return None
 #------------------------------------------------------------------------------
 
@@ -449,11 +451,11 @@ class readDB(object):
         head = self.c.description
         informations = zip(zip(*head)[0], self.c.fetchall()[0])
         print str(
-                  str(informations[0][0]) +
-                  str(informations[0][1]) +
-                  str(informations[3][0]) +
+                  str(informations[0][0]) + ' ' +
+                  str(informations[0][1]) + ' ' +
+                  str(informations[3][0]) + ' ' +
                   str(informations[3][1]))
-        print str('Duration:' +
+        print str('Duration: ' +
                str(int(informations[2][1] - informations[1][1]) / 60) +
                'min')
 
