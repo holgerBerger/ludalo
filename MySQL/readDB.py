@@ -554,7 +554,7 @@ class readDB(object):
 
 def print_job(job):
 
-    db = readDB(None)
+    db = readDB()
 
     check_job = db.c.execute('''
                     select * from jobs where id = %s

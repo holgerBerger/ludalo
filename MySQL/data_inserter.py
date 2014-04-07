@@ -32,8 +32,8 @@ class Logfile:
 
         self.filename = filename
         self.myDB = MySQLObject(None)
-	if filename:
-           self.filesize = os.path.getsize(filename)
+        if filename:
+            self.filesize = os.path.getsize(filename)
 
         if hostfile:
             self.readhostfile(hostfile)
@@ -108,7 +108,9 @@ class Logfile:
             #printString = str("\rinserted %d records / %d%% ETA = %s"
             #                 %(counter,int(fraction*100.0), self.eta(endtime)))
                 printString = str("\rinserted %9d records [%s] ETA = %s"
-                         %(counter,"|"*int(fraction*20.0)+"\\|/-"[acounter%4]+"-"*(19-int(fraction*20.0)), self.eta(endtime)))
+                         % (counter, "|" * int(fraction * 20.0) +
+                         "\\|/-"[acounter % 4] +
+                         "-" * (19 - int(fraction * 20.0)), self.eta(endtime)))
                 print printString,
                 sys.stdout.flush()
                 acounter += 1

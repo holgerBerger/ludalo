@@ -47,10 +47,10 @@ def plotGraph(list_of_list, diagramName='', mvaLength=21):
     for i in range(0, len(list_of_list), 2):
         # ---- Calc filtered values ------
         list_length = len(list_of_list[i])
-        if list_length > 21:
-            mva = MovingAverage(mvaLength)
-        else:
+        if list_length < mvaLength:
             mva = MovingAverage(list_length)
+        else:
+            mva = MovingAverage(mvaLength)
         for j in  range(0, len(list_of_list[i])):
             mva.addValue(list_of_list[i][j], list_of_list[i+1][j])
 
