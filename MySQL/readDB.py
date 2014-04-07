@@ -566,6 +566,7 @@ def print_job(job):
         sys.exit(0)
 
     job = check_job[0]
+    db.explainJob(job)
 
     sum_nid = db.get_sum_nids_to_job(job)
 
