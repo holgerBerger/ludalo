@@ -247,6 +247,7 @@ class readDB(object):
                                       timeMapWIO,
                                       nidName))
 
+                print 'return(get_sum_nids_to_job) ', len(colReturn)
                 return colReturn
 
             else:
@@ -278,12 +279,13 @@ class readDB(object):
         # out of sample range
         if not (start_end[0][0] < samples_min[0][0] or start_end[0][1] > samples_max[0][0]):
             if start_end:
+                print 'return (get_job_start_end)', start_end[0]
                 return start_end[0]
             else:
                 print 'time error, start_end =', start_end, ' samples_min = ', samples_min, ' samples_max = ', samples_max
                 return None
         else:
-            print 'not in window \n'
+            print 'not in window'
             return None
 #------------------------------------------------------------------------------
 
