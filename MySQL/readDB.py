@@ -280,8 +280,10 @@ class readDB(object):
             if start_end:
                 return start_end[0]
             else:
+                print 'time error, start_end =', start_end, ' samples_min = ', samples_min, ' samples_max = ', samples_max
                 return None
         else:
+            print 'not in window \n'
             return None
 #------------------------------------------------------------------------------
 
