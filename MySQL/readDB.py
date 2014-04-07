@@ -557,12 +557,14 @@ def print_job(job):
     db = readDB()
 
     check_job = db.c.execute('''
-                    select * from jobs where id = %s
-                     ''', (job,))
+                    select * from jobs where jobid = %s
+                     ''', (str(job),))
 
     if not check_job:
         print 'No such job: ', job
         sys.exit(0)
+
+    job = check_job[0]
 
     sum_nid = db.get_sum_nids_to_job(job)
 
