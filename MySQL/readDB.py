@@ -448,12 +448,13 @@ class readDB(object):
         self.c.execute(query, (jobID,))
         head = self.c.description
         informations = zip(zip(*head)[0], self.c.fetchall()[0])
-        print str(informations[0][0],
-               informations[0][1],
-               informations[3][0],
-               informations[3][1])
-        print str('Duration:',
-               (int(informations[2][1] - informations[1][1]) / 60),
+        print str(
+                  str(informations[0][0]) +
+                  str(informations[0][1]) +
+                  str(informations[3][0]) +
+                  str(informations[3][1]))
+        print str('Duration:' +
+               str(int(informations[2][1] - informations[1][1]) / 60) +
                'min')
 
         number_of_nodes = len(informations[4][1].split(','))
