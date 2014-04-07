@@ -448,12 +448,12 @@ class readDB(object):
         self.c.execute(query, (jobID,))
         head = self.c.description
         informations = zip(zip(*head)[0], self.c.fetchall()[0])
-        print (informations[0][0],
+        print str(informations[0][0],
                informations[0][1],
                informations[3][0],
                informations[3][1])
-        print ('Duration:',
-               (informations[2][1] - informations[1][1]) / 60,
+        print str('Duration:',
+               (int(informations[2][1] - informations[1][1]) / 60),
                'min')
 
         number_of_nodes = len(informations[4][1].split(','))
@@ -553,9 +553,7 @@ class readDB(object):
 
 
 def print_job(job):
-
     db = readDB()
-
     db.c.execute('''
                     select * from jobs where jobid = %s
                     ''', (str(job),))
@@ -630,7 +628,10 @@ def print_job(job):
                     SET r_sum = %s, w_sum = %s, reqs_sum = %s
                     where jobs.id = %s  '''
         db.c.execute(query, (read_sum_b, write_sum_b, io_sum_b, job))
+        print 'plotting graph in plt/', title
         plotGraph(List_of_lists, title)
+    else:
+        print 'dont plotting graph'
 
 if __name__ == '__main__':
     time_start = time.time()
