@@ -91,11 +91,11 @@ class Logfile:
 def mainloop():
 
   fd = _inotify.create()
-  wddir = _inotify.add(fd, "watchdir", _inotify.CREATE | _inotify.MODIFY) 
+  wddir = _inotify.add(fd, ROOTDIR, _inotify.CREATE | _inotify.MODIFY) 
 
   todayfile = time.strftime("%Y%m%d")
-  todayfile = "20140320"
-  lf = Logfile("","watchdir",todayfile)
+  # todayfile = "20140320"
+  lf = Logfile("",ROOTDIR,todayfile)
 
   while True:
     # blocking wait
