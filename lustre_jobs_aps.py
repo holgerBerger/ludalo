@@ -90,6 +90,7 @@ if __name__ == "__main__":
             jobs[restojob[resid]]['owner'] = usermap[uid]
           except KeyError:
             print "unknown userid", uid
+            jobs[restojob[resid]]['owner'] = uid
           jobs[restojob[resid]]['nids'] = nids
         except KeyError:
           print "job without binding",resid," "*40
