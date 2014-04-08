@@ -52,7 +52,7 @@ class PSQLObject(object):
 
 #------------------------------------------------------------------------------
     def build_database(self):
-        self._generateSQLite()
+        self._generateDatabase()
         # bild map's
 
         # nid map
@@ -150,7 +150,7 @@ class PSQLObject(object):
         self.c.execute(exeString, collection)
 #------------------------------------------------------------------------------
 
-    def _generateSQLite(self):
+    def _generateDatabase(self):
         # create table if not exist
 
         self.c.execute('''CREATE TABLE IF NOT EXISTS

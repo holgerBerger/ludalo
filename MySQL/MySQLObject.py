@@ -15,7 +15,7 @@ class MySQLObject(object):
         '''
         Constructor
         '''
-        self.DB_VERSION = 2
+        self.DB_VERSION = 4
         self.dbFile = dbFile
         self.config = ConfigParser()
         try:
@@ -57,7 +57,7 @@ class MySQLObject(object):
 
 #------------------------------------------------------------------------------
     def build_database(self):
-        self._generateSQLite()
+        self._generateDatabase()
         # bild map's
 
         # fs map
@@ -173,49 +173,83 @@ class MySQLObject(object):
         self.c.execute(exeString, collection)
 #------------------------------------------------------------------------------
 
-    def _generateSQLite(self):
+    def _generateDatabase(self):
         # create table if not exist
 
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             version (
                                 id serial primary key,
-                                version integer) engine=myisam''')
+                                version integer
+                                COMMENT
+                                'This describe the Version of the Database'
+                                    ) engine=myisam''')
 
         # timestamp
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             timestamps (
                                 id serial primary key ,
-                                timestamp integer) engine=myisam''')
+                                c_timestamp integer
+                                COMMENT
+                                'This is an time stamp of one Sample'
+                                ) engine=myisam''')
 
         # name vom clienten
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             nids (
                                 id serial primary key ,
-                                nid varchar(64)) engine=myisam''')
+                                nid varchar(64)
+                                COMMENT
+                                'This is the name of one nid'
+                                ) engine=myisam''')
 
         # oss/mds server name
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             servers (
                                 id serial primary key ,
-                                server text,
-                                server_type text) engine=myisam''')
+                                server text
+                                COMMENT
+                                'name of the server',
+                                server_type text
+                                COMMENT
+                                'describes the server type'
+                                ) engine=myisam''')
 
         # ost / mdt
-        self.c.execute('''CREATE TABLE IF NOT EXISTS
-                            targets (
-                                id serial primary key ,
-                                target varchar(32),
-                                fsid integer) engine=myisam''')
+        self.c.execute('''
+                        CREATE TABLE IF NOT EXISTS targets (
+                            id serial primary key ,
+                            target varchar(32)
+                            COMMENT
+                            'name of the target like lnec-OST000c or lnec-MDT0000',
+                            fsid integer
+                            COMMENT
+                            'map to the filesystem'
+                            ) engine=myisam''')
 
         self.c.execute('''
                         CREATE TABLE IF NOT EXISTS ost_values (
                             id serial primary key,
-                            timestamp integer,
-                            target text,
-                            rio integer,
-                            rb bigint,
-                            wio integer,
+                            timestamp_id integer
+                            COMMENT
+                            'map to the timestamps table',
+                            target integer
+                            COMMENT
+                            'map to the targets table',
+                            server integer
+                            COMMENT
+                            'map to the servers table',
+                            rio integer
+                            COMMENT
+                            'read io value in byte',
+                            rb bigint
+                            COMMENT
+                            'read value in byte',
+                            wio integer
+                            COMMENT
+                            'write io value in byte',
                             wb bigint
+                            COMMENT
+                            'write value in byte'
                         )  engine=myisam''')
 
         self.c.execute(''' CREATE TABLE IF NOT EXISTS
@@ -226,7 +260,7 @@ class MySQLObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             samples_ost (
                                 id serial primary key,
-                                timestamp integer,
+                                timestamp_id integer,
                                 target integer,
                                 nid integer,
                                 rio integer,
@@ -237,7 +271,7 @@ class MySQLObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             samples_mdt (
                                 id serial primary key,
-                                  timestamp integer,
+                                  timestamp_id integer,
                                   target integer,
                                   nid integer,
                                   reqs integer) engine=myisam;''')
@@ -304,25 +338,25 @@ class MySQLObject(object):
 
         try:
             self.c.execute('''CREATE INDEX
-                              samples_ost_index ON samples_ost (timestamp, nid, target);''')
+                              samples_ost_index ON samples_ost (timestamp_id, nid, target);''')
         except:
             pass
 
         try:
             self.c.execute('''CREATE INDEX
-                              ost_values_index ON ost_values (timestamp);''')
+                              ost_values_index ON ost_values (timestamp_id);''')
         except:
             pass
 
         try:
             self.c.execute('''CREATE INDEX
-                              samples_mdt_time ON samples_mdt (timestamp);''')
+                              samples_mdt_time ON samples_mdt (timestamp_id);''')
         except:
             pass
 
         try:
             self.c.execute('''CREATE INDEX
-                              time_index ON timestamps (timestamp);''')
+                              time_index ON timestamps (c_timestamp);''')
         except:
             pass
 
@@ -360,17 +394,20 @@ class MySQLObject(object):
             return False
 #------------------------------------------------------------------------------
 
-    def insert_ost_global(self, server, tup, timestamp):
+    def insert_ost_global(self, target, tup, timestamp, server):
         if self.servertype[server] == 'ost':
             tup = tup.split(',')
+            target = self.sources[target]
+            server = self.servermap[server]
             insert_string = []
             insert_string.append(self.timestamps[timestamp])
+            insert_string.append(target)
             insert_string.append(server)
             insert_string.append(tup[0])  # rio
             insert_string.append(tup[1])  # rb
             insert_string.append(tup[2])  # wio
             insert_string.append(tup[3])  # wb
-            self.c.execute(''' INSERT INTO ost_values VALUES (NULL, %s,%s,%s, %s,%s,%s)
+            self.c.execute(''' INSERT INTO ost_values VALUES (NULL, %s,%s,%s,%s,%s,%s,%s)
                     ''', insert_string)
 #------------------------------------------------------------------------------
 

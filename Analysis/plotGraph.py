@@ -22,7 +22,7 @@ class ArgMismatch(Exception):
         return repr(self.value)
 
 
-def plotGraph(list_of_list, diagramName=''):
+def plotGraph(list_of_list, diagramName='', mvaLength=21):
     ''' [[xValues],[yValues]]
         This Plots all given values and his filtered line.
     '''
@@ -48,7 +48,7 @@ def plotGraph(list_of_list, diagramName=''):
         # ---- Calc filtered values ------
         list_length = len(list_of_list[i])
         if list_length > 21:
-            mva = MovingAverage(21)
+            mva = MovingAverage(mvaLength)
         else:
             mva = MovingAverage(list_length)
         for j in  range(0, len(list_of_list[i])):
