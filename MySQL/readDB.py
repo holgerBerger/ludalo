@@ -668,7 +668,7 @@ if __name__ == '__main__':
         #exit()
     else:
         parser.print_help()
-        #exit()
+        exit()
 
 #------------------------------------------------------------------------------
     time_end = time.time()
