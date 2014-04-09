@@ -94,7 +94,7 @@ def mainloop():
   wddir = _inotify.add(fd, ROOTDIR, _inotify.CREATE | _inotify.MODIFY) 
 
   todayfile = time.strftime("%Y%m%d")
-  #todayfile = "20140320"
+  # todayfile = "20140320"
   lf = Logfile("",ROOTDIR,todayfile)
 
   while True:
