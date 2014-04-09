@@ -150,7 +150,7 @@ class readDB(object):
             if endTime < 0:
                 end = time.time()
             else:
-                end = end + 60
+                end = endTime + 60
         #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
             query = '''
                     select
