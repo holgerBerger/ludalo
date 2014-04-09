@@ -11,8 +11,7 @@
 # fist argument is hosts file for name mapping, following arguments is files
 #
 # addition form Uwe Schilling 2014:
-# to manage more then one database added an db abstraction layer
-# this manages all the query for the db. (abstaction layer removed)
+# add the posibility to insert direct to the db without any file.
 #
 #
 # supported db at this moment, sqlite, mysql, psql
@@ -100,20 +99,21 @@ class Logfile:
                 self.readData(line)
 
 #--------------------- progress bar -------------------------------------------
-            counter += 1
-            if counter % 10 == 0:
-                duration = (time.time() - starttime)
-                fraction = (float(f.tell()) / float(self.filesize))
-                endtime = duration * (1.0 / fraction) - duration
-            #printString = str("\rinserted %d records / %d%% ETA = %s"
-            #                 %(counter,int(fraction*100.0), self.eta(endtime)))
-                printString = str("\rinserted %9d records [%s] ETA = %s"
-                         % (counter, "|" * int(fraction * 20.0) +
-                         "\\|/-"[acounter % 4] +
-                         "-" * (19 - int(fraction * 20.0)), self.eta(endtime)))
-                print printString,
-                sys.stdout.flush()
-                acounter += 1
+            if self.filename:
+                counter += 1
+                if counter % 10 == 0:
+                    duration = (time.time() - starttime)
+                    fraction = (float(f.tell()) / float(self.filesize))
+                    endtime = duration * (1.0 / fraction) - duration
+                #printString = str("\rinserted %d records / %d%% ETA = %s"
+                #                 %(counter,int(fraction*100.0), self.eta(endtime)))
+                    printString = str("\rinserted %9d records [%s] ETA = %s"
+                             % (counter, "|" * int(fraction * 20.0) +
+                             "\\|/-"[acounter % 4] +
+                             "-" * (19 - int(fraction * 20.0)), self.eta(endtime)))
+                    print printString,
+                    sys.stdout.flush()
+                    acounter += 1
 #------------------------------------------------------------------------------
         endtime = time.time()
         print "used %s to insert data." % self.eta(endtime - starttime)

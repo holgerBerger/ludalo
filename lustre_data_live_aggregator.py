@@ -68,9 +68,15 @@ def worker(srv):
     if first or nids[srv] != oldnids[srv]:
         iolock.acquire()
 # --------- switch to db here ---------
-        out.write("#" + FILEVERSION + ";" + hostnames[srv] + ";")
-        out.write(nids[srv][0] + ";")
-        out.write(";".join(nids[srv][1:]) + "\n")
+        #out.write("#" + FILEVERSION + ";" + hostnames[srv] + ";")
+        #out.write(nids[srv][0] + ";")
+        #out.write(";".join(nids[srv][1:]) + "\n")
+        line = str("#" +
+                   FILEVERSION + ";" +
+                   hostnames[srv] + ";" +
+                   nids[srv][0] + ";" +
+                   ";".join(nids[srv][1:]) + "\n")
+        db.readHead(line)
         iolock.release()
     oldnids[srv] = nids[srv]
     for ost in r[1:]:
@@ -83,7 +89,11 @@ def worker(srv):
                 l.append(i)
         iolock.acquire()
 # --------- switch to db here ---------
-        out.write(hostnames[srv] + ";" + str(int(sample)) + ";" + ";" .join(map(str, l))+"\n")
+        #out.write(hostnames[srv] + ";" + str(int(sample)) + ";" + ";" .join(map(str, l))+"\n")
+        line = str(hostnames[srv] + ";" +
+                   str(int(sample)) + ";" +
+                   ";" .join(map(str, l)) + "\n")
+        db.readData(line)
         iolock.release()
         vs = sp[1].split(',')
         if len(vs) == 1:
