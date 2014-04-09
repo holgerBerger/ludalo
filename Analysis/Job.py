@@ -21,6 +21,8 @@ class Job(object):
         self.t_Start = -2
         self.t_End = -2
 
+        self.plotTitle = None
+
         self.nidList = []
         self.perNidMap = {}
 
@@ -108,3 +110,6 @@ class Job(object):
         self.WQ_dict = self.insertValusToDict(self.WQ_dict, timeMapWIO)
         self.RD_dict = self.insertValusToDict(self.RD_dict, timeMapRB)
         self.RQ_dict = self.insertValusToDict(self.RQ_dict, timeMapRIO)
+
+    def setTitle(self, title):
+        self.plotTitle = title

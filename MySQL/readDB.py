@@ -146,113 +146,112 @@ class readDB(object):
         start_end = self.get_job_start_end(jobID)
         if start_end:
             start = start_end[0] - 60
-            end = start_end[1] + 60
-            if not (end - start < 900):
-
-        # Test of the job join
+            endTime = start_end[1]
+            if endTime < 0:
+                end = time.time()
+            else:
+                end = end + 60
         #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
-                query = '''select
-                                sum(samples_ost.rb),
-                                sum(samples_ost.wb),
-                                sum(samples_ost.rio),
-                                sum(samples_ost.wio),
-                                timestamps.c_timestamp,
-                                nids.nid
-                            from
-                                nids
-                                    join
-                                nodelist ON nids.id = nodelist.nid
-                                    join
-                                jobs ON jobs.id = nodelist.job
-                                    and jobs.id = %s
-                                    join
-                                samples_ost ON nids.id = samples_ost.nid
-                                    join
-                                timestamps ON timestamps.id = samples_ost.timestamp_id
-                                    and timestamps.c_timestamp between %s and %s
-                            group by nids.nid , timestamps.c_timestamp'''
-                self.c.execute(query, (jobID, start, end,))
-                query_result = self.c.fetchall()
-
-                self.c.execute('''
+            query = '''
                     select
-                        c_timestamp
+                        sum(samples_ost.rb),
+                        sum(samples_ost.wb),
+                        sum(samples_ost.rio),
+                        sum(samples_ost.wio),
+                        timestamps.c_timestamp,
+                        nids.nid
                     from
-                        timestamps
-                    where
-                        c_timestamp between %s and %s''',
-                        (start, end))
-                tmp_time = self.c.fetchall()
+                        nids
+                            join
+                        nodelist ON nids.id = nodelist.nid
+                            join
+                        jobs ON jobs.id = nodelist.job
+                            and jobs.id = %s
+                            join
+                        samples_ost ON nids.id = samples_ost.nid
+                            join
+                        timestamps ON timestamps.id = samples_ost.timestamp_id
+                            and timestamps.c_timestamp between %s and %s
+                    group by nids.nid , timestamps.c_timestamp'''
+            self.c.execute(query, (jobID, start, end,))
+            query_result = self.c.fetchall()
 
-                nidMap = {}
-                for row in query_result:
-                    rb_sum = row[0]
-                    wb_sum = row[1]
-                    rio_sum = row[2]
-                    wio_sum = row[3]
-                    timestamp = row[4]
-                    nid = row[5]
-                    value_tuple = nidMap.get(nid, None)
+            self.c.execute('''
+                select
+                    c_timestamp
+                from
+                    timestamps
+                where
+                    c_timestamp between %s and %s''',
+                    (start, end))
+            tmp_time = self.c.fetchall()
+            # Build nidMap
+            nidMap = {}
+            for row in query_result:
+                rb_sum = row[0]
+                wb_sum = row[1]
+                rio_sum = row[2]
+                wio_sum = row[3]
+                timestamp = row[4]
+                nid = row[5]
+                value_tuple = nidMap.get(nid, None)
 
-                    if not value_tuple:
-                        timeMapRB = {}
-                        timeMapWB = {}
-                        timeMapRIO = {}
-                        timeMapWIO = {}
-                        # init with 0
-                        for timeStamps in tmp_time:
-                            timeMapRB[timeStamps[0]] = 0
-                            timeMapWB[timeStamps[0]] = 0
-                            timeMapRIO[timeStamps[0]] = 0
-                            timeMapWIO[timeStamps[0]] = 0
+                if not value_tuple:
+                    timeMapRB = {}
+                    timeMapWB = {}
+                    timeMapRIO = {}
+                    timeMapWIO = {}
+                    # init with 0
+                    for timeStamps in tmp_time:
+                        timeMapRB[timeStamps[0]] = 0
+                        timeMapWB[timeStamps[0]] = 0
+                        timeMapRIO[timeStamps[0]] = 0
+                        timeMapWIO[timeStamps[0]] = 0
 
-                        timeMapRB[timestamp] = rb_sum
-                        timeMapWB[timestamp] = wb_sum
-                        timeMapRIO[timestamp] = rio_sum
-                        timeMapWIO[timestamp] = wio_sum
+                    timeMapRB[timestamp] = rb_sum
+                    timeMapWB[timestamp] = wb_sum
+                    timeMapRIO[timestamp] = rio_sum
+                    timeMapWIO[timestamp] = wio_sum
 
-                        nidMap[nid] = (timeMapRB,
-                                       timeMapWB,
-                                       timeMapRIO,
-                                       timeMapWIO)
-                    else:
-                        timeMapRB = value_tuple[0]
-                        timeMapWB = value_tuple[1]
-                        timeMapRIO = value_tuple[2]
-                        timeMapWIO = value_tuple[3]
-
-                        timeMapRB[timestamp] = rb_sum
-                        timeMapWB[timestamp] = wb_sum
-                        timeMapRIO[timestamp] = rio_sum
-                        timeMapWIO[timestamp] = wio_sum
-
-                        nidMap[nid] = (timeMapRB,
-                                       timeMapWB,
-                                       timeMapRIO,
-                                       timeMapWIO)
-                colReturn = []
-                for nid in nidMap.keys():
-        #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList, nidName)
-                    value_tuple = nidMap[nid]
+                    nidMap[nid] = (timeMapRB,
+                                   timeMapWB,
+                                   timeMapRIO,
+                                   timeMapWIO)
+                else:
                     timeMapRB = value_tuple[0]
                     timeMapWB = value_tuple[1]
                     timeMapRIO = value_tuple[2]
                     timeMapWIO = value_tuple[3]
-                    nidName = nid
-                    colReturn.append((start,
-                                      end,
-                                      timeMapRB,
-                                      timeMapWB,
-                                      timeMapRIO,
-                                      timeMapWIO,
-                                      nidName))
 
-                print 'return(get_sum_nids_to_job) ', len(colReturn)
-                return colReturn
+                    timeMapRB[timestamp] = rb_sum
+                    timeMapWB[timestamp] = wb_sum
+                    timeMapRIO[timestamp] = rio_sum
+                    timeMapWIO[timestamp] = wio_sum
 
-            else:
-                print 'duration error ', str(end - start)
-                return None
+                    nidMap[nid] = (timeMapRB,
+                                   timeMapWB,
+                                   timeMapRIO,
+                                  timeMapWIO)
+# build return collection
+#(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList, nidName)
+            colReturn = []
+            for nid in nidMap.keys():
+                value_tuple = nidMap[nid]
+                timeMapRB = value_tuple[0]
+                timeMapWB = value_tuple[1]
+                timeMapRIO = value_tuple[2]
+                timeMapWIO = value_tuple[3]
+                nidName = nid
+                colReturn.append((start,
+                                  endTime,
+                                  timeMapRB,
+                                  timeMapWB,
+                                  timeMapRIO,
+                                  timeMapWIO,
+                                  nidName))
+
+            print 'return(get_sum_nids_to_job) ', len(colReturn)
+            return colReturn
         else:
             print 'start end time error'
             return None
@@ -276,10 +275,12 @@ class readDB(object):
                         limit 1 ''')
         samples_min = self.c.fetchall()
 
-        # out of sample range
-        if not (start_end[0][0] < samples_min[0][0] or start_end[0][1] > samples_max[0][0]):
+        # out of sample range (only job start is in samples)
+        if start_end[0][0] > samples_min[0][0]:
+        # job is complete in sample range?
+        # if not (start_end[0][0] < samples_min[0][0] or start_end[0][1] > samples_max[0][0]):
             if start_end:
-                print 'return (get_job_start_end)', start_end[0]
+                # print 'return (get_job_start_end)', start_end[0]
                 return start_end[0]
             else:
                 print 'time error, start_end =', start_end, ' samples_min = ', samples_min, ' samples_max = ', samples_max
@@ -572,12 +573,12 @@ def print_job(job):
 
     job = check_job[0]
     db.explainJob(job)
-
+    jobObject = Job(job)
     sum_nid = db.get_sum_nids_to_job(job)
 
     if sum_nid:
+    #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList, nidName)
         jobid = job
-
         db.c.execute('''
                 select jobs.jobid, users.username , jobs.nodelist
                 from jobs, users
@@ -590,18 +591,25 @@ def print_job(job):
         title = ('Job_' + str(job_info[0]) +
                  '_NoN_' + str(len(nids)) +
                  '__Owner_' + str(job_info[1]))
+        jobObject.setTitle(title)
         List_of_lists = []
         read_sum = []
         write_sum = []
         io_sum = []
         for nid in sum_nid:
-        #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
-            # start = nid[0]
-            # end = nid[1]
+        #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName)
+            start = nid[0]
+            end = nid[1]
             readDic = nid[2]
             writeDic = nid[3]
             rioDic = nid[4]
             wioDic = nid[5]
+            nidName = nid[5]
+
+            jobObject.t_Start = start
+            jobObject.t_End = end
+
+            jobObject.add_Values(readDic, writeDic, rioDic, wioDic, nidName)
 
             readY = []
             writeY = []
