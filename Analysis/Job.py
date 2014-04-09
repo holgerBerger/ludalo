@@ -102,7 +102,7 @@ class Job(object):
         return dict_org
 
     def add_Values(self, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName):
-
+        print nidName
         self.perNidMap[nidName] = (timeMapRB, timeMapWB, timeMapRIO, timeMapWIO)
         self.nidList.append(nidName)
 
