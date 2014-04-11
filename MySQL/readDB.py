@@ -659,6 +659,7 @@ if __name__ == '__main__':
 
     # fetchall() returns a nested tuple (one tuple for each table row)
     results = db.c.fetchall()
+    print results
 
     # 'num_rows' needed to reshape the 1D NumPy array returend by 'fromiter' 
     # in other words, to restore original dimensions of the results set
@@ -667,7 +668,7 @@ if __name__ == '__main__':
     # recast this nested tuple to a python list and flatten it so it's a proper iterable:
     x = map(list, list(results))              # change the type
     x = sum(x, [])                            # flatten
-
+    print x
     # D is a 1D NumPy array
     D = np.fromiter(iterable=x, dtype=float, count=-1)
 
