@@ -560,6 +560,30 @@ class readDB(object):
         testjob.add_Values(timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName)
         user.addJob(testjob)
 
+    def query_to_npArray(self, query):
+        self.c.execute(query)
+
+        # fetchall() returns a nested tuple (one tuple for each table row)
+        results = self.c.fetchall()
+        print results
+
+        # 'num_rows' needed to reshape the 1D NumPy array returend
+        # by 'fromiter' in other words, to restore original dimensions
+        # of the results set
+        num_rows = int(self.c.rowcount)
+
+        # recast this nested tuple to a python list and flatten it
+        # so it's a proper iterable:
+        x = map(list, list(results))              # change the type
+        x = sum(x, [])                            # flatten
+        print x
+        # D is a 1D NumPy array
+        D = np.fromiter(iter=x, dtype=np.int64, count=-1)
+
+        # 'restore' the original dimensions of the result set:
+        D = D.reshape(num_rows, -1)
+        return D
+
 
 def print_job(job):
     db = readDB()
@@ -653,30 +677,6 @@ if __name__ == '__main__':
     time_start = time.time()
 #------------------------------------------------------------------------------
     db = readDB()
-
-    # this is the test
-    db.c.execute('SELECT * from samples_ost limit 10')
-
-    # fetchall() returns a nested tuple (one tuple for each table row)
-    results = db.c.fetchall()
-    print results
-
-    # 'num_rows' needed to reshape the 1D NumPy array returend by 'fromiter' 
-    # in other words, to restore original dimensions of the results set
-    num_rows = int(db.c.rowcount)
-
-    # recast this nested tuple to a python list and flatten it so it's a proper iterable:
-    x = map(list, list(results))              # change the type
-    x = sum(x, [])                            # flatten
-    print x
-    # D is a 1D NumPy array
-    D = np.fromiter(iter=x, dtype=np.int64, count=-1)
-
-    # 'restore' the original dimensions of the result set:
-    D = D.reshape(num_rows, -1)
-
-    print D
-    exit()
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-u", "--user",
