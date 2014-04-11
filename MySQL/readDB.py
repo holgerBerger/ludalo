@@ -488,9 +488,9 @@ class readDB(object):
                 order by timestamps.c_timestamp''')
         values_np = self.query_to_npArray(query, (fs))
 
-        query = ''' select c_timestamp from  timestamps'''
+        query = ''' select c_timestamp from  timestamps limit 10'''
         allTimestamps = self.query_to_npArray(query)
-        print allTimestamps[:10]
+        print allTimestamps
 
         rbmap = {}
         wbmap = {}
