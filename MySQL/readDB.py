@@ -471,7 +471,7 @@ class readDB(object):
 
     def print_Filesystem(self, fs='univ_1'):
         # getting all informations out of the database
-        self.c.execute('''
+        query = ('''
                 select
                     timestamps.c_timestamp, sum(wb), sum(rb), filesystem
                 from
@@ -485,11 +485,12 @@ class readDB(object):
                         and ost_values.timestamp_id = timestamps.id
                         and filesystems.filesystem = %s
                 group by timestamps.c_timestamp
-                order by timestamps.c_timestamp''', (fs))
-        rows = db.c.fetchall()
+                order by timestamps.c_timestamp''')
+        values_np = self.query_to_npArray(query, (fs))
 
-        self.c.execute(''' select c_timestamp from  timestamps''')
-        allTimestamps = db.c.fetchall()
+        query = ''' select c_timestamp from  timestamps'''
+        allTimestamps = self.query_to_npArray(query)
+        print allTimestamps[:10]
 
         rbmap = {}
         wbmap = {}
@@ -560,8 +561,8 @@ class readDB(object):
         testjob.add_Values(timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName)
         user.addJob(testjob)
 
-    def query_to_npArray(self, query):
-        self.c.execute(query)
+    def query_to_npArray(self, query, options=None):
+        self.c.execute(query, options)
 
         # fetchall() returns a nested tuple (one tuple for each table row)
         results = self.c.fetchall()
@@ -578,7 +579,7 @@ class readDB(object):
         x = sum(x, [])                            # flatten
         print x
         # D is a 1D NumPy array
-        D = np.fromiter(iter=x, dtype=np.int64, count=-1)
+        D = np.fromiter(iter=x, dtype=np.float_, count=-1)
 
         # 'restore' the original dimensions of the result set:
         D = D.reshape(num_rows, -1)
