@@ -16,6 +16,7 @@ from ConfigParser import ConfigParser
 from User import User
 from Job import Job
 import argparse
+import numpy as np
 
 from plotGraph import plotGraph
 
@@ -652,6 +653,29 @@ if __name__ == '__main__':
     time_start = time.time()
 #------------------------------------------------------------------------------
     db = readDB()
+
+    # this is the test
+    db.c.execute('SELECT * from samples_ost limit 10')
+
+    # fetchall() returns a nested tuple (one tuple for each table row)
+    results = db.c.fetchall()
+
+    # 'num_rows' needed to reshape the 1D NumPy array returend by 'fromiter' 
+    # in other words, to restore original dimensions of the results set
+    num_rows = int(db.c.rowcount)
+
+    # recast this nested tuple to a python list and flatten it so it's a proper iterable:
+    x = map(list, list(results))              # change the type
+    x = sum(x, [])                            # flatten
+
+    # D is a 1D NumPy array
+    D = np.fromiter(iterable=x, dtype=float, count=-1)
+
+    # 'restore' the original dimensions of the result set:
+    D = D.reshape(num_rows, -1)
+
+    print D
+    exit()
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-u", "--user",
