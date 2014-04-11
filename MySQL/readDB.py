@@ -670,7 +670,7 @@ if __name__ == '__main__':
     x = sum(x, [])                            # flatten
     print x
     # D is a 1D NumPy array
-    D = np.fromiter(iter=x, dtype=float, count=-1)
+    D = np.fromiter(iter=x, dtype=np.int64, count=-1)
 
     # 'restore' the original dimensions of the result set:
     D = D.reshape(num_rows, -1)
