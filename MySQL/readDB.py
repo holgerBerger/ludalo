@@ -696,8 +696,8 @@ if __name__ == '__main__':
         if not args.window:
             window = 432000
         else:
-            window = args.window * 3600  # hours to seconds
-        db.print_Filesystem(args.filesystem, window)
+            window = int(args.window) * 3600  # hours to seconds
+        db.print_Filesystem(window, args.filesystem)
         #exit()
     elif args.user:
         print 'user=', args.user
