@@ -484,10 +484,10 @@ class readDB(object):
                         and targets.fsid = filesystems.id
                         and ost_values.timestamp_id = timestamps.id
                         and filesystems.filesystem = %s
-                        where c_timestamp between unix_timestamp()-%s and unix_timestamp()
+                        where c_timestamp between unix_timestamp()-%d and unix_timestamp()
                 group by timestamps.c_timestamp
                 order by timestamps.c_timestamp
-                Values (%s,%s)''')
+                Values''')
         values_np = self.query_to_npArray(query, (fs, window))
 
         query = ''' select c_timestamp from  timestamps limit 10'''
