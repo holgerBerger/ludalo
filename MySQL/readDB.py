@@ -489,8 +489,15 @@ class readDB(object):
                 order by timestamps.c_timestamp''')
         values_np = self.query_to_npArray(query, (fs, int(window)))
 
-        query = ''' select c_timestamp from  timestamps limit 10'''
-        allTimestamps = self.query_to_npArray(query)
+        query = ''' select
+                        c_timestamp
+                    from
+                        timestamps
+                    where
+                        c_timestamp
+                            between
+                                unix_timestamp()-%s and unix_timestamp()'''
+        allTimestamps = self.query_to_npArray(query, int(window))
         print allTimestamps
 
         rbmap = {}
