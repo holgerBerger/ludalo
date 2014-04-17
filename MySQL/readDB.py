@@ -507,16 +507,16 @@ class readDB(object):
                 # if timestamp not in matix apend empty entry
                 values_np = np.concatenate((values_np, np.array([[t[0], 0, 0, 0, 0]])))
         values_np = values_np[values_np[:, 0].argsort()]  # a = the matrix a sortet by the first axis
-        print values_np
+        #print values_np
 
         list_of_list = []
-        list_of_list.append(allTimestamps[:, 0])
+        list_of_list.append(values_np[:, 0])
         list_of_list.append(values_np[:, 1])
-        list_of_list.append(allTimestamps[:, 0])
+        list_of_list.append(values_np[:, 0])
         list_of_list.append(values_np[:, 2])
-        list_of_list.append(allTimestamps[:, 0])
+        list_of_list.append(values_np[:, 0])
         list_of_list.append(values_np[:, 3])
-        list_of_list.append(allTimestamps[:, 0])
+        list_of_list.append(values_np[:, 0])
         list_of_list.append(values_np[:, 4])
 
         plotGraph(list_of_list, fs, 81)
