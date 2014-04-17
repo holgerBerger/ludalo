@@ -59,7 +59,7 @@ class readDB(object):
             print ('\nThere is something wrong with the Database\n' +
                        'DB version is ' + str(version) +
                        ''' but expect version ''' +
-                       str(self.DB_VERSION)+ '\n')
+                       str(self.DB_VERSION) + '\n')
             sys.exit(0)
 
 #------------------------------------------------------------------------------
@@ -566,7 +566,7 @@ class readDB(object):
 
         # fetchall() returns a nested tuple (one tuple for each table row)
         results = self.c.fetchall()
-        print results
+        #print results
 
         # 'num_rows' needed to reshape the 1D NumPy array returend
         # by 'fromiter' in other words, to restore original dimensions
@@ -577,7 +577,7 @@ class readDB(object):
         # so it's a proper iterable:
         x = map(list, list(results))              # change the type
         x = sum(x, [])                            # flatten
-        print x
+        #print x
         # D is a 1D NumPy array
         D = np.fromiter(iter=x, dtype=np.float_, count=-1)
 
