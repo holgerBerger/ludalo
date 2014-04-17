@@ -473,7 +473,7 @@ class readDB(object):
         # getting all informations out of the database
         query = ('''
                 select
-                    timestamps.c_timestamp, sum(wb), sum(rb), filesystem
+                    timestamps.c_timestamp, sum(wb), sum(rb)
                 from
                     ost_values,
                     targets,
