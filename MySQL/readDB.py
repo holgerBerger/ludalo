@@ -510,13 +510,18 @@ class readDB(object):
         print values_np
 
         list_of_list = []
-        list_of_list.append(allTimestamps)
-        list_of_list.append(r_list)
-        list_of_list.append(allTimestamps)
-        list_of_list.append(w_list)
+        list_of_list.append(allTimestamps[:, 0])
+        list_of_list.append(values_np[:, 1])
+        list_of_list.append(allTimestamps[:, 0])
+        list_of_list.append(values_np[:, 2])
+        list_of_list.append(allTimestamps[:, 0])
+        list_of_list.append(values_np[:, 3])
+        list_of_list.append(allTimestamps[:, 0])
+        list_of_list.append(values_np[:, 4])
 
         plotGraph(list_of_list, fs, 81)
-
+        print 'done'
+        exit()
 
         rbmap = {}
         wbmap = {}
