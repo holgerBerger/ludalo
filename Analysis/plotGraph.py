@@ -74,7 +74,7 @@ def plotGraph(list_of_list, diagramName='', mvaLength=21):
         datenums = md.date2num(dates)
         tmin = min(datenums)
         ax = plt.gca()
-        xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
+        xfmt = md.DateFormatter('%Y-%m-%d %H:%M')
         ax.xaxis.set_major_formatter(xfmt)
         plt.plot(datenums, fvValues, lw=2)
 
