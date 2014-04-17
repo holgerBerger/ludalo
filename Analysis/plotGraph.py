@@ -65,7 +65,7 @@ def plotGraph(list_of_list, diagramName='', mvaLength=21):
         dates = [dt.datetime.fromtimestamp(ts) for ts in list_of_list[i]]
         datenums = md.date2num(dates)
         ax = plt.gca()
-        xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
+        xfmt = md.DateFormatter('%Y-%m-%d %H:%M')
         ax.xaxis.set_major_formatter(xfmt)
         plt.plot(datenums, list_of_list[i + 1], lw=1, color='gray')
 
