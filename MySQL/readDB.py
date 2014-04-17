@@ -469,7 +469,7 @@ class readDB(object):
         print 'Number of Nodes:', number_of_nodes
 #------------------------------------------------------------------------------
 
-    def print_Filesystem(self, fs='univ_1'):
+    def print_Filesystem(self, fs='univ_1', window):
         # getting all informations out of the database
         query = ('''
                 select
@@ -484,9 +484,10 @@ class readDB(object):
                         and targets.fsid = filesystems.id
                         and ost_values.timestamp_id = timestamps.id
                         and filesystems.filesystem = %s
+                        where c_timestamp between unix_timestamp()-%s and unix_timestamp()
                 group by timestamps.c_timestamp
                 order by timestamps.c_timestamp''')
-        values_np = self.query_to_npArray(query, (fs))
+        values_np = self.query_to_npArray(query, (fs, window))
 
         query = ''' select c_timestamp from  timestamps limit 10'''
         allTimestamps = self.query_to_npArray(query)
@@ -683,13 +684,19 @@ if __name__ == '__main__':
     parser.add_argument("-u", "--user",
                         help="print one specific user", type=str)
     parser.add_argument("-fs", "--filesystem",
-                        help="print one filesystem", type=str)
+                        help="print one file system", type=str)
     parser.add_argument("-j", "--job",
                         help="print one specific job", type=str)
+    parser.add_argument("-w", "--window",
+                        help="specify a time window [in hours], default = 5 days", type=str)
     args = parser.parse_args()
     if args.filesystem:
         print 'fs=', args.filesystem
-        db.print_Filesystem(args.filesystem)
+        if not args.window:
+            window = 432000
+        else:
+            window = args.window * 3600  # hours to seconds
+        db.print_Filesystem(args.filesystem, window)
         #exit()
     elif args.user:
         print 'user=', args.user
