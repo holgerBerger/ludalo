@@ -469,7 +469,7 @@ class readDB(object):
         print 'Number of Nodes:', number_of_nodes
 #------------------------------------------------------------------------------
 
-    def print_Filesystem(self, fs='univ_1', window):
+    def print_Filesystem(self, window, fs='univ_1'):
         # getting all informations out of the database
         query = ('''
                 select
