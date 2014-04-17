@@ -513,11 +513,11 @@ class readDB(object):
         list_of_list.append(values_np[:, 0])  # time
         list_of_list.append(values_np[:, 1] / (60 * 1000000))  # wb
         list_of_list.append(values_np[:, 0])  # time
-        list_of_list.append(values_np[:, 2])  # wio
+        #list_of_list.append(values_np[:, 2])  # wio
         list_of_list.append(values_np[:, 0])  # time
         list_of_list.append(0 - (values_np[:, 3] / (60 * 1000000)))  # rb
         list_of_list.append(values_np[:, 0])  # time
-        list_of_list.append(values_np[:, 4])  # rio
+        #list_of_list.append(values_np[:, 4])  # rio
 
         plotGraph(list_of_list, fs, 21)
         print 'done'
