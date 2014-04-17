@@ -496,9 +496,27 @@ class readDB(object):
                     where
                         c_timestamp
                             between
-                                unix_timestamp()-%s and unix_timestamp()'''
+                                unix_timestamp()-%s and unix_timestamp()
+                                limit 10
+                                '''
         allTimestamps = self.query_to_npArray(query, int(window))
-        print allTimestamps
+
+        rt = np.array(values_np[:, 0])  # get the timestamps
+        for t in allTimestamps:
+            if not np.any(values_np[rt == t]):
+                # if timestamp not in matix apend empty entry
+                values_np = np.concatenate((values_np, np.array([[t[0], 0, 0, 0, 0]])))
+        values_np = values_np[values_np[:, 0].argsort()]  # a = the matrix a sortet by the first axis
+        print values_np
+
+        list_of_list = []
+        list_of_list.append(allTimestamps)
+        list_of_list.append(r_list)
+        list_of_list.append(allTimestamps)
+        list_of_list.append(w_list)
+
+        plotGraph(list_of_list, fs, 81)
+
 
         rbmap = {}
         wbmap = {}
@@ -570,7 +588,6 @@ class readDB(object):
         user.addJob(testjob)
 
     def query_to_npArray(self, query, options=None):
-        print options
         self.c.execute(query, options)
 
         # fetchall() returns a nested tuple (one tuple for each table row)
