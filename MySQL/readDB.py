@@ -488,7 +488,7 @@ class readDB(object):
                 group by timestamps.c_timestamp
                 order by timestamps.c_timestamp
                 Values''')
-        values_np = self.query_to_npArray(query, (fs, window))
+        values_np = self.query_to_npArray(query, (fs, int(window)))
 
         query = ''' select c_timestamp from  timestamps limit 10'''
         allTimestamps = self.query_to_npArray(query)
@@ -564,6 +564,7 @@ class readDB(object):
         user.addJob(testjob)
 
     def query_to_npArray(self, query, options=None):
+        print options
         self.c.execute(query, options)
 
         # fetchall() returns a nested tuple (one tuple for each table row)
