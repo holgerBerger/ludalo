@@ -517,9 +517,9 @@ class readDB(object):
         plotGraph(list_of_list, fs, 21)
 
         list_of_list.append(values_np[:, 0])  # time
-        list_of_list.append(values_np[:, 4])  # rio
+        list_of_list.append(values_np[:, 4] / 60)  # rio per sec
         list_of_list.append(values_np[:, 0])  # time
-        list_of_list.append(values_np[:, 2])  # wio
+        list_of_list.append(values_np[:, 2] / 60)  # wio per sec
         plotGraph(list_of_list, fs + 'io', 21)
         print 'done'
         exit()
