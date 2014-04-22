@@ -522,41 +522,6 @@ class readDB(object):
         plotGraph(list_of_list, fs, 21)
         print 'done'
         exit()
-
-        rbmap = {}
-        wbmap = {}
-
-        # init maps with zeros
-        for time in allTimestamps:
-            rbmap[time[0]] = 0
-            wbmap[time[0]] = 0
-
-        # inserting rows into the maps
-        for row in rows:
-            timestap = row[0]
-            wb = row[1]
-            rb = row[2]
-
-            rbmap[timestap] = rb
-            wbmap[timestap] = wb
-        timestamps_list = sorted(rbmap.keys())
-
-        r_list = []
-        w_list = []
-
-        # filling the lists for plotting
-        # calculating byte per minute in megabyte per second
-        for t in timestamps_list:
-            r_list.append(float(-rbmap[t]) / (60 * 1000000))
-            w_list.append(float(wbmap[t]) / (60 * 1000000))
-
-        list_of_list = []
-        list_of_list.append(timestamps_list)
-        list_of_list.append(r_list)
-        list_of_list.append(timestamps_list)
-        list_of_list.append(w_list)
-
-        plotGraph(list_of_list, fs, 81)
 #------------------------------------------------------------------------------
 
     def print_user(self, user):
@@ -608,7 +573,7 @@ class readDB(object):
         # so it's a proper iterable:
         x = map(list, list(results))              # change the type
         x = sum(x, [])                            # flatten
-        #print x
+
         # D is a 1D NumPy array
         D = np.fromiter(iter=x, dtype=np.float_, count=-1)
 
