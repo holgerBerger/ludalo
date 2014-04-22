@@ -516,6 +516,7 @@ class readDB(object):
         list_of_list.append(0 - (values_np[:, 3] / (60 * 1000000)))  # rb
         plotGraph(list_of_list, fs, 21)
 
+        list_of_list = []
         list_of_list.append(values_np[:, 0])  # time
         list_of_list.append(values_np[:, 4] / 60)  # rio per sec
         list_of_list.append(values_np[:, 0])  # time
