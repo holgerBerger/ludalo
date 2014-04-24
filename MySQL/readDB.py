@@ -625,7 +625,6 @@ def print_job(job):
                     sum(samples_ost.wio),
                     sum(samples_ost.rb),
                     sum(samples_ost.rio),
-                    nids.nid
                 from
                     nids
                         join
