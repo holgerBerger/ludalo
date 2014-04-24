@@ -638,7 +638,7 @@ def print_job(job):
                         join
                     timestamps ON timestamps.id = samples_ost.timestamp_id
                         and timestamps.c_timestamp between %s and %s
-                group timestamps.c_timestamp'''  # by nids.nid ,
+                group by timestamps.c_timestamp'''  # by nids.nid ,
 
         values_np = db.query_to_npArray(query, (job, start, end,))
 
