@@ -144,6 +144,7 @@ class readDB(object):
 
 #------------------------------------------------------------------------------
     def get_sum_nids_to_job(self, jobID):
+        #depricated.
         start_end = self.get_job_start_end(jobID)
         if start_end:
             start = start_end[0] - 60
@@ -276,19 +277,16 @@ class readDB(object):
                         limit 1 ''')
         samples_min = self.c.fetchall()
 
-        # out of sample range (only job start is in samples)
-        if start_end[0][0] > samples_min[0][0]:
-        # job is complete in sample range?
-        # if not (start_end[0][0] < samples_min[0][0] or start_end[0][1] > samples_max[0][0]):
-            if start_end:
-                # print 'return (get_job_start_end)', start_end[0]
+        if start_end:
+            if start_end[0][0] > samples_min[0][0]:
                 return start_end[0]
             else:
-                print 'time error, start_end =', start_end, ' samples_min = ', samples_min, ' samples_max = ', samples_max
-                return None
+                start_end[0][0] = samples_min[0][0]
+                return start_end[0]
         else:
-            print 'not in window'
-            return None
+            print "Error by getting Job Start or End."
+            exit()
+
 #------------------------------------------------------------------------------
 
     def get_nid_to_Job(self, jobID):
@@ -497,17 +495,10 @@ class readDB(object):
                         c_timestamp
                             between
                                 unix_timestamp()-%s and unix_timestamp()
-                                limit 10
                                 '''
         allTimestamps = self.query_to_npArray(query, int(window))
 
-        rt = np.array(values_np[:, 0])  # get the timestamps
-        for t in allTimestamps:
-            if not np.any(values_np[rt == t]):
-                # if timestamp not in matix apend empty entry
-                values_np = np.concatenate((values_np, np.array([[t[0], 0, 0, 0, 0]])))
-        values_np = values_np[values_np[:, 0].argsort()]  # a = the matrix a sortet by the first axis
-        #print values_np
+        values_np = self.np_fillAndSort(values_np, allTimestamps)
 
         list_of_list = []
         list_of_list.append(values_np[:, 0])  # time
@@ -518,9 +509,9 @@ class readDB(object):
 
         list_of_list = []
         list_of_list.append(values_np[:, 0])  # time
-        list_of_list.append((values_np[:, 3] / (60 * 1000000)) / (0 - values_np[:, 4] / 60))  # rio per sec
+        list_of_list.append(0 - values_np[:, 4] / 60)  # rio per sec
         list_of_list.append(values_np[:, 0])  # time
-        list_of_list.append((values_np[:, 3] / (60 * 1000000)) / (values_np[:, 2] / 60))  # wio per sec
+        list_of_list.append(values_np[:, 2] / 60)  # wio per sec
         plotGraph(list_of_list, fs + 'io', 21)
         print 'done'
         exit()
@@ -558,8 +549,12 @@ class readDB(object):
         nidName = job_valuse[6]
         testjob.add_Values(timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName)
         user.addJob(testjob)
+#------------------------------------------------------------------------------
 
     def query_to_npArray(self, query, options=None):
+        ''' execute the query with the given options and returns
+            a numpy matrix of the output
+        '''
         self.c.execute(query, options)
 
         # fetchall() returns a nested tuple (one tuple for each table row)
@@ -582,6 +577,20 @@ class readDB(object):
         # 'restore' the original dimensions of the result set:
         D = D.reshape(num_rows, -1)
         return D
+#------------------------------------------------------------------------------
+
+    def np_fillAndSort(self, values_np, allTimestamps_np):
+        ''' fill the values_np with missing time stamps and sort the
+            new array by the times tamps
+        '''
+        rt = np.array(values_np[:, 0])  # get the timestamps
+        for t in allTimestamps_np:
+            if not np.any(values_np[rt == t]):
+                # if timestamp not in matix apend empty entry
+                values_np = np.concatenate((values_np,
+                                            np.array([[t[0], 0, 0, 0, 0]])))
+        # a = the matrix a sortet by the first axis
+        return values_np[values_np[:, 0].argsort()]
 
 
 def print_job(job):
@@ -598,11 +607,57 @@ def print_job(job):
     job = check_job[0]
     db.explainJob(job)
     jobObject = Job(job)
-    sum_nid = db.get_sum_nids_to_job(job)
 
-    if sum_nid:
-    #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList, nidName)
-        jobid = job
+    start_end = db.get_job_start_end(job)
+
+    if start_end:
+        start = start_end[0] - 60
+        endTime = start_end[1]
+        if endTime < 0:
+            end = time.time()
+        else:
+            end = endTime + 60
+
+        query = '''
+                select
+                    timestamps.c_timestamp,
+                    sum(samples_ost.wb),
+                    sum(samples_ost.wio),
+                    sum(samples_ost.rb),
+                    sum(samples_ost.rio),
+                    nids.nid
+                from
+                    nids
+                        join
+                    nodelist ON nids.id = nodelist.nid
+                        join
+                    jobs ON jobs.id = nodelist.job
+                        and jobs.id = %s
+                        join
+                    samples_ost ON nids.id = samples_ost.nid
+                        join
+                    timestamps ON timestamps.id = samples_ost.timestamp_id
+                        and timestamps.c_timestamp between %s and %s
+                group timestamps.c_timestamp'''  # by nids.nid ,
+
+        values_np = db.query_to_npArray(query, (job, start, end,))
+
+        query = ''' select
+                        c_timestamp
+                    from
+                        timestamps
+                    where
+                        c_timestamp
+                            between
+                                %s and %s
+                                '''
+        allTimestamps = db.query_to_npArray(query, start, end,)
+
+        db.np_fillAndSort(values_np, allTimestamps)
+
+        db.c.execute('''select nid from nodelist where job = %s''', (job,))
+        nids = db.c.fetchall()
+
         db.c.execute('''
                 select jobs.jobid, users.username , jobs.nodelist
                 from jobs, users
@@ -610,67 +665,28 @@ def print_job(job):
                 and users.id = jobs.owner''', (jobid,))
         job_info = db.c.fetchone()
 
-        db.c.execute('''select nid from nodelist where job = %s''', (jobid,))
-        nids = db.c.fetchall()
         title = ('Job_' + str(job_info[0]) +
                  '_NoN_' + str(len(nids)) +
                  '__Owner_' + str(job_info[1]))
         jobObject.setTitle(title)
-        List_of_lists = []
-        read_sum = []
-        write_sum = []
-        io_sum = []
-        for nid in sum_nid:
-        #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName)
-            start = nid[0]
-            end = nid[1]
-            readDic = nid[2]
-            writeDic = nid[3]
-            rioDic = nid[4]
-            wioDic = nid[5]
-            nidName = nid[5]
-
-            jobObject.t_Start = start
-            jobObject.t_End = end
-
-            jobObject.add_Values(readDic, writeDic, rioDic, wioDic, nidName)
-
-            readY = []
-            writeY = []
-            ioread = []
-            iowrite = []
-            writeX = sorted(writeDic.keys())
-            readX = sorted(readDic.keys())
-
-            for timeStamp in readX:
-                readY.append(float(-readDic[timeStamp]) / (60 * 1000000))
-                writeY.append(float(writeDic[timeStamp]) / (60 * 1000000))
-
-                read_sum.append(readDic[timeStamp])
-                write_sum.append(writeDic[timeStamp])
-                io_sum.append(rioDic[timeStamp] + wioDic[timeStamp])
-
-                ioread.append(-rioDic[timeStamp])
-                iowrite.append(wioDic[timeStamp])
-
-            if readX and readY and writeY and writeX:
-                List_of_lists.append(readX)
-                List_of_lists.append(readY)
-
-                List_of_lists.append(writeX)
-                List_of_lists.append(writeY)
         print 'Plot: ', title
-        write_sum_b = sum(write_sum)
-        read_sum_b = sum(read_sum)
-        io_sum_b = sum(io_sum)
-        query = ''' UPDATE jobs
-                    SET r_sum = %s, w_sum = %s, reqs_sum = %s
-                    where jobs.id = %s  '''
-        db.c.execute(query, (read_sum_b, write_sum_b, io_sum_b, job))
-        print 'plotting graph in plt/', title
-        plotGraph(List_of_lists, title)
-    else:
-        print 'dont plotting graph'
+
+        list_of_list = []
+        list_of_list.append(values_np[:, 0])  # time
+        list_of_list.append(values_np[:, 1] / (60 * 1000000))  # wb
+        list_of_list.append(values_np[:, 0])  # time
+        list_of_list.append(0 - (values_np[:, 3] / (60 * 1000000)))  # rb
+        plotGraph(list_of_list, title, 21)
+
+        list_of_list = []
+        list_of_list.append(values_np[:, 0])  # time
+        list_of_list.append(0 - values_np[:, 4] / 60)  # rio per sec
+        list_of_list.append(values_np[:, 0])  # time
+        list_of_list.append(values_np[:, 2] / 60)  # wio per sec
+        plotGraph(list_of_list, title + 'io', 21)
+        print 'done'
+        exit()
+
 
 if __name__ == '__main__':
     time_start = time.time()
