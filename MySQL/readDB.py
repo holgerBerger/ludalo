@@ -281,8 +281,8 @@ class readDB(object):
             if start_end[0][0] > samples_min[0][0]:
                 return start_end[0]
             else:
-                start_end[0][0] = samples_min[0][0]
-                return start_end[0]
+                start_end = (samples_min[0][0], start_end[0][1])
+                return start_end
         else:
             print "Error by getting Job Start or End."
             exit()
