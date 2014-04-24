@@ -5,7 +5,7 @@ Created on 16.12.2013
 '''
 import MySQLdb
 from ConfigParser import ConfigParser
-import sys, time
+import sys, time, re
 
 
 class MySQLObject(object):
@@ -28,6 +28,9 @@ class MySQLObject(object):
         self.dbhost = self.config.get("database", "host")
         self.dbport = int(self.config.get("database", "port"))
         self.dbuser = self.config.get("database", "user")
+        self.hostfile = self.config.get("database", "hosts")
+        self.pattern = self.config.get("database", "pattern")
+        self.replace = self.config.get("database", "replace")
         self.conn = MySQLdb.connect(passwd=self.dbpassword, db=self.dbname, host=self.dbhost, port=self.dbport, user=self.dbuser)
         self.c = self.conn.cursor()
 
@@ -55,6 +58,7 @@ class MySQLObject(object):
                        ''' but expect version ''' +
                        str(self.DB_VERSION))
             sys.exit(0)
+        self.readhostfile()
 
 #------------------------------------------------------------------------------
     def build_database(self):
@@ -116,6 +120,23 @@ class MySQLObject(object):
         print t2 - t1, "secs"
         self.conn.commit()
         self.conn.close()
+#------------------------------------------------------------------------------
+
+    def readhostfile(self):
+        try:
+            f = open(self.hostfile, "r")
+        except:
+            return
+        for l in f:
+            if not l.startswith('#'):
+                sp = l[:-1].split()
+                if len(sp) == 0:
+                    continue
+                ip = sp[0]
+                name = sp[1]
+                self.hostfilemap[ip] = re.sub(self.pattern, self.replace, name)
+        print "read", len(self.hostfilemap), "host mappings"
+        f.close()
 #------------------------------------------------------------------------------
 
     def addUser(self, userName, timeStamp, WR_MB, RD_MB, REQS):
