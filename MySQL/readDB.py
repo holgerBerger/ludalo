@@ -661,7 +661,7 @@ def print_job(job):
                 select jobs.jobid, users.username , jobs.nodelist
                 from jobs, users
                 where jobs.id = %s
-                and users.id = jobs.owner''', (jobid,))
+                and users.id = jobs.owner''', (job,))
         job_info = db.c.fetchone()
 
         title = ('Job_' + str(job_info[0]) +
