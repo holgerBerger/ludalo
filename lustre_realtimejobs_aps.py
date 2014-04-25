@@ -90,7 +90,7 @@ class Logfile:
                     else:
                         # db.insert_job(**jobs[resToJob[resid]])
                         jobid = resToJob[resid]
-                        jobstarts[jobid] = (jobid, jobs[jobid]['start'], jobs[jobid]['end'], jobs[jobid]['owner'], jobs[jobid]['nids'], jobs[jobid]['cmd'])
+                        jobends[jobid] = (jobid, jobs[jobid]['start'], jobs[jobid]['end'], jobs[jobid]['owner'], jobs[jobid]['nids'], jobs[jobid]['cmd'])
 
         ### aps end ######
         inserts = []
@@ -106,8 +106,10 @@ class Logfile:
        
         # insert into DB - executemany is hard to achieve, as we need to insert users as well
         for j in inserts:
+            print "insert", j
             self.db.insert_job(*j)
         for j in updates:
+            print  "update",j
             self.db.update_job(*j)
 
     def switch_file(self,filename):
