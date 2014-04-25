@@ -71,6 +71,7 @@ class Logfile:
             self.db.insert_job(*j)
         for j in updates:
             self.db.update_job(*j)
+        self.db.commit()
 
     def switch_file(self,filename):
         todayfile = time.strftime("%Y%m%d")

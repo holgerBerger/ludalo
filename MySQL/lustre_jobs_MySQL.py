@@ -32,6 +32,9 @@ class DB:
         self.conn.commit()
         self.conn.close()
 
+    def commit(self):
+        self.conn.commit()
+
     def create_tables(self):
         '''create tables and indices needed for job insertion'''
         self.c.execute('''CREATE TABLE IF NOT EXISTS
@@ -96,7 +99,7 @@ class DB:
                             jobid = %s
                         AND
                             t_start = %s''', (jobid, start))
-
+        
         if not self.c.fetchone():
             # check if user is already in DB
             self.c.execute('''SELECT id
