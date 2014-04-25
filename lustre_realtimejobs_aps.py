@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-import time
+import time,pwd
 import select
 import _inotify
 
@@ -9,7 +9,8 @@ sys.path.append("MySQL")
 import lustre_jobs_MySQL as lustre_jobs_db
 
 
-ROOTDIR="/var/spool/torque/server_priv/accounting"
+# ROOTDIR="/var/spool/torque/server_priv/accounting"
+ROOTDIR="/home/berger/Lustre/testdata/watch"
 
 class Logfile:
     def __init__(self, prefix, path, filename):
@@ -34,6 +35,10 @@ class Logfile:
     def read_from_last_pos_to_end(self):
         '''read from file from current position to current end, build lists for inserts and updates
         and do batch execution'''
+        
+        resToJob = {}   # map resid to job
+        jobs = {}
+
         jobstarts = {}
         jobends = {}
         b=self.f.read()
@@ -59,15 +64,15 @@ class Logfile:
                     jobs[resToJob[resid]]['cmd'] = cmd
                     try:
                         # jobs[resToJob[resid]]['owner'] = usermap[uid]
-                        jobs[resToJob[resid]]['owner'] = pwd.getpwuid(uid).pw_name
+                        jobs[resToJob[resid]]['owner'] = pwd.getpwuid(int(uid)).pw_name
                     except KeyError:
                         print "unknown userid", uid
                         jobs[resToJob[resid]]['owner'] = uid
                     jobs[resToJob[resid]]['nids'] = nids
+                    jobid = resToJob[resid]
+                    jobstarts[jobid] = (jobid, jobs[jobid]['start'], -1, jobs[jobid]['owner'], jobs[jobid]['nids'], jobs[jobid]['cmd'])
                 except KeyError:
                     print "job without binding",resid
-                jobid = resToJob[resid]
-                jobstarts[jobid] = (jobid, jobs[jobid]['start'], -1, jobs[jobid]['owner'], jobs[jobid]['nids'], jobs[jobid]['cmd'])
 
             if "Released apid" in l:   
                 sp = l[:-1].split()
@@ -112,7 +117,7 @@ class Logfile:
             self.f.close()
             self.filename = self.path+"/"+filename
             self.f = open(self.filename, "r")
-        #print "new file", self.filename
+        # print "new file", self.filename
 
     def action(self, e):
         if e["mask"] & _inotify.CREATE:
@@ -126,9 +131,9 @@ def mainloop():
   fd = _inotify.create()
   wddir = _inotify.add(fd, ROOTDIR, _inotify.CREATE | _inotify.MODIFY) 
 
-  todayfile = time.strftime("%Y%m%d")
-  # todayfile = "20140320"
-  lf = Logfile("",ROOTDIR,todayfile)
+  todayfile = "apsched"+time.strftime("%Y%m%d")
+  # todayfile = "apsched20131221"
+  lf = Logfile("apsched",ROOTDIR,todayfile)
 
   while True:
     # blocking wait
