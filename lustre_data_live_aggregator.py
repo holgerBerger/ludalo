@@ -71,12 +71,14 @@ def worker(srv):
         #out.write("#" + FILEVERSION + ";" + hostnames[srv] + ";")
         #out.write(nids[srv][0] + ";")
         #out.write(";".join(nids[srv][1:]) + "\n")
+        t_insert = time.time()
         line = str("#" +
                    FILEVERSION + ";" +
                    hostnames[srv] + ";" +
                    nids[srv][0] + ";" +
                    ";".join(nids[srv][1:]) + "\n")
         db.readHead(line)
+        print "\n Time to insert Head [sec]:", (time.time() - t_insert)
         iolock.release()
     oldnids[srv] = nids[srv]
     for ost in r[1:]:
@@ -90,10 +92,12 @@ def worker(srv):
         iolock.acquire()
 # --------- switch to db here ---------
         #out.write(hostnames[srv] + ";" + str(int(sample)) + ";" + ";" .join(map(str, l))+"\n")
+        t_insert = time.time()
         line = str(hostnames[srv] + ";" +
                    str(int(sample)) + ";" +
                    ";" .join(map(str, l)) + "\n")
         db.readData(line)
+        print "\n Time to insert Data [sec]:", (time.time() - t_insert)
         iolock.release()
         vs = sp[1].split(',')
         if len(vs) == 1:
