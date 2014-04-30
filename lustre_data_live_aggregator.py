@@ -78,9 +78,10 @@ def worker(srv):
                    nids[srv][0] + ";" +
                    ";".join(nids[srv][1:]) + "\n")
         db.readHead(line)
-        print "\n Time to insert Head [sec]:", (time.time() - t_insert)
+        print " Time to insert Head [sec]:", (time.time() - t_insert)
         iolock.release()
     oldnids[srv] = nids[srv]
+    t_insert = time.time()
     for ost in r[1:]:
         l = []
         sp = ost.split(";")
@@ -92,12 +93,10 @@ def worker(srv):
         iolock.acquire()
 # --------- switch to db here ---------
         #out.write(hostnames[srv] + ";" + str(int(sample)) + ";" + ";" .join(map(str, l))+"\n")
-        t_insert = time.time()
         line = str(hostnames[srv] + ";" +
                    str(int(sample)) + ";" +
                    ";" .join(map(str, l)) + "\n")
         db.readData(line)
-        print "\n Time to insert Data [sec]:", (time.time() - t_insert)
         iolock.release()
         vs = sp[1].split(',')
         if len(vs) == 1:
@@ -105,6 +104,7 @@ def worker(srv):
         else:
             (wb, rb) = bws.setdefault(srv, (0, 0))
             bws[srv] = (wb + int(vs[1]), rb + int(vs[3]))
+    print " Time to insert Data [sec]:", (time.time() - t_insert)
 
 #------------------------------------------------------------------------------
 
