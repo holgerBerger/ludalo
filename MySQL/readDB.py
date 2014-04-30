@@ -80,68 +80,7 @@ class readDB(object):
             return False
 
 #------------------------------------------------------------------------------
-
-    def read_write_sum_to_Nid(self, start, end, nidName):
-        self.c.execute('''  select
-                                samples_ost.rb,
-                                samples_ost.wb,
-                                timestamps.c_timestamp,
-                                nids.nid,
-                                samples_ost.rio,
-                                samples_ost.wio
-                            from
-                                samples_ost,
-                                nids,
-                                timestamps
-                            where
-                                nids.id = samples_ost.nid
-                                    and timestamps.id = samples_ost.timestamp_id
-                                    and timestamps.c_timestamp between %s and %s
-                                    and nids.nid = %s''',
-                                    (start, end, nidName))
-        tmp = self.c.fetchall()
-
-        timeMapRB = {}
-        timeMapWB = {}
-        timeMapRIO = {}
-        timeMapWIO = {}
-        self.c.execute('''
-                            select
-                                c_timestamp
-                            from
-                                timestamps
-                            where
-                                c_timestamp between %s and %s''',
-                                (start, end))
-        tmp_time = self.c.fetchall()
-        for timeStamp in tmp_time:
-            timeMapRB[timeStamp[0]] = 0
-            timeMapWB[timeStamp[0]] = 0
-            timeMapRIO[timeStamp[0]] = 0
-            timeMapWIO[timeStamp[0]] = 0
-
-        nidList = set()
-        for item in tmp:
-            read = item[0]
-            write = item[1]
-            timestamp = item[2]
-            nid = item[3]
-            rio = item[4]
-            wio = item[5]
-            if timestamp not in timeMapRB or timeMapWB or timeMapRIO or timeMapWIO:
-                timeMapRB[timestamp] = 0
-                timeMapWB[timestamp] = 0
-                timeMapRIO[timestamp] = 0
-                timeMapWIO[timestamp] = 0
-            timeMapRB[timestamp] += read
-            timeMapWB[timestamp] += write
-            timeMapRIO[timestamp] += rio
-            timeMapWIO[timestamp] += wio
-            nidList.add(nid)
-
-        return (start, end, timeMapRB, timeMapWB,
-                    timeMapRIO, timeMapWIO, nidList)
-
+    #  read_write_sum_to_Nid
 #------------------------------------------------------------------------------
     def get_sum_nids_to_job(self, jobID):
         #depricated.
@@ -270,7 +209,7 @@ class readDB(object):
                         select c_timestamp from timestamps
                         order by c_timestamp desc
                         limit 1 ''')
-        samples_max = self.c.fetchall()
+        #samples_max = self.c.fetchall()
         self.c.execute('''
                         select c_timestamp from timestamps
                         order by c_timestamp
@@ -338,7 +277,8 @@ class readDB(object):
         return user
 #------------------------------------------------------------------------------
 
-    def getAll_Jobs_to_Nid_ID_Between(self, timeStamp_start, timeStamp_end, nidID):
+    def getAll_Jobs_to_Nid_ID_Between(self, timeStamp_start,
+                                        timeStamp_end, nidID):
 
         self.c.execute('''
             select owner, nodelist.nid, jobs.jobid, jobs.t_start, jobs.t_end
@@ -372,7 +312,8 @@ class readDB(object):
             return (t_start[0], t_end[0])
 #------------------------------------------------------------------------------
 
-    def getAll_Nid_IDs_Between(self, timeStamp_start, timeStamp_end, threshold_b=0):
+    def getAll_Nid_IDs_Between(self, timeStamp_start,
+                                timeStamp_end, threshold_b=0):
         ''' get all nids between two timestamps  if thershold only nids with
             more rb or wb between this timestamps'''
 
@@ -468,10 +409,11 @@ class readDB(object):
 #------------------------------------------------------------------------------
 
     def print_Filesystem(self, window, fs='univ_1'):
+        # used in main
         # getting all informations out of the database
         query = ('''
                 select
-                    timestamps.c_timestamp, sum(wb), sum(wio), sum(rb), sum(rio)
+                  timestamps.c_timestamp, sum(wb), sum(wio), sum(rb), sum(rio)
                 from
                     ost_values,
                     targets,
@@ -482,7 +424,8 @@ class readDB(object):
                         and targets.fsid = filesystems.id
                         and ost_values.timestamp_id = timestamps.id
                         and filesystems.filesystem = %s
-                        and c_timestamp between unix_timestamp()-%s and unix_timestamp()
+                        and c_timestamp between
+                            unix_timestamp()-%s and unix_timestamp()
                 group by timestamps.c_timestamp
                 order by timestamps.c_timestamp''')
         values_np = self.query_to_npArray(query, (fs, int(window)))
@@ -547,11 +490,13 @@ class readDB(object):
         timeMapRIO = job_valuse[4]
         timeMapWIO = job_valuse[5]
         nidName = job_valuse[6]
-        testjob.add_Values(timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName)
+        testjob.add_Values(timeMapRB, timeMapWB,
+                            timeMapRIO, timeMapWIO, nidName)
         user.addJob(testjob)
 #------------------------------------------------------------------------------
 
     def query_to_npArray(self, query, options=None):
+        # used in print fs
         ''' execute the query with the given options and returns
             a numpy matrix of the output
         '''
@@ -700,7 +645,8 @@ if __name__ == '__main__':
     parser.add_argument("-j", "--job",
                         help="print one specific job", type=str)
     parser.add_argument("-w", "--window",
-                        help="specify a time window [in hours], default = 5 days", type=str)
+                        help='''specify a time window [in hours],
+                                    default = 5 days''', type=str)
     args = parser.parse_args()
     if args.filesystem:
         print 'fs=', args.filesystem
