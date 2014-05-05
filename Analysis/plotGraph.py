@@ -92,3 +92,81 @@ def plotGraph(list_of_list, diagramName='', mvaLength=21):
     time_end = time.time()
     #print "end with no errors in: " + str(time_end - time_start)
     #plt.show()
+
+def plotJob(timestamps, rbs, rio, wbs, wio, title):
+
+    # convert timestamps
+    dates1 = [dt.datetime.fromtimestamp(ts) for ts in timestamps]
+
+    # calculate filter size
+    fsize = int(len(dates1) / 10)
+    if fsize < 3:
+        fsize = 3
+
+    # claculate filterd values
+    mvaRB = MovingAverage(fsize)
+    mvaWB = MovingAverage(fsize)
+    for i in range(len(timestamps)):
+        mvaWB.addValue(timestamps[i], wbs[i])
+        mvaRB.addValue(timestamps[i], rbs[i])
+
+    filterd_WB = mvaWB.getAverage()
+    filterd_RB = mvaRB.getAverage()
+
+    WB_Values = []
+    for item in filterd_WB:
+        WB_Values.append(item[1])
+
+    RB_Values = []
+    for item in filterd_RB:
+        RB_Values.append(item[1])
+
+    # Write
+    fig = plt.figure(figsize=(16, 9))
+    ax1 = fig.add_subplot(2, 3, 1)
+    plt.xticks(rotation=45)
+    plt.xlabel('Time')
+    plt.ylabel('Speed [MB/s]')
+    ax2 = fig.add_subplot(2, 3, 2)
+    ax3 = fig.add_subplot(2, 3, 3)
+
+    # Read
+    ax4 = fig.add_subplot(2, 3, 4)
+    plt.xticks(rotation=45)
+    plt.xlabel('Time')
+    plt.ylabel('Speed [MB/s]')
+    ax5 = fig.add_subplot(2, 3, 5)
+    ax6 = fig.add_subplot(2, 3, 6)
+
+    # Speed
+    ax1.plot(dates1, wbs, label='exact data', lw=1, color='gray')
+    ax1.plot(dates1, WB_Values, label='Filterd data', lw=2, color='green')
+    ax1.set_title('Write MB')
+    ax1.legend(loc='best')
+
+    ax4.plot(dates1, rbs, label='exact data', lw=1, color='gray')
+    ax4.plot(dates1, RB_Values, label='Filterd data', lw=2, color='blue')
+    ax4.set_title('Read MB')
+    ax4.legend(loc='best')
+
+    # Histograms
+    bins1 = 15
+
+    ax2.hist(wio, bins=bins1, color='green')
+    ax2.set_title('amount of write io size')
+
+    ax5.hist(rio, bins=bins1, color='blue')
+    ax5.set_title('amount of read io size')
+
+    # scatter plots
+    ax3.scatter(wbs * 10, wio * 10, color='green')
+    ax3.set_title('scatter plots write')
+
+    ax6.scatter(rbs * 10, rio * 10, color='blue')
+    ax6.set_title('scatter plots read')
+
+    # show data plot
+    plt.tight_layout()
+    plt.savefig(str(title) + '.png',dpi=120)
+    plt.close('all')
+    plt.show()

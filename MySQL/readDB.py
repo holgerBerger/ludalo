@@ -400,8 +400,15 @@ class readDB(object):
                   str(informations[0][1]) + ' ' +
                   str(informations[3][0]) + ' ' +
                   str(informations[3][1]))
-        print str('Duration: ' +
-               str(int(informations[2][1] - informations[1][1]) / 60) +
+        if informations[2][1] < 0:
+            t_end = time.time()
+            print str('Duration [running job]: ' +
+               str(int(t_end - informations[1][1]) / 60) +
+               'min')
+        else:
+            t_end = informations[2][1]
+            print str('Duration: ' +
+               str(int(t_end - informations[1][1]) / 60) +
                'min')
 
         number_of_nodes = len(informations[4][1].split(','))
@@ -595,7 +602,7 @@ def print_job(job):
                             between
                                 %s and %s
                                 '''
-        allTimestamps = db.query_to_npArray(query, start, end,)
+        allTimestamps = db.query_to_npArray(query, (start, end,))
 
         db.np_fillAndSort(values_np, allTimestamps)
 
