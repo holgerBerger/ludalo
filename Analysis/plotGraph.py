@@ -151,7 +151,7 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     ax4.legend(loc='best')
 
     # Histograms
-    bins1 = 25
+    bins1 = 30
 
     ax2.hist(wio, bins=bins1, color='green')
     ax2.set_title('amount of write io size')
@@ -162,9 +162,11 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     # scatter plots
     ax3.scatter(wbs, wio, color='green')
     ax3.set_title('scatter plots write')
+    ax3.set_yscale('log')
 
     ax6.scatter(rbs, rio, color='blue')
     ax6.set_title('scatter plots read')
+    ax6.set_yscale('log')
 
     # show data plot
     plt.tight_layout()
