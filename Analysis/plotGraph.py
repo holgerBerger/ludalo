@@ -123,7 +123,7 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
         RB_Values.append(item[1])
 
     # Write
-    fig = plt.figure(figsize=(8, 5))
+    fig = plt.figure(figsize=(16, 10))
     ax1 = fig.add_subplot(2, 3, 1)
     plt.xticks(rotation=45)
     plt.xlabel('Time')
