@@ -606,7 +606,7 @@ def print_job(job):
 
         values_np = db.np_fillAndSort(values_np, allTimestamps)
         values_np = np.nan_to_num(values_np)
-
+        print values_np
         db.c.execute('''select nid from nodelist where job = %s''', (job,))
         nids = db.c.fetchall()
 
