@@ -18,7 +18,7 @@ from Job import Job
 import argparse
 import numpy as np
 
-from plotGraph import plotGraph
+from plotGraph import plotGraph, plotJob
 
 
 class readDB(object):
@@ -622,6 +622,17 @@ def print_job(job):
         jobObject.setTitle(title)
         print 'Plot: ', title
 
+        timestamps = values_np[:, 0]
+        wbs = values_np[:, 1] / (60 * 1000000)
+        wio = ((values_np[:, 1] / 1000) / (values_np[:, 2])) / 60
+
+        rbs = values_np[:, 3] / (60 * 1000000)
+        rio = ((values_np[:, 3] / 1000) / (values_np[:, 4])) / 60
+
+        plotJob(timestamps, rbs, rio, wbs, wio, title)
+        print 'done'
+        exit()
+
         list_of_list = []
         list_of_list.append(values_np[:, 0])  # time
         list_of_list.append(values_np[:, 1] / (60 * 1000000))  # wb
@@ -631,9 +642,9 @@ def print_job(job):
 
         list_of_list = []
         list_of_list.append(values_np[:, 0])  # time
-        list_of_list.append(0 - values_np[:, 4] / 60)  # rio per sec
+        list_of_list.append(((values_np[:, 3] / 1000) / (values_np[:, 4])) / 60)  # rio per sec
         list_of_list.append(values_np[:, 0])  # time
-        list_of_list.append(values_np[:, 2] / 60)  # wio per sec
+        list_of_list.append(((values_np[:, 1] / 1000) / (values_np[:, 2])) / 60)  # wio per sec
         plotGraph(list_of_list, title + 'io', 21)
         print 'done'
         exit()

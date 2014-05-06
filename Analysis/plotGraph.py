@@ -93,6 +93,7 @@ def plotGraph(list_of_list, diagramName='', mvaLength=21):
     #print "end with no errors in: " + str(time_end - time_start)
     #plt.show()
 
+
 def plotJob(timestamps, rbs, rio, wbs, wio, title):
 
     # convert timestamps
@@ -167,6 +168,6 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
 
     # show data plot
     plt.tight_layout()
-    plt.savefig(str(title) + '.png',dpi=120)
+    plt.savefig(str(title) + '.png', dpi=120)
     plt.close('all')
     plt.show()
