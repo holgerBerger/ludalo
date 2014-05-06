@@ -129,7 +129,11 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     plt.xlabel('Time')
     plt.ylabel('Speed [MB/s]')
     ax2 = fig.add_subplot(2, 3, 2)
+    plt.xlabel('IO size [KB]')
+    plt.ylabel('Number of IOs')
     ax3 = fig.add_subplot(2, 3, 3)
+    plt.xlabel('Speed [MB/s]')
+    plt.ylabel('IO size [KB]')
 
     # Read
     ax4 = fig.add_subplot(2, 3, 4)
@@ -137,7 +141,11 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     plt.xlabel('Time')
     plt.ylabel('Speed [MB/s]')
     ax5 = fig.add_subplot(2, 3, 5)
+    plt.xlabel('IO size [KB]')
+    plt.ylabel('Number of IOs')
     ax6 = fig.add_subplot(2, 3, 6)
+    plt.xlabel('Speed [MB/s]')
+    plt.ylabel('IO size [KB]')
 
     # Speed
     ax1.plot(dates1, wbs, label='exact data', lw=1, color='gray')
