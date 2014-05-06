@@ -630,7 +630,7 @@ def print_job(job):
         wbs_mb_per_s = wbs_kb_per_s / 1024
         wio = values_np[:, 2]
         wio_per_second = wio / 60
-        wio_volume_in_kb = np.nan_to_num((wbs / wio) / 60)
+        wio_volume_in_kb = np.nan_to_num((wbs / wio) / 1024)
         #wio = np.nan_to_num(((values_np[:, 1] / 10) / values_np[:, 2]) / 60)
 
         rbs = values_np[:, 3]
@@ -639,7 +639,7 @@ def print_job(job):
         rbs_mb_per_s = rbs_kb_per_s / 1024
         rio = values_np[:, 4]
         rio_per_second = rio / 60
-        rio_volume_in_kb = np.nan_to_num((rbs / rio) / 60)
+        rio_volume_in_kb = np.nan_to_num((rbs / rio) / 1024)
         #rio = np.nan_to_num(((values_np[:, 3] / 10) / values_np[:, 4]) / 60)
 
         plotJob(timestamps, rbs_mb_per_s, rio_volume_in_kb, wbs_mb_per_s, wio_volume_in_kb, title)
