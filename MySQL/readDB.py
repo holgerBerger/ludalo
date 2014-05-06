@@ -624,13 +624,25 @@ def print_job(job):
         print 'Plot: ', title
 
         timestamps = values_np[:, 0]
-        wbs = values_np[:, 1] / (60 * 1000000)
-        wio = np.nan_to_num(((values_np[:, 1] / 10) / values_np[:, 2]) / 60)
+        wbs = values_np[:, 1]
+        wbs_per_second = wbs / 60
+        wbs_kb_per_s = wbs_per_second / 1024
+        wbs_mb_per_s = wbs_kb_per_s / 1024
+        wio = values_np[:, 2]
+        wio_per_second = wio / 60
+        wio_volume_in_kb = np.nan_to_num((wbs / wio) / 60)
+        #wio = np.nan_to_num(((values_np[:, 1] / 10) / values_np[:, 2]) / 60)
 
-        rbs = values_np[:, 3] / (60 * 1000000)
-        rio = np.nan_to_num(((values_np[:, 3] / 10) / values_np[:, 4]) / 60)
+        rbs = values_np[:, 3]
+        rbs_per_second = rbs / 60
+        rbs_kb_per_s = rbs_per_second / 1024
+        rbs_mb_per_s = rbs_kb_per_s / 1024
+        rio = values_np[:, 4]
+        rio_per_second = rio / 60
+        rio_volume_in_kb = np.nan_to_num((rbs / rio) / 60)
+        #rio = np.nan_to_num(((values_np[:, 3] / 10) / values_np[:, 4]) / 60)
 
-        plotJob(timestamps, rbs, rio, wbs, wio, title)
+        plotJob(timestamps, rbs_mb_per_s, rio_volume_in_kb, wbs_mb_per_s, wio_volume_in_kb, title)
         print 'done'
         exit()
 
