@@ -162,11 +162,9 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     # scatter plots
     ax3.scatter(wbs, wio, color='green')
     ax3.set_title('scatter plots write')
-    ax3.set_yscale('log')
 
     ax6.scatter(rbs, rio, color='blue')
     ax6.set_title('scatter plots read')
-    ax6.set_yscale('log')
 
     # show data plot
     plt.tight_layout()
