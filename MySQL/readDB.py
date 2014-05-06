@@ -450,19 +450,25 @@ class readDB(object):
 
         values_np = self.np_fillAndSort(values_np, allTimestamps)
 
-        list_of_list = []
-        list_of_list.append(values_np[:, 0])  # time
-        list_of_list.append(values_np[:, 1] / (60 * 1000000))  # wb
-        list_of_list.append(values_np[:, 0])  # time
-        list_of_list.append(0 - (values_np[:, 3] / (60 * 1000000)))  # rb
-        plotGraph(list_of_list, fs, 21)
+        timestamps = values_np[:, 0]
+        wbs = values_np[:, 1]
+        wbs_per_second = wbs / 60
+        wbs_kb_per_s = wbs_per_second / 1024
+        wbs_mb_per_s = wbs_kb_per_s / 1024
+        wio = values_np[:, 2]
+        wio_volume_in_kb = np.nan_to_num((wbs / wio) / 1024)
 
-        list_of_list = []
-        list_of_list.append(values_np[:, 0])  # time
-        list_of_list.append(0 - values_np[:, 4] / 60)  # rio per sec
-        list_of_list.append(values_np[:, 0])  # time
-        list_of_list.append(values_np[:, 2] / 60)  # wio per sec
-        plotGraph(list_of_list, fs + 'io', 21)
+        rbs = values_np[:, 3]
+        rbs_per_second = rbs / 60
+        rbs_kb_per_s = rbs_per_second / 1024
+        rbs_mb_per_s = rbs_kb_per_s / 1024
+        rio = values_np[:, 4]
+        rio_volume_in_kb = np.nan_to_num((rbs / rio) / 1024)
+
+        plotJob(timestamps,
+                    rbs_mb_per_s, rio_volume_in_kb,
+                    wbs_mb_per_s, wio_volume_in_kb,
+                    fs)
         print 'done'
         exit()
 #------------------------------------------------------------------------------
@@ -605,8 +611,8 @@ def print_job(job):
         allTimestamps = db.query_to_npArray(query, (start, end,))
 
         values_np = db.np_fillAndSort(values_np, allTimestamps)
-        values_np = np.nan_to_num(values_np)
-        print values_np
+        # values_np = np.nan_to_num(values_np)
+
         db.c.execute('''select nid from nodelist where job = %s''', (job,))
         nids = db.c.fetchall()
 
@@ -629,39 +635,21 @@ def print_job(job):
         wbs_kb_per_s = wbs_per_second / 1024
         wbs_mb_per_s = wbs_kb_per_s / 1024
         wio = values_np[:, 2]
-        wio_per_second = wio / 60
         wio_volume_in_kb = np.nan_to_num((wbs / wio) / 1024)
-        #wio = np.nan_to_num(((values_np[:, 1] / 10) / values_np[:, 2]) / 60)
 
         rbs = values_np[:, 3]
         rbs_per_second = rbs / 60
         rbs_kb_per_s = rbs_per_second / 1024
         rbs_mb_per_s = rbs_kb_per_s / 1024
         rio = values_np[:, 4]
-        rio_per_second = rio / 60
         rio_volume_in_kb = np.nan_to_num((rbs / rio) / 1024)
-        #rio = np.nan_to_num(((values_np[:, 3] / 10) / values_np[:, 4]) / 60)
 
-        plotJob(timestamps, rbs_mb_per_s, rio_volume_in_kb, wbs_mb_per_s, wio_volume_in_kb, title)
+        plotJob(timestamps,
+                    rbs_mb_per_s, rio_volume_in_kb,
+                    wbs_mb_per_s, wio_volume_in_kb,
+                    title)
         print 'done'
         exit()
-
-        list_of_list = []
-        list_of_list.append(values_np[:, 0])  # time
-        list_of_list.append(values_np[:, 1] / (60 * 1000000))  # wb
-        list_of_list.append(values_np[:, 0])  # time
-        list_of_list.append(0 - (values_np[:, 3] / (60 * 1000000)))  # rb
-        plotGraph(list_of_list, title, 21)
-
-        list_of_list = []
-        list_of_list.append(values_np[:, 0])  # time
-        list_of_list.append(((values_np[:, 3] / 1000) / (values_np[:, 4])) / 60)  # rio per sec
-        list_of_list.append(values_np[:, 0])  # time
-        list_of_list.append(((values_np[:, 1] / 1000) / (values_np[:, 2])) / 60)  # wio per sec
-        plotGraph(list_of_list, title + 'io', 21)
-        print 'done'
-        exit()
-
 
 if __name__ == '__main__':
     time_start = time.time()
