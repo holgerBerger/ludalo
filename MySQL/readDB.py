@@ -625,10 +625,10 @@ def print_job(job):
 
         timestamps = values_np[:, 0]
         wbs = values_np[:, 1] / (60 * 1000000)
-        wio = np.nan_to_num((values_np[:, 1] / values_np[:, 2]) / 60)
+        wio = np.nan_to_num(((values_np[:, 1] / 1000) / values_np[:, 2]) / 60)
 
         rbs = values_np[:, 3] / (60 * 1000000)
-        rio = np.nan_to_num((values_np[:, 3]) / (values_np[:, 4]) / 60)
+        rio = np.nan_to_num(((values_np[:, 3] / 1000) / values_np[:, 4]) / 60)
 
         plotJob(timestamps, rbs, rio, wbs, wio, title)
         print 'done'
