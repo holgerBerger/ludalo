@@ -13,6 +13,8 @@ for the average over 3 values.
 import time
 import math
 import binomialCoeff
+import numpy as np
+import sys
 
 
 class MovingAverage(object):
@@ -43,9 +45,10 @@ class MovingAverage(object):
         return self.average
 
     def getValue(self, valueArray):
-        tmp = 0
-        for i in range(0, self.size):
-            tmp = tmp + (valueArray[i] * self.calcArray[i])
+        npValues = np.array(valueArray)
+        npFilter = np.array(self.calcArray)
+
+        tmp = sum(npValues * npFilter)
         tmp = tmp / self.calcSum
         #return int(round(tmp))
         return tmp
@@ -182,6 +185,13 @@ if __name__ == '__main__':
     #print mav.average
     if test == mav.average:
         print 'Test pass!'
+    else:
+        print 'expected this:'
+        print test
+        print 'got:'
+        print mav.average
+        sys.stderr.write('Test not passed!!!')
+        exit(1)
 
     '''
     if output =
