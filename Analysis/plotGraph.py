@@ -7,6 +7,7 @@ Created on 19.02.2014
 import matplotlib
 matplotlib.use('AGG')
 
+from matplotlib.ticker import FuncFormatter
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
 import datetime as dt
@@ -20,6 +21,16 @@ class ArgMismatch(Exception):
 
     def __str__(self):
         return repr(self.value)
+
+
+def to_percent(y, position):
+    s = str(100 * y)
+
+    # The percent symbol needs escaping in latex
+    if matplotlib.rcParams['text.usetex'] == True:
+        return s + r'$\%$'
+    else:
+        return s + '%'
 
 
 def plotGraph(list_of_list, diagramName='', mvaLength=21):
@@ -122,15 +133,19 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     for item in filterd_RB:
         RB_Values.append(item[1])
 
+    formatter = FuncFormatter(to_percent)
     # Write
     fig = plt.figure(figsize=(16, 10))
     ax1 = fig.add_subplot(2, 3, 1)
     plt.xticks(rotation=45)
     plt.xlabel('Time')
     plt.ylabel('Speed [MB/s]')
+
     ax2 = fig.add_subplot(2, 3, 2)
     plt.xlabel('IO size [KB]')
-    plt.ylabel('Number of IOs')
+    plt.ylabel('IOs')
+    plt.gca().yaxis.set_major_formatter(formatter)
+
     ax3 = fig.add_subplot(2, 3, 3)
     plt.xlabel('Speed [MB/s]')
     plt.ylabel('IO size [KB]')
@@ -140,9 +155,12 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     plt.xticks(rotation=45)
     plt.xlabel('Time')
     plt.ylabel('Speed [MB/s]')
+
     ax5 = fig.add_subplot(2, 3, 5)
     plt.xlabel('IO size [KB]')
-    plt.ylabel('Number of IOs')
+    plt.ylabel('IOs')
+    plt.gca().yaxis.set_major_formatter(formatter)
+
     ax6 = fig.add_subplot(2, 3, 6)
     plt.xlabel('Speed [MB/s]')
     plt.ylabel('IO size [KB]')
@@ -161,17 +179,17 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     # Histograms
     bins1 = 30
 
-    ax2.hist(wio, bins=bins1, color='green')
+    ax2.hist(wio, bins=bins1, color='green', normed=True)
     ax2.set_title('amount of write io size')
 
-    ax5.hist(rio, bins=bins1, color='blue')
+    ax5.hist(rio, bins=bins1, color='blue', normed=True)
     ax5.set_title('amount of read io size')
 
     # scatter plots
-    ax3.scatter(wbs, wio, color='green')
+    ax3.scatter(wbs, wio, color='green', s=1)
     ax3.set_title('scatter plots write')
 
-    ax6.scatter(rbs, rio, color='blue')
+    ax6.scatter(rbs, rio, color='blue', s=1)
     ax6.set_title('scatter plots read')
 
     # show data plot
