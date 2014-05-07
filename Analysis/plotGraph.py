@@ -147,8 +147,8 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     plt.gca().yaxis.set_major_formatter(formatter)
 
     ax3 = fig.add_subplot(2, 3, 3)
-    plt.xlabel('Speed [MB/s]')
-    plt.ylabel('IO size [KB]')
+    plt.ylabel('Speed [MB/s]')
+    plt.xlabel('IO size [KB]')
 
     # Read
     ax4 = fig.add_subplot(2, 3, 4)
@@ -157,8 +157,8 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     plt.ylabel('Speed [MB/s]')
 
     ax5 = fig.add_subplot(2, 3, 5)
-    plt.ylabel('IO size [KB]')
-    plt.xlabel('IOs')
+    plt.xlabel('IO size [KB]')
+    plt.ylabel('IOs')
     plt.gca().yaxis.set_major_formatter(formatter)
 
     ax6 = fig.add_subplot(2, 3, 6)
