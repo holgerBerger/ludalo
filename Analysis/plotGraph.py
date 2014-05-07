@@ -157,13 +157,13 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     plt.ylabel('Speed [MB/s]')
 
     ax5 = fig.add_subplot(2, 3, 5)
-    plt.xlabel('IO size [KB]')
-    plt.ylabel('IOs')
+    plt.ylabel('IO size [KB]')
+    plt.xlabel('IOs')
     plt.gca().yaxis.set_major_formatter(formatter)
 
     ax6 = fig.add_subplot(2, 3, 6)
-    plt.xlabel('Speed [MB/s]')
-    plt.ylabel('IO size [KB]')
+    plt.ylabel('Speed [MB/s]')
+    plt.xlabel('IO size [KB]')
 
     # Speed
     ax1.plot(dates1, wbs, label='exact data', lw=1, color='gray')
@@ -186,10 +186,10 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     ax5.set_title('amount of read io size')
 
     # scatter plots
-    ax3.scatter(wbs, wio, color='green', s=1)
+    ax3.scatter(wio, wbs, color='green', s=1)
     ax3.set_title('scatter plots write')
 
-    ax6.scatter(rbs, rio, color='blue', s=1)
+    ax6.scatter(rio, rbs, color='blue', s=1)
     ax6.set_title('scatter plots read')
 
     # show data plot
