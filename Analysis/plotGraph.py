@@ -144,7 +144,7 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     ax2 = fig.add_subplot(2, 3, 2)
     plt.xlabel('IO size [KB]')
     plt.ylabel('IOs')
-    plt.gca().yaxis.set_major_formatter(formatter)
+    #plt.gca().yaxis.set_major_formatter(formatter)
 
     ax3 = fig.add_subplot(2, 3, 3)
     plt.ylabel('Speed [MB/s]')
@@ -159,7 +159,7 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     ax5 = fig.add_subplot(2, 3, 5)
     plt.xlabel('IO size [KB]')
     plt.ylabel('IOs')
-    plt.gca().yaxis.set_major_formatter(formatter)
+    #plt.gca().yaxis.set_major_formatter(formatter)
 
     ax6 = fig.add_subplot(2, 3, 6)
     plt.ylabel('Speed [MB/s]')
@@ -179,10 +179,10 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     # Histograms
     bins1 = 30
 
-    ax2.hist(wio, bins=bins1, color='green', normed=True)
+    ax2.hist(wio, bins=bins1, color='green')
     ax2.set_title('amount of write io size')
 
-    ax5.hist(rio, bins=bins1, color='blue', normed=True)
+    ax5.hist(rio, bins=bins1, color='blue')
     ax5.set_title('amount of read io size')
 
     # scatter plots
