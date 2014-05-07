@@ -19,7 +19,6 @@ FILEVERSION = "1.0"
 
 servers = sys.argv[1:]
 
-out = open("data_file", "w")
 db = Logfile()
 
 rpcs = {}
@@ -36,17 +35,6 @@ timings = {}
 bws = {}
 reqs = {}
 
-
-def signalhandler(signum, frame):
-    global out, first, iolock
-    if signum == signal.SIGUSR1:
-        iolock.acquire()
-        out.close()
-        print "switching file to", "data_file_" + str(int(time.time()))
-        os.rename("data_file", "data_file_" + str(int(time.time())))
-        out = open("data_file", "w")
-        iolock.release()
-        first = True
 
 
 def worker(srv):
@@ -68,9 +56,6 @@ def worker(srv):
     if first or nids[srv] != oldnids[srv]:
         iolock.acquire()
 # --------- switch to db here ---------
-        #out.write("#" + FILEVERSION + ";" + hostnames[srv] + ";")
-        #out.write(nids[srv][0] + ";")
-        #out.write(";".join(nids[srv][1:]) + "\n")
         t_insert = time.time()
         line = str("#" +
                    FILEVERSION + ";" +
@@ -92,7 +77,6 @@ def worker(srv):
                 l.append(i)
         iolock.acquire()
 # --------- switch to db here ---------
-        #out.write(hostnames[srv] + ";" + str(int(sample)) + ";" + ";" .join(map(str, l))+"\n")
         line = str(hostnames[srv] + ";" +
                    str(int(sample)) + ";" +
                    ";" .join(map(str, l)) + "\n")
@@ -115,8 +99,6 @@ for srv in servers:
     types[srv] = rpcs[srv].get_type()
     hostnames[srv] = rpcs[srv].get_hostname()
     print "connected to %s running a %s" % (hostnames[srv], types[srv])
-
-signal.signal(signal.SIGUSR1, signalhandler)
 
 while True:
     sample = time.time()
