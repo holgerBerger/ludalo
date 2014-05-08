@@ -180,17 +180,18 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     # Histograms
     bins1 = 30
 
-    heatmap, xedges, yedges = np.histogram2d(rbs, rio, bins=(512, 384))
-    extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-    ax6.imshow(heatmap, extent=extent)
-    #ax2.hist(wio, bins=bins1, color='green')
+    ax2.hist(wio, bins=bins1, color='green')
     ax2.set_title('amount of write io size')
 
     ax5.hist(rio, bins=bins1, color='blue')
     ax5.set_title('amount of read io size')
 
     # scatter plots
-    ax3.scatter(wio, wbs, color='green', s=1)
+    heatmap, xedges, yedges = np.histogram2d(wio, wbs, bins=(512, 384))
+    extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+    ax3.imshow(heatmap, extent=extent)
+
+    # ax3.scatter(wio, wbs, color='green', s=1)
     ax3.set_title('scatter plots write')
 
     ax6.scatter(rio, rbs, color='blue', s=1)
