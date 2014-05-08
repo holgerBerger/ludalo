@@ -10,6 +10,7 @@ matplotlib.use('AGG')
 from matplotlib.ticker import FuncFormatter
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
+from pylab import *
 import datetime as dt
 import numpy as np
 import time
@@ -187,10 +188,14 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     ax5.set_title('amount of read io size')
 
     # scatter plots
+
+    ax3.hexbin(wio, wbs)
+
+    '''
     heatmap, xedges, yedges = np.histogram2d(wio, wbs, bins=(512, 384))
     extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
     ax3.imshow(heatmap, extent=extent)
-
+    '''
     # ax3.scatter(wio, wbs, color='green', s=1)
     ax3.set_title('scatter plots write')
 
