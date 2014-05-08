@@ -179,7 +179,10 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     # Histograms
     bins1 = 30
 
-    ax2.hist(wio, bins=bins1, color='green')
+    heatmap, xedges, yedges = np.histogram2d(rbs, rio, bins=(512, 384))
+    extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+    ax6.imshow(heatmap, extent=extent)
+    #ax2.hist(wio, bins=bins1, color='green')
     ax2.set_title('amount of write io size')
 
     ax5.hist(rio, bins=bins1, color='blue')
