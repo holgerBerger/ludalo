@@ -11,6 +11,7 @@ from matplotlib.ticker import FuncFormatter
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
 import datetime as dt
+import numpy as np
 import time
 from MovingAverage import MovingAverage
 
