@@ -5,6 +5,7 @@ Created on 19.02.2014
 '''
 
 import matplotlib
+import math
 matplotlib.use('AGG')
 
 from matplotlib.ticker import FuncFormatter
@@ -113,7 +114,7 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     dates1 = [dt.datetime.fromtimestamp(ts) for ts in timestamps]
 
     # calculate filter size
-    fsize = int(len(dates1) / 10)
+    fsize = int(math.sqrt(len(dates1)))
     if fsize < 3:
         fsize = 3
 
