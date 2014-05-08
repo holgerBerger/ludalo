@@ -189,7 +189,7 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
 
     # scatter plots
 
-    ax3.hexbin(wio, wbs)
+    ax3.hexbin(wio, wbs, bins='log')
 
     '''
     heatmap, xedges, yedges = np.histogram2d(wio, wbs, bins=(512, 384))
