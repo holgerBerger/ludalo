@@ -182,15 +182,15 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     # Histograms
     bins1 = 30
 
-    ax2.hist(wio, bins=bins1, color='green')
-    ax2.set_title('amount of write io size')
+    ax2.hist(wio[wio > 0], bins=bins1, color='green')
+    ax2.set_title('Histogram of write io size')
 
-    ax5.hist(rio, bins=bins1, color='blue')
-    ax5.set_title('amount of read io size')
+    ax5.hist(rio[rio > 0], bins=bins1, color='blue')
+    ax5.set_title('Histogram of read io size')
 
     # scatter plots
 
-    ax3.hexbin(wio, wbs, bins='log')
+    ax3.hexbin(wio[wio > 0], wbs[wbs > 0], bins='log')
 
     '''
     heatmap, xedges, yedges = np.histogram2d(wio, wbs, bins=(512, 384))
@@ -198,10 +198,10 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     ax3.imshow(heatmap, extent=extent)
     '''
     # ax3.scatter(wio, wbs, color='green', s=1)
-    ax3.set_title('scatter plots write')
+    ax3.set_title('Scatter plots write')
 
-    ax6.scatter(rio, rbs, color='blue', s=1)
-    ax6.set_title('scatter plots read')
+    ax6.scatter(rio[rio > 0], rbs[rbs > 0], color='blue', s=1)
+    ax6.set_title('Scatter plots read')
 
     # show data plot
     plt.tight_layout()
