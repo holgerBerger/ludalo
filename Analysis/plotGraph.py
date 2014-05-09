@@ -200,7 +200,8 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     # ax3.scatter(wio, wbs, color='green', s=1)
     ax3.set_title('Scatter plots write')
 
-    ax6.scatter(rio[rio > 0], rbs[rbs > 0], color='blue', s=1)
+    ax6.hexbin(rio[rio > 0], rbs[rbs > 0], bins='log')
+    #ax6.scatter(rio[rio > 0], rbs[rbs > 0], color='blue', s=1)
     ax6.set_title('Scatter plots read')
 
     # show data plot
