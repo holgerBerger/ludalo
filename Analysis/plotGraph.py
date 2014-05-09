@@ -8,7 +8,6 @@ import matplotlib
 import math
 matplotlib.use('AGG')
 
-from matplotlib.ticker import FuncFormatter
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
 from pylab import *
@@ -136,7 +135,6 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     for item in filterd_RB:
         RB_Values.append(item[1])
 
-    formatter = FuncFormatter(to_percent)
     # Write
     fig = plt.figure(figsize=(16, 10))
     ax1 = fig.add_subplot(2, 3, 1)
@@ -191,12 +189,6 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     # scatter plots
 
     ax3.hexbin(wio[wio > 0], wbs[wbs > 0], bins='log')
-
-    '''
-    heatmap, xedges, yedges = np.histogram2d(wio, wbs, bins=(512, 384))
-    extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-    ax3.imshow(heatmap, extent=extent)
-    '''
     # ax3.scatter(wio, wbs, color='green', s=1)
     ax3.set_title('Scatter plots write')
 

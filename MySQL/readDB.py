@@ -433,6 +433,7 @@ class readDB(object):
                         and filesystems.filesystem = %s
                         and c_timestamp between
                             unix_timestamp()-%s and unix_timestamp()
+                        and target.id between 2 and 13
                 group by timestamps.c_timestamp
                 order by timestamps.c_timestamp''')
         values_np = self.query_to_npArray(query, (fs, int(window)))
