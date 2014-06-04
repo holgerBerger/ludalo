@@ -433,7 +433,6 @@ class readDB(object):
                         and filesystems.filesystem = %s
                         and c_timestamp between
                             unix_timestamp()-%s and unix_timestamp()
-                        and targets.id between 2 and 13
                 group by timestamps.c_timestamp
                 order by timestamps.c_timestamp''')
         values_np = self.query_to_npArray(query, (fs, int(window)))
@@ -466,10 +465,11 @@ class readDB(object):
         rio = values_np[:, 4]
         rio_volume_in_kb = np.nan_to_num((rbs / rio) / 1024)
 
+        path = '/var/www/ludalo-web/calc' + str(fs)
         plotJob(timestamps,
                     rbs_mb_per_s, rio_volume_in_kb,
                     wbs_mb_per_s, wio_volume_in_kb,
-                    fs)
+                    path)
         print 'done'
         exit()
 #------------------------------------------------------------------------------
