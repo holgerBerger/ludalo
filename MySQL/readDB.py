@@ -417,7 +417,8 @@ class readDB(object):
     def print_Filesystem(self, window, fs='univ_1'):
         # used in main
         # getting all informations out of the database
-
+        fir = open('2_test', 'wb+')
+        fir.close()
         query = ('''
                 select
                   timestamps.c_timestamp, sum(wb), sum(wio), sum(rb), sum(rio)
@@ -465,6 +466,8 @@ class readDB(object):
         rio = values_np[:, 4]
         rio_volume_in_kb = np.nan_to_num((rbs / rio) / 1024)
 
+        fir = open('3_test', 'wb+')
+        fir.close()
         path = '/var/www/ludalo-web/calc/' + str(fs)
         plotJob(timestamps,
                     rbs_mb_per_s, rio_volume_in_kb,
@@ -472,6 +475,8 @@ class readDB(object):
                     path)
 
         print 'done'
+        fir = open('4_test', 'wb+')
+        fir.close()
         exit()
 #------------------------------------------------------------------------------
 
@@ -657,7 +662,8 @@ if __name__ == '__main__':
     time_start = time.time()
 #------------------------------------------------------------------------------
     db = readDB()
-
+    fir = open('0_test', 'wb+')
+    fir.close()
     parser = argparse.ArgumentParser()
     parser.add_argument("-u", "--user",
                         help="print one specific user", type=str)
@@ -675,6 +681,8 @@ if __name__ == '__main__':
             window = 432000
         else:
             window = int(args.window) * 3600  # hours to seconds
+        fir = open('1_test', 'wb+')
+        fir.close()
         db.print_Filesystem(window, args.filesystem)
         #exit()
     elif args.user:
