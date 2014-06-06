@@ -13,8 +13,8 @@ import MySQLdb
 from threading import Thread, Lock
 from multiprocessing.pool import Pool
 from ConfigParser import ConfigParser
-from User import User
-from Job import Job
+#from User import User
+#from Job import Job
 import argparse
 import numpy as np
 
@@ -502,8 +502,8 @@ class readDB(object):
         for row in rows:
             jobID_list.append(row[0])
 
-        user = User(testUser)
-        testjob = Job(jobID_list[0])
+        #user = User(testUser)
+        #testjob = Job(jobID_list[0])
         # (start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName)
         job_valuse = db.get_sum_nids_to_job(jobID_list[0])
         timeMapRB = job_valuse[2]
@@ -511,9 +511,9 @@ class readDB(object):
         timeMapRIO = job_valuse[4]
         timeMapWIO = job_valuse[5]
         nidName = job_valuse[6]
-        testjob.add_Values(timeMapRB, timeMapWB,
-                            timeMapRIO, timeMapWIO, nidName)
-        user.addJob(testjob)
+        #testjob.add_Values(timeMapRB, timeMapWB,
+        #                    timeMapRIO, timeMapWIO, nidName)
+        #user.addJob(testjob)
 #------------------------------------------------------------------------------
 
     def query_to_npArray(self, query, options=None):
@@ -572,7 +572,7 @@ def print_job(job):
 
     job = check_job[0]
     db.explainJob(job)
-    jobObject = Job(job)
+    #jobObject = Job(job)
 
     start_end = db.get_job_start_end(job)
 
@@ -634,7 +634,7 @@ def print_job(job):
         title = ('Job_' + str(job_info[0]) +
                  '_NoN_' + str(len(nids)) +
                  '__Owner_' + str(job_info[1]))
-        jobObject.setTitle(title)
+        #jobObject.setTitle(title)
         print 'Plot: ', title
 
         timestamps = values_np[:, 0]
