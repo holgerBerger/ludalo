@@ -415,7 +415,7 @@ class readDB(object):
         print 'Number of Nodes:', number_of_nodes
 #------------------------------------------------------------------------------
 
-    def print_Filesystem(self, window, fs='univ_1'):
+    def print_Filesystem(self, window, fs='univ_1', f=None):
         # used in main
         # getting all informations out of the database
         query = ('''
@@ -470,7 +470,10 @@ class readDB(object):
                     rbs_mb_per_s, rio_volume_in_kb,
                     wbs_mb_per_s, wio_volume_in_kb,
                     path)
-        #print 'done'
+        if not f:
+            print 'done'
+        else:
+            f.write('done')
         exit()
 #------------------------------------------------------------------------------
 
