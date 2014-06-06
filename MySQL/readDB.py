@@ -6,7 +6,7 @@ Created on 18.02.2014
 '''
 
 import sys
-sys.path.append("../Analysis")
+sys.path.append("/home/uwe/projects/ludalo/Analysis")
 import time
 import datetime
 import MySQLdb
@@ -17,7 +17,6 @@ from ConfigParser import ConfigParser
 #from Job import Job
 import argparse
 import numpy as np
-sys.path.append("/home/uwe/projects/ludalo/")
 from plotGraph import plotGraph, plotJob
 
 
