@@ -17,7 +17,7 @@ from ConfigParser import ConfigParser
 #from Job import Job
 import argparse
 import numpy as np
-
+sys.path.append("/home/uwe/projects/ludalo/")
 from plotGraph import plotGraph, plotJob
 
 
