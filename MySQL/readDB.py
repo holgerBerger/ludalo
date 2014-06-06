@@ -470,7 +470,7 @@ class readDB(object):
                     rbs_mb_per_s, rio_volume_in_kb,
                     wbs_mb_per_s, wio_volume_in_kb,
                     path)
-        print 'done'
+        #print 'done'
         exit()
 #------------------------------------------------------------------------------
 
