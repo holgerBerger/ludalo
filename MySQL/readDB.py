@@ -418,6 +418,10 @@ class readDB(object):
     def print_Filesystem(self, window, fs='univ_1', f=None):
         # used in main
         # getting all informations out of the database
+
+        if f:
+            f.write('\n' + str(window) + ' ' + str(fs) + '\n')
+
         query = ('''
                 select
                   timestamps.c_timestamp, sum(wb), sum(wio), sum(rb), sum(rio)
