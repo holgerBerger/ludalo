@@ -628,7 +628,11 @@ class readDB(object):
         rio_volume_in_kb = np.nan_to_num((rbs / rio) / 1024)
 
         # print job data
-        path = '/var/www/ludalo-web/calc/' + str(jobName)
+        if jobRunning:
+            path = '/var/www/ludalo-web/calc/jobs/' + str(jobName)
+        else:
+            path = '/var/www/ludalo-web/calc/jobs/' + str(jobName)
+
         plotJob(timestamps,
                     rbs_mb_per_s, rio_volume_in_kb,
                     wbs_mb_per_s, wio_volume_in_kb,
