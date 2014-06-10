@@ -510,6 +510,128 @@ class readDB(object):
         #user.addJob(testjob)
 #------------------------------------------------------------------------------
 
+    def getJobID(self, jobName):
+        query = '''
+        select
+            id
+        from
+            jobs
+        where
+            jobid = ?'''
+
+        self.c.execute(query, (jobName,))
+        rows = self.c.fatchall()
+
+        if rows:
+            return rows[0][0]
+        else:
+            return None
+#------------------------------------------------------------------------------
+
+    def job_running(self, jobID):
+        query = '''
+        select
+            t_end
+        from
+            jobs
+        where
+            id = ? '''
+        self.c.execute(query, (jobID,))
+        rows = self.c.fatchall()
+
+        if rows[0][0] < 0:
+            return False
+        else:
+            return True
+#------------------------------------------------------------------------------
+
+    def print_job(self, jobName):
+        # test if job exist
+        jobID = self.getJobID(jobName)
+
+        if not jobID:
+            print '404'
+            exit(1)
+
+        # test if job running
+        job_start_end = self.get_job_start_end(jobID)
+
+        jobRunning = self.job_running(jobID)
+        if jobRunning:
+            job_end = time.time()
+        else:
+            job_end = job_start_end[1]
+
+        job_start = job_start_end[0]
+        # get job data
+        option = (jobID, job_start, job_end)
+
+        query = '''
+            select
+                timestamps.c_timestamp,
+                sum(samples_ost.wb),
+                sum(samples_ost.wio),
+                sum(samples_ost.rb),
+                sum(samples_ost.rio)
+            from
+                nids
+                    join
+                nodelist ON nids.id = nodelist.nid
+                    join
+                jobs ON jobs.id = nodelist.job
+                    and jobs.id = ?
+                    join
+                samples_ost ON nids.id = samples_ost.nid
+                    join
+                timestamps ON timestamps.id = samples_ost.timestamp_id,
+                filesystems
+            where
+                timestamps.c_timestamp between ? and ?
+            group by timestamps.c_timestamp
+        '''
+
+        values_np = self.query_to_npArray(query, option)
+
+        query = ''' select
+                        c_timestamp
+                    from
+                        timestamps
+                    where
+                        c_timestamp
+                            between
+                                unix_timestamp()-%s and unix_timestamp()
+                                '''
+        allTimestamps = self.query_to_npArray(query, int(window))
+        values_np = self.np_fillAndSort(values_np, allTimestamps)
+
+        # transform data
+        timestamps = values_np[:, 0]
+        wbs = values_np[:, 1]
+        wbs_per_second = wbs / 60
+        wbs_kb_per_s = wbs_per_second / 1024
+        wbs_mb_per_s = wbs_kb_per_s / 1024
+        wio = values_np[:, 2]
+        wio_volume_in_kb = np.nan_to_num((wbs / wio) / 1024)
+
+        rbs = values_np[:, 3]
+        rbs_per_second = rbs / 60
+        rbs_kb_per_s = rbs_per_second / 1024
+        rbs_mb_per_s = rbs_kb_per_s / 1024
+        rio = values_np[:, 4]
+        rio_volume_in_kb = np.nan_to_num((rbs / rio) / 1024)
+
+        # print job data
+        path = '/var/www/ludalo-web/calc/' + str(jobName)
+        plotJob(timestamps,
+                    rbs_mb_per_s, rio_volume_in_kb,
+                    wbs_mb_per_s, wio_volume_in_kb,
+                    path)
+
+        # exit
+        print 'done'
+        exit()
+#------------------------------------------------------------------------------
+
     def query_to_npArray(self, query, options=None):
         # used in print fs
         ''' execute the query with the given options and returns
@@ -685,7 +807,7 @@ if __name__ == '__main__':
         #exit()
     elif args.job:
         print 'job=', args.job
-        print_job(args.job)
+        db.print_job(args.job)
         #exit()
     else:
         parser.print_help()
