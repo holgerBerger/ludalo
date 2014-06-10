@@ -188,11 +188,11 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
 
     # scatter plots
     print np.average(wio[wio > 0])
-    ax3.hexbin(wio[wio > 0], wbs[wbs > 0], bins='log', mincnt=0)
+    ax3.hexbin(wio[wio > 0], wbs[wbs > 0], bins='log', mincnt=1)
     # ax3.scatter(wio, wbs, color='green', s=1)
     ax3.set_title('Scatter Plots Write')
 
-    ax6.hexbin(rio[rio > 0], rbs[rbs > 0], bins='log', mincnt=0)
+    ax6.hexbin(rio[rio > 0], rbs[rbs > 0], bins='log', mincnt=1)
     #ax6.scatter(rio[rio > 0], rbs[rbs > 0], color='blue', s=1)
     ax6.set_title('Scatter Plots Read')
 
