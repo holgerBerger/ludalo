@@ -559,6 +559,8 @@ class readDB(object):
         print 'start end ', job_start_end
 
         jobRunning = self.job_running(jobID)
+        print 'job Running? ', jobRunning
+
         if jobRunning:
             job_end = time.time()
         else:
