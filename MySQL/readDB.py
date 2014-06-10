@@ -538,8 +538,7 @@ class readDB(object):
             id = %s '''
         self.c.execute(query, (jobID,))
         rows = self.c.fetchall()
-        print 'job_running rows[0]', rows[0]
-        print 'job_running rows[0][0]', rows[0][0]
+
         if rows[0][0] < 0:
             return True
         else:
@@ -563,7 +562,7 @@ class readDB(object):
         print 'job Running? ', jobRunning
 
         if jobRunning:
-            job_end = time.time()
+            job_end = int(time.time())
         else:
             job_end = job_start_end[1]
 
@@ -607,9 +606,9 @@ class readDB(object):
                     where
                         c_timestamp
                             between
-                                unix_timestamp()-%s and unix_timestamp()
+                                %s and %s
                                 '''
-        allTimestamps = self.query_to_npArray(query, int(window))
+        allTimestamps = self.query_to_npArray(query, (job_start, job_end))
         values_np = self.np_fillAndSort(values_np, allTimestamps)
 
         # transform data
