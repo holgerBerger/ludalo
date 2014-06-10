@@ -519,7 +519,7 @@ class readDB(object):
         where
             jobid = ?'''
 
-        self.c.execute(query, (jobName,))
+        self.c.execute(query, (str(jobName),))
         rows = self.c.fatchall()
 
         if rows:
