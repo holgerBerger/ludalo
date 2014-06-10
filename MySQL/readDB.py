@@ -517,7 +517,7 @@ class readDB(object):
         from
             jobs
         where
-            jobid = ?'''
+            jobid = %s'''
 
         self.c.execute(query, (str(jobName),))
         rows = self.c.fatchall()
@@ -535,7 +535,7 @@ class readDB(object):
         from
             jobs
         where
-            id = ? '''
+            id = %s '''
         self.c.execute(query, (jobID,))
         rows = self.c.fatchall()
 
@@ -579,14 +579,14 @@ class readDB(object):
                 nodelist ON nids.id = nodelist.nid
                     join
                 jobs ON jobs.id = nodelist.job
-                    and jobs.id = ?
+                    and jobs.id = %s
                     join
                 samples_ost ON nids.id = samples_ost.nid
                     join
                 timestamps ON timestamps.id = samples_ost.timestamp_id,
                 filesystems
             where
-                timestamps.c_timestamp between ? and ?
+                timestamps.c_timestamp between %s and %s
             group by timestamps.c_timestamp
         '''
 
