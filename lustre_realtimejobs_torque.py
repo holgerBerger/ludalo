@@ -32,7 +32,7 @@ class Logfile:
         b=self.f.read()
         for l in b.split("\n"):
             sp = l[:-1].split(";")
-            if len(sp)>1 and sp[1] in ["S","E"]:
+            if len(sp)>1 and sp[1] in ["S","E","A","D"]:   # A ABORT / D delete do not always produce E record
               datestr=sp[0]
               if sp[1] == "S":
                 end=-1
@@ -51,10 +51,10 @@ class Logfile:
                     if n not in l:
                       l.append(n)
                   hosts=",".join(l)
-                  if sp[1] == "S":
-                    jobstarts[jobid] = (jobid, start, end, owner, hosts, "") 
-                  else:
-                    jobends[jobid] = (jobid, start, end, owner, hosts, "")
+              if sp[1] == "S":
+                jobstarts[jobid] = (jobid, start, end, owner, hosts, "") 
+              else:
+                jobends[jobid] = (jobid, start, end, owner, hosts, "")
         inserts = []
         updates = []
         for i in jobstarts:
