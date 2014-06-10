@@ -647,6 +647,7 @@ class readDB(object):
         # by 'fromiter' in other words, to restore original dimensions
         # of the results set
         num_rows = int(self.c.rowcount)
+        print num_rows
 
         # recast this nested tuple to a python list and flatten it
         # so it's a proper iterable:
