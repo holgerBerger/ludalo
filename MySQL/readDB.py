@@ -548,6 +548,7 @@ class readDB(object):
     def print_job(self, jobName):
         # test if job exist
         jobID = self.getJobID(jobName)
+        print 'job id ', jobID
 
         if not jobID:
             print '404'
@@ -555,6 +556,7 @@ class readDB(object):
 
         # test if job running
         job_start_end = self.get_job_start_end(jobID)
+        print 'start end ', job_start_end
 
         jobRunning = self.job_running(jobID)
         if jobRunning:
@@ -562,7 +564,10 @@ class readDB(object):
         else:
             job_end = job_start_end[1]
 
+        print 'job_end ', job_end
+
         job_start = job_start_end[0]
+        print 'job_start ', job_start
         # get job data
         option = (jobID, job_start, job_end)
 
@@ -647,7 +652,7 @@ class readDB(object):
         # by 'fromiter' in other words, to restore original dimensions
         # of the results set
         num_rows = int(self.c.rowcount)
-        print num_rows
+        #print num_rows
 
         # recast this nested tuple to a python list and flatten it
         # so it's a proper iterable:
