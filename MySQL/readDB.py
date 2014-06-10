@@ -538,11 +538,12 @@ class readDB(object):
             id = %s '''
         self.c.execute(query, (jobID,))
         rows = self.c.fetchall()
-
+        print 'job_running rows[0]', rows[0]
+        print 'job_running rows[0][0]', rows[0][0]
         if rows[0][0] < 0:
-            return False
-        else:
             return True
+        else:
+            return False
 #------------------------------------------------------------------------------
 
     def print_job(self, jobName):
