@@ -6,7 +6,7 @@ import select
 import _inotify
 
 sys.path.append("MySQL")
-import lustre_jobs_MySQL as lustre_jobs_db
+import MySQLObject 
 
 
 ROOTDIR="/var/spool/torque/server_priv/accounting"
@@ -21,7 +21,7 @@ class Logfile:
         self.prefix = prefix
         self.filename = self.path+"/"+filename
         self.f = open(self.filename,"r")
-        self.db = lustre_jobs_db.DB()
+        self.db = MySQLObject.MySQLObject()
         self.read_from_last_pos_to_end()
 
     def read_from_last_pos_to_end(self):

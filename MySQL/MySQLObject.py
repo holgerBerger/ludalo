@@ -11,12 +11,11 @@ import sys, time, re
 class MySQLObject(object):
     '''database connection class'''
 
-    def __init__(self, dbFile):
+    def __init__(self):
         '''
         Constructor
         '''
         self.DB_VERSION = 4
-        self.dbFile = dbFile
         self.config = ConfigParser()
         try:
             self.config.readfp(open("db.conf"))
@@ -511,3 +510,99 @@ class MySQLObject(object):
                                         (NULL,%s,%s,%s,NULL,%s)''',
                                         # time  typ  mdsID    values
                                         (timeid, s_type, mdsID, lastID))
+
+    # convenience from old job abstraction layer
+    def close(self):
+        self.conn.commit()
+        self.conn.close()
+
+    def commit(self):
+        self.conn.commit()
+    ###################
+
+    def update_job(self, jobid, start, end, owner, nids, cmd):
+        '''insert end time for job started before
+            jobid is: jobid.batchserver-year
+            jobid.batchserver must be built from caller, year is appended here.
+            for cray, batchserver has to come from config file, is not in alps log file
+            start, ownder, nids might contain nonsense, do not use!
+        '''
+        cyear = time.localtime(end).tm_year 
+        for dbjobid in [ jobid+"-"+str(cyear), jobid+"-"+str(cyear-1), jobid ]:
+            # old self.c.execute(''' UPDATE jobs SET t_end=%s WHERE jobid=%s AND t_start=%s''', (end, jobid, start))
+            self.c.execute('''
+                            UPDATE
+                                jobs
+                            SET
+                                t_end=%s
+                            WHERE
+                                jobid=%s
+                            ''', (end, dbjobid))
+            if self.c.rowcount>0:
+                return
+
+
+    def insert_job(self, jobid, start, end, owner, nids, cmd):
+        '''insert complete job with all dependencies'''
+
+        # new: we add year to jobid to make it unique
+        cyear = time.localtime(end).tm_year 
+        jobid = jobid + "-" + str(cyear)
+
+        #print jobid, start, end, owner, nids, cmd
+        # check if job is already in DB
+        #  OLD self.c.execute(''' SELECT jobid FROM jobs WHERE jobid = %s AND t_start = %s''', (jobid, start))
+        self.c.execute('''
+                        SELECT
+                            jobid
+                        FROM
+                            jobs
+                        WHERE
+                            jobid = %s
+                        ''', (jobid, ))
+        
+        if not self.c.fetchone():
+            # check if user is already in DB
+            self.c.execute('''SELECT id
+                              FROM users
+                              WHERE users.username = %s''', (owner,))
+            r = self.c.fetchone()
+            if r:
+                userid = r[0]
+            else:
+                self.c.execute('''INSERT INTO users
+                                  VALUES (NULL,%s)''', (owner,))
+                userid = self.c.lastrowid
+            self.c.execute('''INSERT INTO jobs
+                              VALUES
+                                (NULL,%s,%s,%s,%s,%s,%s,NULL,NULL,NULL)''',
+                              (jobid, start, end, userid, nids, cmd))
+            jobkey = self.c.lastrowid
+            # nodes - expand cray name compression with ranges
+            nl = []
+            for node in nids.split(','):
+                if "-" in node:
+                    (s, e) = node.split("-")
+                    # in case a hostname is not NUMERIC-NUMERIC,
+                    # we assume it is just a hostname with a - and append it
+                    try:
+                        nl.extend(map(str, range(int(s), int(e) + 1)))
+                    except:
+                        nl.append(node)
+                else:
+                    nl.append(node)
+            # insert into db
+            # check if node is already in DB
+            for node in nl:
+                self.c.execute('''SELECT id
+                                  FROM nids
+                                  WHERE nid = %s''', (node,))
+                r = self.c.fetchone()
+                if r:
+                    nodeid = r[0]
+                else:
+                    self.c.execute('''INSERT INTO nids
+                                      VALUES (NULL,%s)''', (node,))
+                    nodeid = self.c.lastrowid
+                self.c.execute('''INSERT INTO nodelist
+                                  VALUES (NULL,%s,%s)''', (jobkey, nodeid))

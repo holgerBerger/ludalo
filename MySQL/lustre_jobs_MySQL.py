@@ -1,4 +1,8 @@
 
+# MOVED TO MySQLObject !!!!!!!!!!!!!!!!!!
+
+# ALL OBSOLETE
+
 
 # helper to add data to MySQL database, using some preexisting tables
 # create_tables only creates new tables for this routine
@@ -101,7 +105,7 @@ class DB:
 
         # new: we add year to jobid to make it unique
         cyear = time.localtime(end).tm_year 
-        jobid = jobdid + "-" + str(cyear)
+        jobid = jobid + "-" + str(cyear)
 
         #print jobid, start, end, owner, nids, cmd
         # check if job is already in DB

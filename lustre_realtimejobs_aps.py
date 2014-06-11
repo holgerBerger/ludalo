@@ -4,12 +4,14 @@ import sys
 import time
 import pwd
 import _inotify
+import anydbm
 
 sys.path.append("MySQL")
-import lustre_jobs_MySQL as lustre_jobs_db
+import MySQLObject 
 
 # ROOTDIR="/var/spool/torque/server_priv/accounting"
 ROOTDIR = "/home/berger/Lustre/testdata/watch"
+BATCHSERVER="hermit"
 
 
 class Logfile:
@@ -22,10 +24,16 @@ class Logfile:
         self.prefix = prefix
         self.filename = self.path + "/" + filename
         self.f = open(self.filename, "r")
-        self.db = lustre_jobs_db.DB()
+        self.db = MySQLObject.MySQLObject()
+
+        # map resid to job - make it persistent as Bound line is only line containing jobid
+        self.resToJob = anydbm.open('resToJob', 'c')
+        print "init:",self.resToJob
+
         self.read_from_last_pos_to_end()
 
     def getvalue(self, l, key):
+        # get values for specified key from list l of form: key value key value
         try:
             p = l.index(key)
         except ValueError:
@@ -36,7 +44,6 @@ class Logfile:
         '''read from file from current position to current end,
         build lists for inserts and updates and do batch execution'''
 
-        resToJob = {}   # map resid to job
         jobs = {}
 
         jobstarts = {}
@@ -48,8 +55,12 @@ class Logfile:
                 sp = l[:-1].split()
                 jobid = self.getvalue(sp, "batchId")[1:-1]
                 resid = self.getvalue(sp, "resId")
-                resToJob[resid] = jobid
-                jobs[jobid] = {'jobid': jobid}
+                # Cray resid is used in logfile to identfy jobs, this "Bound apid" line is the only line containing batchId
+                # so later on we will map resid to batchId as batchId is used in database, to make it easyer to map
+                # database data to existing jobs
+                self.resToJob[resid] = jobid + BATCHSERVER    # we add batchserver here as cray log files do not contain it!!!
+                self.resToJob.sync()
+                #jobs[jobid] = {'jobid': jobid}
 
             if "Placed apid" in l:
                 sp = l[:-1].split()
@@ -62,17 +73,14 @@ class Logfile:
                 cmd = self.getvalue(sp, "cmd0")[1:-1]
                 nids = self.getvalue(sp, "nids:")
                 try:
-                    jobs[resToJob[resid]]['start'] = start
-                    jobs[resToJob[resid]]['cmd'] = cmd
                     try:
                         # jobs[resToJob[resid]]['owner'] = usermap[uid]
-                        jobs[resToJob[resid]]['owner'] = pwd.getpwuid(int(uid)).pw_name
+                        owner = pwd.getpwuid(int(uid)).pw_name
                     except KeyError:
                         print "unknown userid", uid
-                        jobs[resToJob[resid]]['owner'] = uid
-                    jobs[resToJob[resid]]['nids'] = nids
-                    jobid = resToJob[resid]
-                    jobstarts[jobid] = (jobid, jobs[jobid]['start'], -1, jobs[jobid]['owner'], jobs[jobid]['nids'], jobs[jobid]['cmd'])
+                        owner = uid
+                    jobid = self.resToJob[resid]
+                    self.db.insert_job(jobid, start, -1, owner, nids, cmd)
                 except KeyError:
                     print "job without binding", resid
 
@@ -82,37 +90,16 @@ class Logfile:
                 end = int(time.mktime(time.strptime(send, "%Y-%m-%d %H:%M:%S")))
                 resid = self.getvalue(sp, "resId")
                 try:
-                    jobs[resToJob[resid]]['end'] = end
+                    jobid = self.resToJob[resid]
+                    self.db.update_job(jobid, -1, end, "", "", "")
                 except KeyError:
-                    print "job without start", resid
-                else:
-                    #print jobs[resToJob[resid]]
-                    if not 'start' in jobs[resToJob[resid]]:
-                        print "job not placed", resid
-                    else:
-                        # db.insert_job(**jobs[resToJob[resid]])
-                        jobid = resToJob[resid]
-                        jobends[jobid] = (jobid, jobs[jobid]['start'], jobs[jobid]['end'], jobs[jobid]['owner'], jobs[jobid]['nids'], jobs[jobid]['cmd'])
+                    print "job without binding", resid
+                # be nice and shrink the DB
+                try:
+                    del self.resToJob[resid]
+                except KeyError:
+                    pass # we give a ...
 
-        ### aps end ######
-        inserts = []
-        updates = []
-        for i in jobstarts:
-            if i not in jobends:
-                inserts.append(jobstarts[i])
-            else:
-                inserts.append(jobends[i])
-        for i in jobends:
-            if i not in jobstarts:
-                updates.append(jobends[i])
-
-        # insert into DB - executemany is hard to achieve, as we need to insert users as well
-        for j in inserts:
-            print "insert", j
-            self.db.insert_job(*j)
-        for j in updates:
-            print  "update", j
-            self.db.update_job(*j)
         self.db.commit()
 
     def switch_file(self, filename):
