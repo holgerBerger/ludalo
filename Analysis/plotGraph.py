@@ -5,12 +5,14 @@ Created on 19.02.2014
 '''
 
 import matplotlib
+import math
 matplotlib.use('AGG')
 
-from matplotlib.ticker import FuncFormatter
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
+from pylab import *
 import datetime as dt
+import numpy as np
 import time
 from MovingAverage import MovingAverage
 
@@ -111,7 +113,7 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     dates1 = [dt.datetime.fromtimestamp(ts) for ts in timestamps]
 
     # calculate filter size
-    fsize = int(len(dates1) / 10)
+    fsize = int(math.sqrt(len(dates1)))
     if fsize < 3:
         fsize = 3
 
@@ -133,7 +135,6 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     for item in filterd_RB:
         RB_Values.append(item[1])
 
-    formatter = FuncFormatter(to_percent)
     # Write
     fig = plt.figure(figsize=(16, 10))
     ax1 = fig.add_subplot(2, 3, 1)
@@ -142,13 +143,13 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     plt.ylabel('Speed [MB/s]')
 
     ax2 = fig.add_subplot(2, 3, 2)
-    plt.xlabel('IO size [KB]')
+    plt.xlabel('IO Size [KB]')
     plt.ylabel('IOs')
     #plt.gca().yaxis.set_major_formatter(formatter)
 
     ax3 = fig.add_subplot(2, 3, 3)
     plt.ylabel('Speed [MB/s]')
-    plt.xlabel('IO size [KB]')
+    plt.xlabel('IO Size [KB]')
 
     # Read
     ax4 = fig.add_subplot(2, 3, 4)
@@ -157,40 +158,43 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     plt.ylabel('Speed [MB/s]')
 
     ax5 = fig.add_subplot(2, 3, 5)
-    plt.xlabel('IO size [KB]')
+    plt.xlabel('IO Size [KB]')
     plt.ylabel('IOs')
     #plt.gca().yaxis.set_major_formatter(formatter)
 
     ax6 = fig.add_subplot(2, 3, 6)
     plt.ylabel('Speed [MB/s]')
-    plt.xlabel('IO size [KB]')
+    plt.xlabel('IO Size [KB]')
 
     # Speed
-    ax1.plot(dates1, wbs, label='exact data', lw=1, color='gray')
-    ax1.plot(dates1, WB_Values, label='Filterd data', lw=2, color='green')
+    ax1.plot(dates1, wbs, label='Exact Data', lw=1, color='gray')
+    ax1.plot(dates1, WB_Values, label='Filterd Data', lw=2, color='green')
     ax1.set_title('Write MB')
     ax1.legend(loc='best')
 
-    ax4.plot(dates1, rbs, label='exact data', lw=1, color='gray')
-    ax4.plot(dates1, RB_Values, label='Filterd data', lw=2, color='blue')
+    ax4.plot(dates1, rbs, label='Exact Data', lw=1, color='gray')
+    ax4.plot(dates1, RB_Values, label='Filterd Data', lw=2, color='blue')
     ax4.set_title('Read MB')
     ax4.legend(loc='best')
 
     # Histograms
     bins1 = 30
 
-    ax2.hist(wio, bins=bins1, color='green')
-    ax2.set_title('amount of write io size')
+    ax2.hist(wio[wio > 0], bins=bins1, color='green')
+    ax2.set_title('Histogram of Write IO Size')
 
-    ax5.hist(rio, bins=bins1, color='blue')
-    ax5.set_title('amount of read io size')
+    ax5.hist(rio[rio > 0], bins=bins1, color='blue')
+    ax5.set_title('Histogram of Read IO Size')
 
     # scatter plots
-    ax3.scatter(wio, wbs, color='green', s=1)
-    ax3.set_title('scatter plots write')
+    print np.average(wio[wio > 0])
+    ax3.hexbin(wio[wio > 0], wbs[wbs > 0], bins='log', mincnt=1)
+    # ax3.scatter(wio, wbs, color='green', s=1)
+    ax3.set_title('Scatter Plots Write')
 
-    ax6.scatter(rio, rbs, color='blue', s=1)
-    ax6.set_title('scatter plots read')
+    ax6.hexbin(rio[rio > 0], rbs[rbs > 0], bins='log', mincnt=1)
+    #ax6.scatter(rio[rio > 0], rbs[rbs > 0], color='blue', s=1)
+    ax6.set_title('Scatter Plots Read')
 
     # show data plot
     plt.tight_layout()

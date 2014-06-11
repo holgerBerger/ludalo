@@ -6,18 +6,17 @@ Created on 18.02.2014
 '''
 
 import sys
-sys.path.append("../Analysis")
+sys.path.append("/home/uwe/projects/ludalo/Analysis")
 import time
 import datetime
 import MySQLdb
 from threading import Thread, Lock
 from multiprocessing.pool import Pool
 from ConfigParser import ConfigParser
-from User import User
-from Job import Job
+#from User import User
+#from Job import Job
 import argparse
 import numpy as np
-
 from plotGraph import plotGraph, plotJob
 
 
@@ -418,6 +417,7 @@ class readDB(object):
     def print_Filesystem(self, window, fs='univ_1'):
         # used in main
         # getting all informations out of the database
+
         query = ('''
                 select
                   timestamps.c_timestamp, sum(wb), sum(wio), sum(rb), sum(rio)
@@ -465,10 +465,12 @@ class readDB(object):
         rio = values_np[:, 4]
         rio_volume_in_kb = np.nan_to_num((rbs / rio) / 1024)
 
+        path = '/var/www/ludalo-web/calc/' + str(fs)
         plotJob(timestamps,
                     rbs_mb_per_s, rio_volume_in_kb,
                     wbs_mb_per_s, wio_volume_in_kb,
-                    fs)
+                    path)
+
         print 'done'
         exit()
 #------------------------------------------------------------------------------
@@ -494,8 +496,8 @@ class readDB(object):
         for row in rows:
             jobID_list.append(row[0])
 
-        user = User(testUser)
-        testjob = Job(jobID_list[0])
+        #user = User(testUser)
+        #testjob = Job(jobID_list[0])
         # (start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName)
         job_valuse = db.get_sum_nids_to_job(jobID_list[0])
         timeMapRB = job_valuse[2]
@@ -503,9 +505,142 @@ class readDB(object):
         timeMapRIO = job_valuse[4]
         timeMapWIO = job_valuse[5]
         nidName = job_valuse[6]
-        testjob.add_Values(timeMapRB, timeMapWB,
-                            timeMapRIO, timeMapWIO, nidName)
-        user.addJob(testjob)
+        #testjob.add_Values(timeMapRB, timeMapWB,
+        #                    timeMapRIO, timeMapWIO, nidName)
+        #user.addJob(testjob)
+#------------------------------------------------------------------------------
+
+    def getJobID(self, jobName):
+        query = '''
+        select
+            id
+        from
+            jobs
+        where
+            jobid = %s'''
+
+        self.c.execute(query, (str(jobName),))
+        rows = self.c.fetchall()
+
+        if rows:
+            return rows[0][0]
+        else:
+            return None
+#------------------------------------------------------------------------------
+
+    def job_running(self, jobID):
+        query = '''
+        select
+            t_end
+        from
+            jobs
+        where
+            id = %s '''
+        self.c.execute(query, (jobID,))
+        rows = self.c.fetchall()
+
+        if rows[0][0] < 0:
+            return True
+        else:
+            return False
+#------------------------------------------------------------------------------
+
+    def print_job(self, jobName):
+        # test if job exist
+        jobID = self.getJobID(jobName)
+        print 'job id ', jobID
+
+        if not jobID:
+            print '404'
+            exit(1)
+
+        # test if job running
+        job_start_end = self.get_job_start_end(jobID)
+        print 'start end ', job_start_end
+
+        jobRunning = self.job_running(jobID)
+        print 'job Running? ', jobRunning
+
+        if jobRunning:
+            job_end = int(time.time())
+        else:
+            job_end = job_start_end[1]
+
+        print 'job_end ', job_end
+
+        job_start = job_start_end[0]
+        print 'job_start ', job_start
+        # get job data
+        option = (jobID, job_start, job_end)
+
+        query = '''
+            select
+                timestamps.c_timestamp,
+                sum(samples_ost.wb),
+                sum(samples_ost.wio),
+                sum(samples_ost.rb),
+                sum(samples_ost.rio)
+            from
+                nids
+                    join
+                nodelist ON nids.id = nodelist.nid
+                    join
+                jobs ON jobs.id = nodelist.job
+                    and jobs.id = %s
+                    join
+                samples_ost ON nids.id = samples_ost.nid
+                    join
+                timestamps ON timestamps.id = samples_ost.timestamp_id,
+                filesystems
+            where
+                timestamps.c_timestamp between %s and %s
+            group by timestamps.c_timestamp
+        '''
+
+        values_np = self.query_to_npArray(query, option)
+
+        query = ''' select
+                        c_timestamp
+                    from
+                        timestamps
+                    where
+                        c_timestamp
+                            between
+                                %s and %s
+                                '''
+        allTimestamps = self.query_to_npArray(query, (job_start, job_end))
+        values_np = self.np_fillAndSort(values_np, allTimestamps)
+
+        # transform data
+        timestamps = values_np[:, 0]
+        wbs = values_np[:, 1]
+        wbs_per_second = wbs / 60
+        wbs_kb_per_s = wbs_per_second / 1024
+        wbs_mb_per_s = wbs_kb_per_s / 1024
+        wio = values_np[:, 2]
+        wio_volume_in_kb = np.nan_to_num((wbs / wio) / 1024)
+
+        rbs = values_np[:, 3]
+        rbs_per_second = rbs / 60
+        rbs_kb_per_s = rbs_per_second / 1024
+        rbs_mb_per_s = rbs_kb_per_s / 1024
+        rio = values_np[:, 4]
+        rio_volume_in_kb = np.nan_to_num((rbs / rio) / 1024)
+
+        # print job data
+        if jobRunning:
+            path = '/var/www/ludalo-web/calc/jobs/' + str(jobName)
+        else:
+            path = '/var/www/ludalo-web/calc/jobs/' + str(jobName)
+
+        plotJob(timestamps,
+                    rbs_mb_per_s, rio_volume_in_kb,
+                    wbs_mb_per_s, wio_volume_in_kb,
+                    path)
+
+        # exit
+        print 'done'
+        exit()
 #------------------------------------------------------------------------------
 
     def query_to_npArray(self, query, options=None):
@@ -523,6 +658,7 @@ class readDB(object):
         # by 'fromiter' in other words, to restore original dimensions
         # of the results set
         num_rows = int(self.c.rowcount)
+        #print num_rows
 
         # recast this nested tuple to a python list and flatten it
         # so it's a proper iterable:
@@ -564,7 +700,7 @@ def print_job(job):
 
     job = check_job[0]
     db.explainJob(job)
-    jobObject = Job(job)
+    #jobObject = Job(job)
 
     start_end = db.get_job_start_end(job)
 
@@ -626,7 +762,7 @@ def print_job(job):
         title = ('Job_' + str(job_info[0]) +
                  '_NoN_' + str(len(nids)) +
                  '__Owner_' + str(job_info[1]))
-        jobObject.setTitle(title)
+        #jobObject.setTitle(title)
         print 'Plot: ', title
 
         timestamps = values_np[:, 0]
@@ -655,7 +791,8 @@ if __name__ == '__main__':
     time_start = time.time()
 #------------------------------------------------------------------------------
     db = readDB()
-
+    fir = open('0_test', 'wb+')
+    fir.close()
     parser = argparse.ArgumentParser()
     parser.add_argument("-u", "--user",
                         help="print one specific user", type=str)
@@ -682,11 +819,11 @@ if __name__ == '__main__':
         #exit()
     elif args.job:
         print 'job=', args.job
-        print_job(args.job)
+        db.print_job(args.job)
         #exit()
     else:
         parser.print_help()
-        exit()
+        exit(1)
 
 #------------------------------------------------------------------------------
     time_end = time.time()

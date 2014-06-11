@@ -105,7 +105,7 @@ class MySQLObject(object):
     def closeConnection(self):
         ''' Closing db connection '''
         if self.insertfile:
-            print "completing insert by reading previously created CSV file...",
+            print "completing insert by reading previously created CSV file..."   ,
             sys.stdout.flush()
             t1 = time.time()
             self.c.execute("""load data infile '/tmp/samples_ost.txt' into table samples_ost COLUMNS TERMINATED BY ',';""")
