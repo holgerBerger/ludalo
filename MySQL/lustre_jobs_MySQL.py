@@ -9,7 +9,7 @@
 
 import MySQLdb
 from ConfigParser import ConfigParser
-import sys
+import sys, time
 
 
 class DB:
@@ -75,21 +75,37 @@ class DB:
             pass
 
     def update_job(self, jobid, start, end, owner, nids, cmd):
-        '''insert end time for job started before'''
-        self.c.execute('''
-                        UPDATE
-                            jobs
-                        SET
-                            t_end=%s
-                        WHERE
-                            jobid=%s
-                        AND
-                            t_start=%s''', (end, jobid, start))
+        '''insert end time for job started before
+            jobid is: jobid.batchserver-year
+            jobid.batchserver must be built from caller, year is appended here.
+            for cray, batchserver has to come from config file, is not in alps log file
+            start, ownder, nids might contain nonsense, do not use!
+        '''
+        cyear = time.localtime(end).tm_year 
+        for dbjobid in [ jobid+"-"+str(cyear), jobid+"-"+str(cyear-1), jobid ]:
+            # old self.c.execute(''' UPDATE jobs SET t_end=%s WHERE jobid=%s AND t_start=%s''', (end, jobid, start))
+            self.c.execute('''
+                            UPDATE
+                                jobs
+                            SET
+                                t_end=%s
+                            WHERE
+                                jobid=%s
+                            ''', (end, dbjobid))
+            if self.c.rowcount>0:
+                return
+
 
     def insert_job(self, jobid, start, end, owner, nids, cmd):
         '''insert complete job with all dependencies'''
+
+        # new: we add year to jobid to make it unique
+        cyear = time.localtime(end).tm_year 
+        jobid = jobdid + "-" + str(cyear)
+
         #print jobid, start, end, owner, nids, cmd
         # check if job is already in DB
+        #  OLD self.c.execute(''' SELECT jobid FROM jobs WHERE jobid = %s AND t_start = %s''', (jobid, start))
         self.c.execute('''
                         SELECT
                             jobid
@@ -97,8 +113,7 @@ class DB:
                             jobs
                         WHERE
                             jobid = %s
-                        AND
-                            t_start = %s''', (jobid, start))
+                        ''', (jobid, ))
         
         if not self.c.fetchone():
             # check if user is already in DB
