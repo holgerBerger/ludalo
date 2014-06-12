@@ -30,6 +30,9 @@ class MySQLObject(object):
         self.hostfile = self.config.get("database", "hosts")
         self.pattern = self.config.get("database", "pattern")
         self.replace = self.config.get("database", "replace")
+
+        self.batchpostfix = self.config.get("batchsystem", "postfix")
+
         self.conn = MySQLdb.connect(passwd=self.dbpassword, db=self.dbname, host=self.dbhost, port=self.dbport, user=self.dbuser)
         self.c = self.conn.cursor()
 
@@ -546,7 +549,7 @@ class MySQLObject(object):
         '''insert complete job with all dependencies'''
 
         # new: we add year to jobid to make it unique
-        cyear = time.localtime(end).tm_year 
+        cyear = time.localtime(start).tm_year 
         jobid = jobid + "-" + str(cyear)
 
         #print jobid, start, end, owner, nids, cmd

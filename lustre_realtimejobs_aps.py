@@ -11,7 +11,6 @@ import MySQLObject
 
 # ROOTDIR="/var/spool/torque/server_priv/accounting"
 ROOTDIR = "/home/berger/Lustre/testdata/watch"
-BATCHSERVER="hermit"
 
 
 class Logfile:
@@ -58,7 +57,7 @@ class Logfile:
                 # Cray resid is used in logfile to identfy jobs, this "Bound apid" line is the only line containing batchId
                 # so later on we will map resid to batchId as batchId is used in database, to make it easyer to map
                 # database data to existing jobs
-                self.resToJob[resid] = jobid + BATCHSERVER    # we add batchserver here as cray log files do not contain it!!!
+                self.resToJob[resid] = jobid + self.db.batchpostfix    # we add batchserver here as cray log files do not contain it!!!
                 self.resToJob.sync()
                 #jobs[jobid] = {'jobid': jobid}
 

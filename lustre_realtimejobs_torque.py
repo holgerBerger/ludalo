@@ -32,31 +32,29 @@ class Logfile:
         b=self.f.read()
         for l in b.split("\n"):
             sp = l[:-1].split(";")
-            jobid=sp[2]
-            datestr=sp[0]
             if len(sp)>1 and sp[1] in ["S","E","A","D"]:   # A ABORT / D delete do not always produce E record
+              jobid=sp[2]
+              datestr=sp[0]
               if sp[1] == "S":
+                  fi = sp[3].split()
+                  for i in fi:
+                    if i.startswith("start"):
+                      start=int(i.split('=')[1])
+                    if i.startswith("user"):
+                      owner=i.split('=')[1]
+                    if i.startswith("exec_host"):
+                      l=[]
+                      for n in [x.split('/')[0] for x in  i.split('=')[1].split("+")]:
+                        if n not in l:
+                          l.append(n)
+                      hosts=",".join(l)
                   end=-1
                   jobstarts[jobid] = (jobid, start, end, owner, hosts, "") 
               else:
                   end=int(time.mktime(time.strptime(datestr,"%m/%d/%Y %H:%M:%S")))
-                  if sp[1] == 'E':
-                      fi = sp[3].split()
-                      for i in fi:
-                        if i.startswith("start"):
-                          start=i.split('=')[1]
-                        if i.startswith("user"):
-                          owner=i.split('=')[1]
-                        if i.startswith("exec_host"):
-                          l=[]
-                          for n in [x.split('/')[0] for x in  i.split('=')[1].split("+")]:
-                            if n not in l:
-                              l.append(n)
-                          hosts=",".join(l)
-                  else:     # A or D
-                      start = -1
-                      owner = ""
-                      hosts = ""
+                  start = -1
+                  owner = ""
+                  hosts = ""
                   jobends[jobid] = (jobid, start, end, owner, hosts, "")
 
         inserts = []
@@ -66,9 +64,9 @@ class Logfile:
             if i not in jobends:
                 inserts.append(jobstarts[i])
             else:
-                tmp = jobstarts[i]
+                tmp = list(jobstarts[i])
                 tmp[2] = jobends[i][2]
-                inserts.append(tmp)  
+                inserts.append(tuple(tmp))
         for i in jobends:
             if i not in jobstarts:
                 updates.append(jobends[i])   
