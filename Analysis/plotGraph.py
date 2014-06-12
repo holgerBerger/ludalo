@@ -194,6 +194,11 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     plot_rio = np.append([rio > 0], 1)
     plot_rbs = np.append([rbs > 0], 1)
 
+    print plot_wio, '\n'
+    print plot_wbs, '\n'
+    print plot_rio, '\n'
+    print plot_rbs, '\n'
+
     ax3.hexbin(plot_wio, plot_wbs, bins='log', mincnt=1)
     # ax3.scatter(wio, wbs, color='green', s=1)
     ax3.set_title('Scatter Plots Write')
