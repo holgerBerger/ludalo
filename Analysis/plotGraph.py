@@ -188,6 +188,9 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
 
     # scatter plots
     print np.average(wio[wio > 0])
+    print np.average(wbs[wbs > 0])
+    print np.average(rio[rio > 0])
+    print np.average(rbs[rbs > 0])
     ax3.hexbin(wio[wio > 0], wbs[wbs > 0], bins='log', mincnt=1)
     # ax3.scatter(wio, wbs, color='green', s=1)
     ax3.set_title('Scatter Plots Write')
