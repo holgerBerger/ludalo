@@ -95,10 +95,13 @@ def worker(srv):
 socket.setdefaulttimeout(TIMEOUT)
 
 for srv in servers:
-    rpcs[srv] = xmlrpclib.ServerProxy('http://' + srv + ':8000')
-    types[srv] = rpcs[srv].get_type()
-    hostnames[srv] = rpcs[srv].get_hostname()
-    print "connected to %s running a %s" % (hostnames[srv], types[srv])
+    try:
+        rpcs[srv] = xmlrpclib.ServerProxy('http://' + srv + ':8000')
+        types[srv] = rpcs[srv].get_type()
+        hostnames[srv] = rpcs[srv].get_hostname()
+        print "connected to %s running a %s" % (hostnames[srv], types[srv])
+    except socket.error:
+        print >>sys.stderr,"could not connect to ",srv
 
 while True:
     sample = time.time()
