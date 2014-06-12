@@ -195,6 +195,7 @@ class MySQLObject(object):
                      ')' +
                      'VALUES (%s,%s,%s,%s)')
         self.c.execute(exeString, collection)
+        self.conn.commit() # added
 #------------------------------------------------------------------------------
 
     def _generateDatabase(self):
@@ -332,6 +333,7 @@ class MySQLObject(object):
                     filesystems (
                         id serial primary key ,
                         filesystem varchar(32)) engine=myisam''')
+        self.conn.commit()  # added
 #------------------------------------------------------------------------------
         # create INDEX if not exists
         try:
@@ -389,6 +391,8 @@ class MySQLObject(object):
                               nids_index ON nids (nid);''')
         except:
             pass
+
+        self.conn.commit()  # added
 #------------------------------------------------------------------------------
 
     def check_version(self):
@@ -415,6 +419,7 @@ class MySQLObject(object):
             return True
         else:
             self.c.execute(''' INSERT INTO hashes VALUES (%s)''', (hexdigest,))
+            self.conn.commit()  # added
             return False
 #------------------------------------------------------------------------------
 
@@ -433,6 +438,7 @@ class MySQLObject(object):
             insert_string.append(tup[3])  # wb
             self.c.execute(''' INSERT INTO ost_values VALUES (NULL, %s,%s,%s,%s,%s,%s,%s)
                     ''', insert_string)
+            self.conn.commit()   # added
 #------------------------------------------------------------------------------
 
     def insert_timestamp(self, timestamp):
@@ -440,6 +446,7 @@ class MySQLObject(object):
             self.c.execute('''INSERT INTO timestamps VALUES (NULL,%s)''',
                                 (timestamp,))
             self.timestamps[timestamp] = self.c.lastrowid
+            self.conn.commit()   # added
 #------------------------------------------------------------------------------
 
     def insert_source(self, source, fsName):
@@ -455,6 +462,7 @@ class MySQLObject(object):
             self.c.execute('''INSERT INTO targets VALUES (NULL,%s,%s)''',
                                 (source, fsid))
             self.sources[source] = self.c.lastrowid
+        self.conn.commit()  # added
 #------------------------------------------------------------------------------
 
     def insert_server(self, server, stype):
@@ -465,6 +473,7 @@ class MySQLObject(object):
                                 (server, stype,))
             self.servermap[server] = self.c.lastrowid
             self.servertype[server] = stype
+            self.conn.commit()  # added
 #------------------------------------------------------------------------------
 
     def add_nid_server(self, server, nid_name):
@@ -477,6 +486,7 @@ class MySQLObject(object):
         if nid not in self.globalnidmap:
             self.c.execute('''INSERT INTO nids VALUES (NULL,%s)''', (nid,))
             self.globalnidmap[nid] = self.c.lastrowid
+            self.conn.commit()  # added
         if nid not in self.per_server_nids[server]:
             self.per_server_nids[server].append(nid)
 #------------------------------------------------------------------------------
@@ -495,10 +505,12 @@ class MySQLObject(object):
                 self.insertfile.write("NULL,%d,%d,%d,%s,%s,%s,%s\n" % tuple(v))
         else:
             self.c.executemany('''INSERT INTO samples_ost VALUES (NULL,%s,%s,%s,%s,%s,%s,%s)''', il_ost)
+            self.conn.commit()  # added
 #------------------------------------------------------------------------------
 
     def insert_mdt_samples(self, il_mdt):
         self.c.executemany('''INSERT INTO samples_mdt VALUES (NULL,%s,%s,%s,%s)''', il_mdt)
+        self.conn.commit()  # added
 #------------------------------------------------------------------------------
 
     def insert_SERVER_values(self, mds_name, REQS, timeStamp, s_type):
@@ -513,6 +525,7 @@ class MySQLObject(object):
                                         (NULL,%s,%s,%s,NULL,%s)''',
                                         # time  typ  mdsID    values
                                         (timeid, s_type, mdsID, lastID))
+        self.conn.commit()  # added
 
     # convenience from old job abstraction layer
     def close(self):
@@ -541,7 +554,9 @@ class MySQLObject(object):
                             WHERE
                                 jobid=%s
                             ''', (end, dbjobid))
+            
             if self.c.rowcount>0:
+				self.conn.commit()  # added
                 return
 
 
@@ -609,3 +624,4 @@ class MySQLObject(object):
                     nodeid = self.c.lastrowid
                 self.c.execute('''INSERT INTO nodelist
                                   VALUES (NULL,%s,%s)''', (jobkey, nodeid))
+            self.conn.commit()  # added
