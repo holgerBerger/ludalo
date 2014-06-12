@@ -791,7 +791,6 @@ if __name__ == '__main__':
     time_start = time.time()
 #------------------------------------------------------------------------------
     db = readDB()
-    fir = open('0_test', 'wb+')
     fir.close()
     parser = argparse.ArgumentParser()
     parser.add_argument("-u", "--user",
