@@ -187,10 +187,11 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     ax5.set_title('Histogram of Read IO Size')
 
     # scatter plots
-    print np.average(wio[wio > 0])
-    print np.average(wbs[wbs > 0])
-    print np.average(rio[rio > 0])
-    print np.average(rbs[rbs > 0])
+    print len(wio[wio > 0])
+    print len(wbs[wbs > 0])
+    print len(rio[rio > 0])
+    print len(rbs[rbs > 0])
+
     ax3.hexbin(wio[wio > 0], wbs[wbs > 0], bins='log', mincnt=1)
     # ax3.scatter(wio, wbs, color='green', s=1)
     ax3.set_title('Scatter Plots Write')
