@@ -71,7 +71,7 @@ class Logfile:
                 #  sstart = sp[0] + " " + sp[1][:-1]
                 #  start = int( time.mktime( time.strptime(sstart, "%Y-%m-%d %H:%M:%S") ) )
                 # NEW time format after syslog 2014-06-12T16:01:59.829416+02:00
-                start = calendar.timegm(dateutil.parser.parse(sp[0]))
+                start = calendar.timegm(dateutil.parser.parse(sp[0]).utctimetuple())
                 resid = self.getvalue(sp, "resId")
                 uid = self.getvalue(sp, "uid")
                 cmd = self.getvalue(sp, "cmd0")[1:-1]
@@ -90,8 +90,11 @@ class Logfile:
 
             if "Released apid" in l:
                 sp = l[:-1].split()
-                send = sp[0] + " " + sp[1][:-1]
-                end = int(time.mktime(time.strptime(send, "%Y-%m-%d %H:%M:%S")))
+                # OLD format
+                # send = sp[0] + " " + sp[1][:-1]
+                # end = int(time.mktime(time.strptime(send, "%Y-%m-%d %H:%M:%S")))
+                # NEW format
+                end = calendar.timegm(dateutil.parser.parse(sp[0]).utctimetuple())
                 resid = self.getvalue(sp, "resId")
                 try:
                     jobid = self.resToJob[resid]
