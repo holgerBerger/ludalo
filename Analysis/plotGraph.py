@@ -188,11 +188,11 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
 
     # scatter plots
 
-    plot_wio = np.append([wio > 0], 1)
-    plot_wbs = np.append([wbs > 0], 1)
+    plot_wio = [wio > 0]
+    plot_wbs = [wbs > 0]
 
-    plot_rio = np.append([rio > 0], 1)
-    plot_rbs = np.append([rbs > 0], 1)
+    plot_rio = [rio > 0]
+    plot_rbs = [rbs > 0]
 
     print plot_wio, '\n'
     print plot_wbs, '\n'
