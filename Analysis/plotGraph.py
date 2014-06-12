@@ -179,21 +179,20 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
 
     # Histograms
     bins1 = 30
-
-    ax2.hist(wio[wio > 0], bins=bins1, color='green')
-    ax2.set_title('Histogram of Write IO Size')
-
-    ax5.hist(rio[rio > 0], bins=bins1, color='blue')
-    ax5.set_title('Histogram of Read IO Size')
-
-    # ------ scatter plots --------
-
     # avoid arrays with only one elemet. important!
     plot_wio = np.append(wio[wio > 0], 1)
     plot_wbs = np.append(wbs[wbs > 0], 1)
 
     plot_rio = np.append(rio[rio > 0], 1)
     plot_rbs = np.append(rbs[rbs > 0], 1)
+
+    ax2.hist(plot_wio, bins=bins1, color='green')
+    ax2.set_title('Histogram of Write IO Size')
+
+    ax5.hist(plot_rio, bins=bins1, color='blue')
+    ax5.set_title('Histogram of Read IO Size')
+
+    # ------ scatter plots --------
 
     ax3.hexbin(plot_wio, plot_wbs, bins='log', mincnt=1)
     # ax3.scatter(wio, wbs, color='green', s=1)
