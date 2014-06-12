@@ -77,6 +77,7 @@ class Logfile:
                 cmd = self.getvalue(sp, "cmd0")[1:-1]
                 nids = self.getvalue(sp, "nids:")
                 try:
+                    # FIXME need way to handel usermapping when machine does not have user db
                     try:
                         # jobs[resToJob[resid]]['owner'] = usermap[uid]
                         owner = pwd.getpwuid(int(uid)).pw_name
