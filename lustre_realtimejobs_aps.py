@@ -31,7 +31,7 @@ class Logfile:
 
         # map resid to job - make it persistent as Bound line is only line containing jobid
         self.resToJob = anydbm.open('resToJob', 'c')
-        print "init:",self.resToJob
+        # print "init:",self.resToJob
 
         self.read_from_last_pos_to_end()
 
@@ -51,9 +51,20 @@ class Logfile:
 
         jobstarts = {}
         jobends = {}
-        b = self.f.read()
+
+#        b = self.f.read()
+#        ### aps #######
+#        for l in b.split("\n"):
+
+        # code to ignore incomplete lines, ignore garbage and seek back to last end of line
+        # in case of single incomplete line, it is supposed to work as well
+        lines = self.f.readlines()
+        if len(lines)==0: return
+        if lines[-1][-1] != '\n':
+            self.f.seek(0-len(lines[-1]),1)    # seek back to last end of line
+            del lines[-1]
         ### aps #######
-        for l in b.split("\n"):
+        for l in lines:
             if "Bound apid" in l:
                 sp = l[:-1].split()
                 jobid = self.getvalue(sp, "batchId")[1:-1]
@@ -77,7 +88,7 @@ class Logfile:
                 cmd = self.getvalue(sp, "cmd0")[1:-1]
                 nids = self.getvalue(sp, "nids:")
                 try:
-                    # FIXME need way to handel usermapping when machine does not have user db
+                    # FIXME need way to handle usermapping when machine does not have user db
                     try:
                         # jobs[resToJob[resid]]['owner'] = usermap[uid]
                         owner = pwd.getpwuid(int(uid)).pw_name
