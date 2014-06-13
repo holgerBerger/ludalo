@@ -97,6 +97,7 @@ class Logfile:
                         owner = uid
                     jobid = self.resToJob[resid]
                     self.db.insert_job(jobid, start, -1, owner, nids, cmd)
+                    print "jobstart:",jobid,"owner:",owner,len(nids),"nodes"
                 except KeyError:
                     print "job without binding", resid
 
