@@ -63,7 +63,7 @@ def worker(srv):
                    nids[srv][0] + ";" +
                    ";".join(nids[srv][1:]) + "\n")
         db.readHead(line)
-        print " Time to insert Head [sec]:", (time.time() - t_insert)
+        print "  time to insert header [sec]:", (time.time() - t_insert)
         iolock.release()
     oldnids[srv] = nids[srv]
     t_insert = time.time()
@@ -88,7 +88,7 @@ def worker(srv):
         else:
             (wb, rb) = bws.setdefault(srv, (0, 0))
             bws[srv] = (wb + int(vs[1]), rb + int(vs[3]))
-    print " Time to insert Data [sec]:", (time.time() - t_insert)
+    print "  time to insert data   [sec]:", (time.time() - t_insert)
 
 #------------------------------------------------------------------------------
 
