@@ -5,7 +5,7 @@
 # tested with lustre 1.8.4
 # has to work with python 2.4 for redhat 5.x based OSS
 #
-# collect nr of IO requests and size of IO every when asked
+# collect nr of IO requests and size of IO when asked
 # and return as list via RPC, only if any data, otherwise empty list.
 # samples are tuples of 4 values #read io request,read bytes,#write io requests, written bytes
 # name of ost; sample for ost; sampel for 1. nid; sample for 2. nid; ...
@@ -270,17 +270,24 @@ def rpc_server(version, servertype):
 
 
 if __name__ == "__main__":
-  line = open("/proc/fs/lustre/version","r").readline()[:-1]
-  version = line.split()[1]
+    while True: 
+      # wait until lustre is mounted, otherwise wait 60s
+      try:
+        line = open("/proc/fs/lustre/version","r").readline()[:-1]
+        version = line.split()[1]
+      except:
+        print "no lustre mounted. Waiting..." 
+        time.sleep(60)
+        continue
 
-  servertype = ""
-  if os.path.exists("/proc/fs/lustre/mds"): servertype="mds"
-  if os.path.exists("/proc/fs/lustre/ost"): servertype="oss"
+      servertype = ""
+      if os.path.exists("/proc/fs/lustre/mds"): servertype="mds"
+      if os.path.exists("/proc/fs/lustre/ost"): servertype="oss"
 
-  if servertype == "":
-    print "unknown server type!"
-    sys.exit()
+      if servertype == "":
+        print "unknown server type!"
+        sys.exit()
 
-  print "Running on %s of lustre version %s" % (servertype, version)
-  rpc_server(version, servertype)
-  
+      print "Running on %s of lustre version %s" % (servertype, version)
+      rpc_server(version, servertype)
+       
