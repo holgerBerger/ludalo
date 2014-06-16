@@ -15,6 +15,7 @@ import MySQLObject
 
 # ROOTDIR="/var/spool/torque/server_priv/accounting"
 ROOTDIR = "/home/berger/Lustre/testdata/watch"
+FILEPREFIX="apssched"
 
 
 class Logfile:
@@ -97,7 +98,7 @@ class Logfile:
                         owner = uid
                     jobid = self.resToJob[resid]
                     self.db.insert_job(jobid, start, -1, owner, nids, cmd)
-                    print "jobstart:",jobid,"owner:",owner,len(nids),"nodes"
+                    print "jobstart:",jobid,"owner:",owner
                 except KeyError:
                     print "job without binding", resid
 
@@ -142,9 +143,9 @@ def mainloop():
     fd = _inotify.create()
     wddir = _inotify.add(fd, ROOTDIR, _inotify.CREATE | _inotify.MODIFY)
 
-    todayfile = "apsched" + time.strftime("%Y%m%d")
+    todayfile = FILEPREFIX + time.strftime("%Y%m%d")
     # todayfile = "apsched20131221"
-    lf = Logfile("apsched", ROOTDIR, todayfile)
+    lf = Logfile(FILEPREFIX, ROOTDIR, todayfile)
 
     while True:
     # blocking wait

@@ -285,8 +285,9 @@ if __name__ == "__main__":
       if os.path.exists("/proc/fs/lustre/ost"): servertype="oss"
 
       if servertype == "":
-        print "unknown server type!"
-        sys.exit()
+        print "unknown server type. Waiting..."
+        time.sleep(60)
+        continue
 
       print "Running on %s of lustre version %s" % (servertype, version)
       rpc_server(version, servertype)

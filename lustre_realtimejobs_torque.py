@@ -50,7 +50,7 @@ class Logfile:
                       hosts=",".join(l)
                   end=-1
                   jobstarts[jobid] = (jobid, start, end, owner, hosts, "") 
-                  print "jobstart:",jobid,"owner:",owner,len(hosts),"nodes"
+                  print "jobstart:",jobid,"owner:",owner,len(l),"nodes"
               else:
                   end=int(time.mktime(time.strptime(datestr,"%m/%d/%Y %H:%M:%S")))
                   start = -1
