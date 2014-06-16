@@ -34,6 +34,7 @@ class MySQLObject(object):
         self.batchpostfix = self.config.get("batchsystem", "postfix")
 
         self.conn = MySQLdb.connect(passwd=self.dbpassword, db=self.dbname, host=self.dbhost, port=self.dbport, user=self.dbuser)
+        self.conn.autocommit(True)   # we enable autocommit to avoid locking issues
         self.c = self.conn.cursor()
 
         self.globalnidmap = {}
