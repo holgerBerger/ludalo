@@ -33,11 +33,32 @@ class Logfile:
         # map resid to job - make it persistent as Bound line is only line containing jobid
         self.resToJob = anydbm.open('resToJob', 'c')
         # print "init:",self.resToJob
+        self.usermap = {}
+        self.readusermap()
 
         self.read_from_last_pos_to_end()
 
+    def readusermap(self):
+        '''read mapping file in format of /etc/passwd'''
+        f = open(self.db.usermapping,"r")
+        for l in f:
+            sp = l.split(":")
+            self.usermap(sp[2]) = sp[0]
+        f.close()
+        self.usermapage = time.time()
+
+    def mapuser(self, uid):
+        ''' map uid to username, read mapping file at most every 5 minutes, if a user is not known
+            try to read mapping file, if still not known, return uid'''
+        if uid not in self.usermap and time.time()>self.usermapage+300:   # read only every 5 minutes in case of unknown users
+            self.readusermap()
+        if uid not in self.usermap:
+            return uid
+        else:
+            return self.usermap[uid]
+
     def getvalue(self, l, key):
-        # get values for specified key from list l of form: key value key value
+        ''' get values for specified key from list l of form: key value key value'''
         try:
             p = l.index(key)
         except ValueError:
@@ -89,13 +110,11 @@ class Logfile:
                 cmd = self.getvalue(sp, "cmd0")[1:-1]
                 nids = self.getvalue(sp, "nids:")
                 try:
-                    # FIXME need way to handle usermapping when machine does not have user db
                     try:
-                        # jobs[resToJob[resid]]['owner'] = usermap[uid]
                         owner = pwd.getpwuid(int(uid)).pw_name
                     except KeyError:
-                        print "unknown userid", uid
-                        owner = uid
+                        # in case /etc/passwd does not contain user, we check file mapping
+                        owner = self.mapuser(uid)
                     jobid = self.resToJob[resid]
                     self.db.insert_job(jobid, start, -1, owner, nids, cmd)
                     print "jobstart:",jobid,"owner:",owner
