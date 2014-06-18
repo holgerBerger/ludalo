@@ -521,9 +521,7 @@ class readDB(object):
 
         self.c.execute(query, (str(jobName),))
         rows = self.c.fetchall()
-        print rows
         if rows:
-
             return rows[0][0]
         else:
             return None
