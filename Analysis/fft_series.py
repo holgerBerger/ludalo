@@ -27,9 +27,9 @@ def get_Spectrum(y, Fs=60.0):
     T = n / Fs
     frq = k / T  # two sides frequency range
     frq = frq[range(n / 2)]  # one side frequency range
+    print 'Base frequency:', Fs / n
     Y = fft(y) / n  # fft computing and normalization
     Y = Y[range(n / 2)]
-
     # frq_amp_list = [(freq, ampli), (freq, ampli), (freq, ampli)]
     frq_amp_list = zip(frq, abs(Y))
 
