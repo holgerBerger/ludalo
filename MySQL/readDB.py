@@ -643,7 +643,7 @@ class readDB(object):
 
         # exit
         print '----- Spectrum ----'
-        print get_Spectrum(wbs)
+        print get_Spectrum(wbs_mb_per_s)
         print '----- Spectrum ----'
         print 'done'
         exit()
