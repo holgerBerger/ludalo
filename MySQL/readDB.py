@@ -14,7 +14,7 @@ from multiprocessing.pool import Pool
 from ConfigParser import ConfigParser
 import argparse
 import numpy as np
-from plotGraph import plotGraph, plotJob
+
 
 # Owen imports
 sys.path.append("/home/uwe/projects/ludalo/Analysis")
@@ -22,7 +22,7 @@ sys.path.append("/home/uwe/projects/ludalo/Analysis")
 #from User import User
 from Job import Job
 from fft_series import get_Spectrum
-
+from plotGraph import plotGraph, plotJob
 
 class readDB(object):
 
