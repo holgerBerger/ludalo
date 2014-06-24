@@ -6,18 +6,22 @@ Created on 18.02.2014
 '''
 
 import sys
-sys.path.append("/home/uwe/projects/ludalo/Analysis")
 import time
 import datetime
 import MySQLdb
 from threading import Thread, Lock
 from multiprocessing.pool import Pool
 from ConfigParser import ConfigParser
-#from User import User
-#from Job import Job
 import argparse
 import numpy as np
 from plotGraph import plotGraph, plotJob
+
+# Owen imports
+sys.path.append("/home/uwe/projects/ludalo/Analysis")
+
+#from User import User
+from Job import Job
+from fft_series import get_Spectrum
 
 
 class readDB(object):
@@ -555,7 +559,7 @@ class readDB(object):
 
         # test if job running
         job_start_end = self.get_job_start_end(jobID)
-        print 'start end ', job_start_end
+        #print 'start end ', job_start_end
 
         jobRunning = self.job_running(jobID)
         print 'job Running? ', jobRunning
@@ -638,6 +642,9 @@ class readDB(object):
                     path)
 
         # exit
+        print '----- Spectrum ----'
+        print get_Spectrum(wbs)
+        print '----- Spectrum ----'
         print 'done'
         exit()
 #------------------------------------------------------------------------------
@@ -800,6 +807,9 @@ if __name__ == '__main__':
     parser.add_argument("-w", "--window",
                         help='''specify a time window [in hours],
                                     default = 5 days''', type=str)
+    parser.add_argument("-e", "--experimentel",
+                        help='''test for new methodes, in this case fft
+                                    ''', type=str)
     args = parser.parse_args()
     if args.filesystem:
         print 'fs=', args.filesystem

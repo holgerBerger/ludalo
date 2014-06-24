@@ -3,37 +3,42 @@ Created on 07.03.2014
 
 @author: Uwe Schilling
 
-Modul to categorize data form jobs.
-
-See:
-http://stackoverflow.com/questions/3637350/how-to-write-stereo-wav-files-in-python
-http://stackoverflow.com/questions/3694918/how-to-extract-frequency-associated-with-fft-values-in-python
+Modul to categorize data form jobs. FFT_spectrum is used to analyse data
+strucktur. Try with more informations to categorize jobs.
 
     To Do:
         - select category or buckets for jobs
-        - calaculate the ffts and group jobs
         - try to group simular jobs
         - analyse behaviar
         - find bad behaviar
 
 '''
-import numpy as np
+from scipy import fft, arange
 
 
-def get_fft_coef(value_array):
-    x = np.array(value_array)
-    w = np.fft.fft(x)
-    freqs = np.fft.fftfreq(len(x))
+def get_Spectrum(y, Fs=60.0):
 
-    print(freqs.min(), freqs.max())
-    # (-0.5, 0.499975)
+    """
+    retrun list of tubles with
+    [(freq_1, ampli_1), (freq_2, ampli_2), (freq_n, ampli_n)]
+    """
+    n = len(y)  # length of the signal
+    k = arange(n)
+    T = n / Fs
+    frq = k / T  # two sides frequency range
+    frq = frq[range(n / 2)]  # one side frequency range
+    Y = fft(y) / n  # fft computing and normalization
+    Y = Y[range(n / 2)]
 
-    # Find the peak in the coefficients
-    frate = 1
-    idx = np.argmax(np.abs(w) ** 2)
-    freq = freqs[idx]
-    freq_in_hertz = abs(freq * frate)
-    print(freq_in_hertz)
+    # frq_amp_list = [(freq, ampli), (freq, ampli), (freq, ampli)]
+    frq_amp_list = zip(frq, abs(Y))
+
+    # return only frequenz with amplitud larger then zero
+    return filter(lambda x: x[1] > 0, frq_amp_list)
 
 if __name__ == '__main__':
-    print get_fft_coef([1, 2, 1, 0, 1, 2, 1, 0])
+
+    a = [1, 2, 1, 0, 1, 2, 1, 0]
+    Fs = 60.0  # sampling rate
+
+    print get_Spectrum(a, Fs)

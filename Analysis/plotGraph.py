@@ -206,4 +206,4 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     plt.tight_layout()
     plt.savefig(str(title) + '.png', dpi=120)
     plt.close('all')
-    plt.show()
+    #plt.show()

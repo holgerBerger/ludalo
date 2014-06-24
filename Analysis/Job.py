@@ -5,7 +5,8 @@ Created on 24.03.2014
 '''
 
 import time
-
+from fft_series import get_Spectrum
+import numpy as np
 
 class Job(object):
     '''
@@ -21,43 +22,19 @@ class Job(object):
         self.t_Start = -2
         self.t_End = -2
 
-        self.plotTitle = None
+        self.WR = np.array()
+        self.RD = np.array()
+        self.WQ = np.array()
+        self.RQ = np.array()
 
-        self.nidList = []
-        self.perNidMap = {}
+    def get_WR_sepctrum(self):
+        return get_Spectrum(self.WR)
 
-        self.WR_dict = {}
-        self.RD_dict = {}
-        self.WQ_dict = {}
-        self.RQ_dict = {}
+    def set_start(self, t_Start):
+        self.t_Start = t_Start
 
-    def getReadList(self):
-        'returns read values'
-        returnList = []
-        for key in sorted(self.RD_dict.keys()):
-            returnList.append(self.RD_dict.get(key))
-        return returnList
-
-    def getWriteList(self):
-        'returns write values'
-        returnList = []
-        for key in sorted(self.WR_dict.keys()):
-            returnList.append(self.WR_dict.get(key))
-        return returnList
-
-    def getReadRequestList(self):
-        'returns read request values'
-        returnList = []
-        for key in sorted(self.RQ_dict.keys()):
-            returnList.append(self.RQ_dict.get(key))
-        return returnList
-
-    def getWriteRequestList(self):
-        'returns write request values'
-        returnList = []
-        for key in sorted(self.WQ_dict.keys()):
-            returnList.append(self.WQ_dict.get(key))
-        return returnList
+    def set_end(self, t_end):
+        self.t_End = t_end
 
     def getName(self):
         return self.Name
@@ -86,30 +63,3 @@ class Job(object):
         if duration > minMinutes:
             returnValue = True
         return returnValue
-
-    def addNidName(self, nidName):
-        self.nidList.append(nidName)
-
-    def insertValusToDict(self, dict_org, dict_insert):
-        if not dict_org:
-            dict_org = dict_insert
-        else:
-            dict_insert = dict(dict_insert)
-            dict_org = dict(dict_org)
-            for key in dict_insert.keys():
-                insert = dict_insert.get(key, 0) + dict_org.get(key, 0)
-                dict_org[key] = insert
-        return dict_org
-
-    def add_Values(self, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName):
-        print nidName
-        self.perNidMap[nidName] = (timeMapRB, timeMapWB, timeMapRIO, timeMapWIO)
-        self.nidList.append(nidName)
-
-        self.WR_dict = self.insertValusToDict(self.WR_dict, timeMapWB)
-        self.WQ_dict = self.insertValusToDict(self.WQ_dict, timeMapWIO)
-        self.RD_dict = self.insertValusToDict(self.RD_dict, timeMapRB)
-        self.RQ_dict = self.insertValusToDict(self.RQ_dict, timeMapRIO)
-
-    def setTitle(self, title):
-        self.plotTitle = title
