@@ -33,8 +33,10 @@ def get_Spectrum(y, Fs=60.0):
     # frq_amp_list = [(freq, ampli), (freq, ampli), (freq, ampli)]
     frq_amp_list = zip(frq, abs(Y))
 
-    # return only frequenz with amplitud larger then zero
-    return filter(lambda x: x[1] > 0, frq_amp_list)
+    # only frequenz with amplitud larger then zero
+    filtered = filter(lambda x: x[1] > 0, frq_amp_list)
+    # return the 10 highest amplituden
+    return sorted(filtered, key=lambda amps: amps[1], reverse=True)[:11]
 
 if __name__ == '__main__':
 
