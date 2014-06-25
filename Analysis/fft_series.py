@@ -114,10 +114,10 @@ def class_4(rio, wio, rb, wb):
     b_per_io_list = np.nan_to_num(total_b / total_io)
 
     spec = get_Spectrum(b_per_io_list)
-    return_value = list()
+    return_value = set()
 
     for feq, amp in spec:
-        return_value.append(int(round(feq)))
+        return_value.append(round(feq, 3))
     return str(return_value)
 
 
