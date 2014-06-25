@@ -117,7 +117,7 @@ def class_4(rio, wio, rb, wb):
     return_value = set()
 
     for feq, amp in spec:
-        return_value.append(round(feq, 3))
+        return_value.add(round(feq, 3))
     return str(return_value)
 
 
