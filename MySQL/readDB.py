@@ -21,7 +21,7 @@ sys.path.append("/home/uwe/projects/ludalo/Analysis")
 
 #from User import User
 from Job import Job
-from fft_series import get_Spectrum
+from fft_series import get_Spectrum, get_fingerprint
 from plotGraph import plotGraph, plotJob
 
 class readDB(object):
@@ -616,6 +616,8 @@ class readDB(object):
 
         # transform data
         timestamps = values_np[:, 0]
+        duration = max(timestamps) - min(timestamps)  # in seconds
+        duration = duration / 60 / 60  # in hours
         wbs = values_np[:, 1]
         wbs_per_second = wbs / 60
         wbs_kb_per_s = wbs_per_second / 1024
@@ -643,7 +645,8 @@ class readDB(object):
 
         # exit
         print '----- Spectrum ----'
-        print get_Spectrum(wbs_mb_per_s)
+        print get_fingerprint(duration, wbs, rbs, rio, wio, wbs, rbs)
+        #print get_Spectrum(wbs_mb_per_s)
         print '----- Spectrum ----'
         print 'done'
         exit()
