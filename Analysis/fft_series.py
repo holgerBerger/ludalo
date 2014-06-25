@@ -54,7 +54,7 @@ def class_2(rb, wb, fs=None, duration=None):
     ''' volumen in byte '''
     total = rb + wb
 
-    total_mb = float(total) / 1024 / 1024
+    total_mb = sum(total) / 1024 / 1024
 
     if total_mb < 20:
         return 'a'
