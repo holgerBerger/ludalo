@@ -91,8 +91,10 @@ def class_3(rio, wio, rbs, wbs):
         return_st = return_st + 'c'
     elif wio_aver < 800:
         return_st = return_st + 'd'
-    else:
+    elif wio_aver <= 1000:
         return_st = return_st + 'e'
+    else:
+        return_st = return_st + 'f'
 
     if rio_aver < 100:
         return_st = return_st + 'a'
@@ -102,8 +104,10 @@ def class_3(rio, wio, rbs, wbs):
         return_st = return_st + 'c'
     elif rio_aver < 800:
         return_st = return_st + 'd'
-    else:
+    elif rio_aver <= 1000:
         return_st = return_st + 'e'
+    else:
+        return_st = return_st + 'f'
     return return_st
 
 
