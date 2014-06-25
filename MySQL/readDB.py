@@ -614,6 +614,12 @@ class readDB(object):
         allTimestamps = self.query_to_npArray(query, (job_start, job_end))
         values_np = self.np_fillAndSort(values_np, allTimestamps)
 
+        # ignore division by zero
+        # it is posibel that wbs has a value but wio is zero. in this case
+        # replaced with 0 (np.nan_to_num)
+
+        np.seterr(divide='ignore', invalid='ignore')
+
         # transform data
         timestamps = values_np[:, 0]
         duration = max(timestamps) - min(timestamps)  # in seconds
