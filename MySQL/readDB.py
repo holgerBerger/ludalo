@@ -645,7 +645,7 @@ class readDB(object):
 
         # exit
         print '----- Spectrum ----'
-        print get_fingerprint(duration, wbs, rbs, rio, wio, wbs, rbs)
+        print get_fingerprint(duration, wbs, rbs, rio, wio)
         #print get_Spectrum(wbs_mb_per_s)
         print '----- Spectrum ----'
         print 'done'
