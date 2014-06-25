@@ -118,7 +118,7 @@ def class_4(rio, wio, rb, wb):
 
     for feq, amp in spec:
         return_value.add(round(feq, 2))
-    return str(return_value)
+    return str(return_value)[4:-1]  # Srip set() and ceep the rest
 
 
 def get_fingerprint(duration, rio, wio, wbs, rbs, fs=None):
