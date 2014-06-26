@@ -418,7 +418,7 @@ class readDB(object):
             return False
 #------------------------------------------------------------------------------
 
-    def print_job(self, jobName, verbose=True):
+    def print_job(self, jobName):
         # test if job exist
         jobID = self.getJobID(jobName)
 
@@ -588,10 +588,11 @@ class readDB(object):
 
         print '# of valid jobs: ' + str(len(valid_jobs))
 
-        pool = Pool()
-        pool.map(self.print_job, valid_jobs)
+        #pool = Pool()
+        #pool.map(self.print_job, valid_jobs)
         self.conn.commit()
-
+        for job in valid_jobs:
+            self.print_job(job)
 
 if __name__ == '__main__':
     time_start = time.time()
