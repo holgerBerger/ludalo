@@ -338,6 +338,10 @@ class readDB(object):
                 order by timestamps.c_timestamp''')
         values_np = self.query_to_npArray(query, (fs, int(window)))
 
+        if not values_np:
+            print 'no fs data found'
+            exit(1)
+
         query = ''' select
                         c_timestamp
                     from
@@ -348,6 +352,10 @@ class readDB(object):
                                 unix_timestamp()-%s and unix_timestamp()
                                 '''
         allTimestamps = self.query_to_npArray(query, int(window))
+
+        if not values_np:
+            print 'no fs timestamps found'
+            exit(1)
 
         values_np = self.np_fillAndSort(values_np, allTimestamps)
 
@@ -490,57 +498,60 @@ class readDB(object):
 
         values_np = self.query_to_npArray(query, option)
 
-        query = ''' select
-                        c_timestamp
-                    from
-                        timestamps
-                    where
-                        c_timestamp
-                            between
-                                %s and %s
-                                '''
-        allTimestamps = self.query_to_npArray(query, (job_start, job_end))
-        values_np = self.np_fillAndSort(values_np, allTimestamps)
+        if values_np:
+            query = ''' select
+                            c_timestamp
+                        from
+                            timestamps
+                        where
+                            c_timestamp
+                                between
+                                    %s and %s
+                                    '''
+            allTimestamps = self.query_to_npArray(query, (job_start, job_end))
+            values_np = self.np_fillAndSort(values_np, allTimestamps)
 
-        # ignore division by zero
-        # it is posibel that wbs has a value but wio is zero. in this case
-        # replaced with 0 (np.nan_to_num)
+            # ignore division by zero
+            # it is posibel that wbs has a value but wio is zero. in this case
+            # replaced with 0 (np.nan_to_num)
 
-        np.seterr(divide='ignore', invalid='ignore')
+            np.seterr(divide='ignore', invalid='ignore')
 
-        # transform data
-        timestamps = values_np[:, 0]
-        duration = max(timestamps) - min(timestamps)  # in seconds
-        duration = duration / 60 / 60  # in hours
-        wbs = values_np[:, 1]
-        wbs_per_second = wbs / 60
-        wbs_kb_per_s = wbs_per_second / 1024
-        wbs_mb_per_s = wbs_kb_per_s / 1024
-        wio = values_np[:, 2]
-        wio_volume_in_kb = np.nan_to_num((wbs / wio) / 1024)
+            # transform data
+            timestamps = values_np[:, 0]
+            duration = max(timestamps) - min(timestamps)  # in seconds
+            duration = duration / 60 / 60  # in hours
+            wbs = values_np[:, 1]
+            wbs_per_second = wbs / 60
+            wbs_kb_per_s = wbs_per_second / 1024
+            wbs_mb_per_s = wbs_kb_per_s / 1024
+            wio = values_np[:, 2]
+            wio_volume_in_kb = np.nan_to_num((wbs / wio) / 1024)
 
-        rbs = values_np[:, 3]
-        rbs_per_second = rbs / 60
-        rbs_kb_per_s = rbs_per_second / 1024
-        rbs_mb_per_s = rbs_kb_per_s / 1024
-        rio = values_np[:, 4]
-        rio_volume_in_kb = np.nan_to_num((rbs / rio) / 1024)
+            rbs = values_np[:, 3]
+            rbs_per_second = rbs / 60
+            rbs_kb_per_s = rbs_per_second / 1024
+            rbs_mb_per_s = rbs_kb_per_s / 1024
+            rio = values_np[:, 4]
+            rio_volume_in_kb = np.nan_to_num((rbs / rio) / 1024)
 
-        # print job data
-        if jobRunning:
-            path = '/var/www/ludalo-web/calc/jobs/' + str(jobName)
+            # print job data
+            if jobRunning:
+                path = '/var/www/ludalo-web/calc/jobs/' + str(jobName)
+            else:
+                path = '/var/www/ludalo-web/calc/jobs/' + str(jobName)
+
+            print jobName, get_fingerprint(duration, wbs, rbs, rio, wio)
+
+            if self.verbose:
+                plotJob(timestamps,
+                            rbs_mb_per_s, rio_volume_in_kb,
+                            wbs_mb_per_s, wio_volume_in_kb,
+                            path)
+                print 'done'
+                exit()
         else:
-            path = '/var/www/ludalo-web/calc/jobs/' + str(jobName)
-
-        print jobName, get_fingerprint(duration, wbs, rbs, rio, wio)
-
-        if self.verbose:
-            plotJob(timestamps,
-                        rbs_mb_per_s, rio_volume_in_kb,
-                        wbs_mb_per_s, wio_volume_in_kb,
-                        path)
-            print 'done'
-            exit()
+            print 'job not in sample range'
 #------------------------------------------------------------------------------
 
     def query_to_npArray(self, query, options=None):
@@ -552,25 +563,26 @@ class readDB(object):
 
         # fetchall() returns a nested tuple (one tuple for each table row)
         results = self.c.fetchall()
-        print 'npArray', results
+        if results:
+            # 'num_rows' needed to reshape the 1D NumPy array returend
+            # by 'fromiter' in other words, to restore original dimensions
+            # of the results set
+            num_rows = int(self.c.rowcount)
+            #print num_rows
 
-        # 'num_rows' needed to reshape the 1D NumPy array returend
-        # by 'fromiter' in other words, to restore original dimensions
-        # of the results set
-        num_rows = int(self.c.rowcount)
-        #print num_rows
+            # recast this nested tuple to a python list and flatten it
+            # so it's a proper iterable:
+            x = map(list, list(results))              # change the type
+            x = sum(x, [])                            # flatten
 
-        # recast this nested tuple to a python list and flatten it
-        # so it's a proper iterable:
-        x = map(list, list(results))              # change the type
-        x = sum(x, [])                            # flatten
+            # D is a 1D NumPy array
+            D = np.fromiter(iter=x, dtype=np.float_, count=-1)
 
-        # D is a 1D NumPy array
-        D = np.fromiter(iter=x, dtype=np.float_, count=-1)
-
-        # 'restore' the original dimensions of the result set:
-        D = D.reshape(num_rows, -1)
-        return D
+            # 'restore' the original dimensions of the result set:
+            D = D.reshape(num_rows, -1)
+            return D
+        else:
+            return None
 #------------------------------------------------------------------------------
 
     def np_fillAndSort(self, values_np, allTimestamps_np):
