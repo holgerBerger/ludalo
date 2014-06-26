@@ -93,11 +93,11 @@ class readDB(object):
                         where id = %s ''', (jobID,))
         start_end = self.c.fetchall()
 
-        job_start = start_end[0]
-        if start_end[1] < 0:
+        job_start = start_end[0][1]
+        if start_end[0][1] < 0:
             job_end = time.time() - 60
         else:
-            job_end = start_end[1]
+            job_end = start_end[0][1]
 
         self.c.execute('''
                         select c_timestamp from timestamps
