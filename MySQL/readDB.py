@@ -609,7 +609,7 @@ if __name__ == '__main__':
                                     default = 5 days''', type=str)
     parser.add_argument("-e", "--experimentel",
                         help='''test for new methodes, in this case fft
-                                    ''', dest='boolean_switch')
+                                    ''', default=False)
     args = parser.parse_args()
     if args.filesystem:
         print 'fs=', args.filesystem
