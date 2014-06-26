@@ -105,18 +105,16 @@ class readDB(object):
                         order by c_timestamp desc
                         limit 1 ''')
         samples_max = self.c.fetchall()
+        samples_max = samples_max[0][0]
 
         self.c.execute('''
                         select c_timestamp from timestamps
                         order by c_timestamp
                         limit 1 ''')
         samples_min = self.c.fetchall()
+        samples_min = samples_min[0][0]
 
         if start_end:
-            print job_start
-            print samples_min
-            print job_end
-            print samples_max
             # job begins befor samples
             if job_start < samples_min:
                 return None
@@ -125,7 +123,7 @@ class readDB(object):
                 return None
             # job is in sample range
             else:
-                return start_end
+                return start_end[0]
         else:
             print "Error by getting Job Start or End."
             exit()
