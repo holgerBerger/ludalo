@@ -43,11 +43,11 @@ def get_Spectrum(y, Fs=60.0):
 def class_1(duration):
     ''' duration in hours '''
     if duration < 3:
-        return 'a'
+        return '1'
     elif duration < 24:
-        return 'b'
+        return '2'
     else:
-        return 'c'
+        return '3'
 
 
 def class_2(rb, wb, fs=None, duration=None):
@@ -57,21 +57,21 @@ def class_2(rb, wb, fs=None, duration=None):
     total_mb = sum(total) / 1024 / 1024
 
     if total_mb < 20:
-        return 'a'
+        return '1'
     elif total_mb < 200:
-        return 'b'
+        return '2'
     elif total_mb < 2000:
-        return 'c'
+        return '3'
     elif total_mb < 20000:
-        return 'd'
+        return '4'
     elif total_mb < 200000:
-        return 'e'
+        return '5'
     elif total_mb < 2000000:
-        return 'f'
+        return '6'
     elif total_mb < 20000000:
-        return 'g'
+        return '7'
     else:
-        return 'h'
+        return '8'
 
 
 def class_3(rio, wio, rbs, wbs):
@@ -84,30 +84,30 @@ def class_3(rio, wio, rbs, wbs):
     return_st = ''
 
     if wio_aver < 100:
-        return_st = return_st + 'a'
+        return_st = return_st + '1'
     elif wio_aver < 300:
-        return_st = return_st + 'b'
+        return_st = return_st + '2'
     elif wio_aver < 500:
-        return_st = return_st + 'c'
+        return_st = return_st + '3'
     elif wio_aver < 800:
-        return_st = return_st + 'd'
+        return_st = return_st + '4'
     elif wio_aver <= 1000:
-        return_st = return_st + 'e'
+        return_st = return_st + '5'
     else:
-        return_st = return_st + 'f'
+        return_st = return_st + '6'
 
     if rio_aver < 100:
-        return_st = return_st + 'a'
+        return_st = return_st + '1'
     elif rio_aver < 300:
-        return_st = return_st + 'b'
+        return_st = return_st + '2'
     elif rio_aver < 500:
-        return_st = return_st + 'c'
+        return_st = return_st + '3'
     elif rio_aver < 800:
-        return_st = return_st + 'd'
+        return_st = return_st + '4'
     elif rio_aver <= 1000:
-        return_st = return_st + 'e'
+        return_st = return_st + '5'
     else:
-        return_st = return_st + 'f'
+        return_st = return_st + '6'
     return return_st
 
 

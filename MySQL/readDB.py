@@ -600,7 +600,7 @@ class readDB(object):
         for job in jobs:
             start_end = self.get_job_start_end(job[0])
             if start_end:
-                valid_jobs.append(job[1])
+                valid_jobs.append(job)
 
         print '# of valid jobs: ' + str(len(valid_jobs))
 
@@ -608,7 +608,8 @@ class readDB(object):
         #pool.map(self.print_job, valid_jobs)
         self.conn.commit()
         for job in valid_jobs:
-            self.print_job(job)
+            print 'job', job
+            self.print_job(job[1])
 
 if __name__ == '__main__':
     time_start = time.time()
