@@ -93,11 +93,18 @@ class readDB(object):
                         where id = %s ''', (jobID,))
         start_end = self.c.fetchall()
 
+        job_start = start_end[0]
+        if start_end[1] < 0:
+            job_end = time.time() - 60
+        else:
+            job_end = start_end[1]
+
         self.c.execute('''
                         select c_timestamp from timestamps
                         order by c_timestamp desc
                         limit 1 ''')
-        #samples_max = self.c.fetchall()
+        samples_max = self.c.fetchall()
+
         self.c.execute('''
                         select c_timestamp from timestamps
                         order by c_timestamp
@@ -105,10 +112,14 @@ class readDB(object):
         samples_min = self.c.fetchall()
 
         if start_end:
-            if start_end[0][0] > samples_min[0][0]:
-                return start_end[0]
+            # job begins befor samples
+            if job_start < samples_min:
+                return None
+            # job ends after last sample
+            elif job_end > samples_max:
+                return None
+            # job is in sample range
             else:
-                start_end = (samples_min[0][0], start_end[0][1])
                 return start_end
         else:
             print "Error by getting Job Start or End."
@@ -421,13 +432,15 @@ class readDB(object):
     def print_job(self, jobName):
         # test if job exist
         jobID = self.getJobID(jobName)
-
         if not jobID:
             print '404', jobName
             exit(1)
 
         # test if job running
         job_start_end = self.get_job_start_end(jobID)
+        if not job_start_end(jobID):
+            print 'Not enough samples for job', jobName
+            exit(1)
 
         jobRunning = self.job_running(jobID)
 
@@ -516,15 +529,15 @@ class readDB(object):
         else:
             path = '/var/www/ludalo-web/calc/jobs/' + str(jobName)
 
+        print jobName, get_fingerprint(duration, wbs, rbs, rio, wio)
+
         if self.verbose:
             plotJob(timestamps,
                         rbs_mb_per_s, rio_volume_in_kb,
                         wbs_mb_per_s, wio_volume_in_kb,
                         path)
-        print jobName, get_fingerprint(duration, wbs, rbs, rio, wio)
-
-        print 'done'
-        exit()
+            print 'done'
+            exit()
 #------------------------------------------------------------------------------
 
     def query_to_npArray(self, query, options=None):
