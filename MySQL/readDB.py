@@ -552,7 +552,7 @@ class readDB(object):
 
         # fetchall() returns a nested tuple (one tuple for each table row)
         results = self.c.fetchall()
-        #print results
+        print 'npArray', results
 
         # 'num_rows' needed to reshape the 1D NumPy array returend
         # by 'fromiter' in other words, to restore original dimensions
