@@ -94,6 +94,7 @@ class readDB(object):
         start_end = self.c.fetchall()
 
         job_start = start_end[0][1]
+
         if start_end[0][1] < 0:
             job_end = time.time() - 60
         else:
@@ -112,6 +113,10 @@ class readDB(object):
         samples_min = self.c.fetchall()
 
         if start_end:
+            print job_start
+            print samples_min
+            print job_end
+            print samples_max
             # job begins befor samples
             if job_start < samples_min:
                 return None
@@ -438,7 +443,7 @@ class readDB(object):
 
         # test if job running
         job_start_end = self.get_job_start_end(jobID)
-        if not job_start_end(jobID):
+        if not job_start_end:
             print 'Not enough samples for job', jobName
             exit(1)
 
