@@ -9,7 +9,6 @@ import sys
 import time
 import datetime
 import MySQLdb
-from threading import Thread, Lock
 from multiprocessing.pool import Pool
 from ConfigParser import ConfigParser
 import argparse
@@ -21,8 +20,9 @@ sys.path.append("/home/uwe/projects/ludalo/Analysis")
 
 #from User import User
 from Job import Job
-from fft_series import get_Spectrum, get_fingerprint
-from plotGraph import plotGraph, plotJob
+from fft_series import get_fingerprint
+from plotGraph import plotJob
+
 
 class readDB(object):
 
@@ -46,6 +46,9 @@ class readDB(object):
                                     host=self.dbhost,
                                     user=self.dbuser)
         self.c = self.conn.cursor()
+
+        self.verbose = True
+
         if not self.check_version():
             self.c.execute(''' select
                                     version
@@ -64,8 +67,8 @@ class readDB(object):
                        ''' but expect version ''' +
                        str(self.DB_VERSION) + '\n')
             sys.exit(0)
-
 #------------------------------------------------------------------------------
+
     def check_version(self):
         self.c.execute(''' select
                                 version
@@ -81,124 +84,6 @@ class readDB(object):
                 return False
         else:
             return False
-
-#------------------------------------------------------------------------------
-    #  read_write_sum_to_Nid
-#------------------------------------------------------------------------------
-    def get_sum_nids_to_job(self, jobID):
-        #depricated.
-        start_end = self.get_job_start_end(jobID)
-        if start_end:
-            start = start_end[0] - 60
-            endTime = start_end[1]
-            if endTime < 0:
-                end = time.time()
-            else:
-                end = endTime + 60
-        #(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList)
-            query = '''
-                    select
-                        sum(samples_ost.rb),
-                        sum(samples_ost.wb),
-                        sum(samples_ost.rio),
-                        sum(samples_ost.wio),
-                        timestamps.c_timestamp,
-                        nids.nid
-                    from
-                        nids
-                            join
-                        nodelist ON nids.id = nodelist.nid
-                            join
-                        jobs ON jobs.id = nodelist.job
-                            and jobs.id = %s
-                            join
-                        samples_ost ON nids.id = samples_ost.nid
-                            join
-                        timestamps ON timestamps.id = samples_ost.timestamp_id
-                            and timestamps.c_timestamp between %s and %s
-                    group by nids.nid , timestamps.c_timestamp'''
-            self.c.execute(query, (jobID, start, end,))
-            query_result = self.c.fetchall()
-
-            self.c.execute('''
-                select
-                    c_timestamp
-                from
-                    timestamps
-                where
-                    c_timestamp between %s and %s''',
-                    (start, end))
-            tmp_time = self.c.fetchall()
-            # Build nidMap
-            nidMap = {}
-            for row in query_result:
-                rb_sum = row[0]
-                wb_sum = row[1]
-                rio_sum = row[2]
-                wio_sum = row[3]
-                timestamp = row[4]
-                nid = row[5]
-                value_tuple = nidMap.get(nid, None)
-
-                if not value_tuple:
-                    timeMapRB = {}
-                    timeMapWB = {}
-                    timeMapRIO = {}
-                    timeMapWIO = {}
-                    # init with 0
-                    for timeStamps in tmp_time:
-                        timeMapRB[timeStamps[0]] = 0
-                        timeMapWB[timeStamps[0]] = 0
-                        timeMapRIO[timeStamps[0]] = 0
-                        timeMapWIO[timeStamps[0]] = 0
-
-                    timeMapRB[timestamp] = rb_sum
-                    timeMapWB[timestamp] = wb_sum
-                    timeMapRIO[timestamp] = rio_sum
-                    timeMapWIO[timestamp] = wio_sum
-
-                    nidMap[nid] = (timeMapRB,
-                                   timeMapWB,
-                                   timeMapRIO,
-                                   timeMapWIO)
-                else:
-                    timeMapRB = value_tuple[0]
-                    timeMapWB = value_tuple[1]
-                    timeMapRIO = value_tuple[2]
-                    timeMapWIO = value_tuple[3]
-
-                    timeMapRB[timestamp] = rb_sum
-                    timeMapWB[timestamp] = wb_sum
-                    timeMapRIO[timestamp] = rio_sum
-                    timeMapWIO[timestamp] = wio_sum
-
-                    nidMap[nid] = (timeMapRB,
-                                   timeMapWB,
-                                   timeMapRIO,
-                                  timeMapWIO)
-# build return collection
-#(start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidList, nidName)
-            colReturn = []
-            for nid in nidMap.keys():
-                value_tuple = nidMap[nid]
-                timeMapRB = value_tuple[0]
-                timeMapWB = value_tuple[1]
-                timeMapRIO = value_tuple[2]
-                timeMapWIO = value_tuple[3]
-                nidName = nid
-                colReturn.append((start,
-                                  endTime,
-                                  timeMapRB,
-                                  timeMapWB,
-                                  timeMapRIO,
-                                  timeMapWIO,
-                                  nidName))
-
-            print 'return(get_sum_nids_to_job) ', len(colReturn)
-            return colReturn
-        else:
-            print 'start end time error'
-            return None
 #------------------------------------------------------------------------------
 
     def get_job_start_end(self, jobID):
@@ -228,7 +113,6 @@ class readDB(object):
         else:
             print "Error by getting Job Start or End."
             exit()
-
 #------------------------------------------------------------------------------
 
     def get_nid_to_Job(self, jobID):
@@ -245,7 +129,6 @@ class readDB(object):
             nidReturn.append(nid[0])
 
         return nidReturn
-
 #------------------------------------------------------------------------------
 
     def get_All_Users_r_w(self, houers, rw_in_MB=1):
@@ -499,19 +382,6 @@ class readDB(object):
         jobID_list = []
         for row in rows:
             jobID_list.append(row[0])
-
-        #user = User(testUser)
-        #testjob = Job(jobID_list[0])
-        # (start, end, timeMapRB, timeMapWB, timeMapRIO, timeMapWIO, nidName)
-        job_valuse = db.get_sum_nids_to_job(jobID_list[0])
-        timeMapRB = job_valuse[2]
-        timeMapWB = job_valuse[3]
-        timeMapRIO = job_valuse[4]
-        timeMapWIO = job_valuse[5]
-        nidName = job_valuse[6]
-        #testjob.add_Values(timeMapRB, timeMapWB,
-        #                    timeMapRIO, timeMapWIO, nidName)
-        #user.addJob(testjob)
 #------------------------------------------------------------------------------
 
     def getJobID(self, jobName):
@@ -548,31 +418,33 @@ class readDB(object):
             return False
 #------------------------------------------------------------------------------
 
-    def print_job(self, jobName):
+    def print_job(self, jobName, verbose=True):
         # test if job exist
         jobID = self.getJobID(jobName)
-        print 'job id ', jobID
 
         if not jobID:
-            print '404'
+            print '404', jobName
             exit(1)
 
         # test if job running
         job_start_end = self.get_job_start_end(jobID)
-        #print 'start end ', job_start_end
 
         jobRunning = self.job_running(jobID)
-        print 'job Running? ', jobRunning
 
         if jobRunning:
             job_end = int(time.time())
         else:
             job_end = job_start_end[1]
 
-        print 'job_end ', job_end
-
         job_start = job_start_end[0]
-        print 'job_start ', job_start
+
+        if self.verbose:
+            print 'job id ', jobID
+            self.explainJob(jobID)
+            print 'job Running? ', jobRunning
+            print 'job_end ', job_end
+            print 'job_start ', job_start
+
         # get job data
         option = (jobID, job_start, job_end)
 
@@ -644,16 +516,13 @@ class readDB(object):
         else:
             path = '/var/www/ludalo-web/calc/jobs/' + str(jobName)
 
-        plotJob(timestamps,
-                    rbs_mb_per_s, rio_volume_in_kb,
-                    wbs_mb_per_s, wio_volume_in_kb,
-                    path)
+        if self.verbose:
+            plotJob(timestamps,
+                        rbs_mb_per_s, rio_volume_in_kb,
+                        wbs_mb_per_s, wio_volume_in_kb,
+                        path)
+            print jobName, get_fingerprint(duration, wbs, rbs, rio, wio)
 
-        # exit
-        print '----- Spectrum ----'
-        print get_fingerprint(duration, wbs, rbs, rio, wio)
-        #print get_Spectrum(wbs_mb_per_s)
-        print '----- Spectrum ----'
         print 'done'
         exit()
 #------------------------------------------------------------------------------
@@ -700,107 +569,29 @@ class readDB(object):
                                             np.array([[t[0], 0, 0, 0, 0]])))
         # a = the matrix a sortet by the first axis
         return values_np[values_np[:, 0].argsort()]
+#------------------------------------------------------------------------------
 
+    def print_all_jobs(self):
+        ''' test the  classification of the jobs'''
 
-def print_job(job):
-    db = readDB()
-    db.c.execute('''
-                    select * from jobs where jobid = %s
-                    ''', (str(job),))
+        self.c.execute('''select id, jobid from jobs where t_end > 1''')
+        jobs = self.c.fetchall()
+        valid_jobs = []
 
-    check_job = db.c.fetchone()
-    if not check_job:
-        print 'No such job: ', job
-        sys.exit(0)
+        print '# of jobs: ' + str(len(jobs))
+        self.conn.commit()
 
-    job = check_job[0]
-    db.explainJob(job)
-    #jobObject = Job(job)
+        for job in jobs:
+            start_end = self.get_job_start_end(job[0])
+            if start_end:
+                valid_jobs.append(job[1])
 
-    start_end = db.get_job_start_end(job)
+        print '# of valid jobs: ' + str(len(valid_jobs))
 
-    if start_end:
-        start = start_end[0] - 60
-        endTime = start_end[1]
-        if endTime < 0:
-            end = time.time()
-        else:
-            end = endTime + 60
+        pool = Pool()
+        pool.map(self.print_job, valid_jobs)
+        self.conn.commit()
 
-        query = '''
-                select
-                    timestamps.c_timestamp,
-                    sum(samples_ost.wb),
-                    sum(samples_ost.wio),
-                    sum(samples_ost.rb),
-                    sum(samples_ost.rio)
-                from
-                    nids
-                        join
-                    nodelist ON nids.id = nodelist.nid
-                        join
-                    jobs ON jobs.id = nodelist.job
-                        and jobs.id = %s
-                        join
-                    samples_ost ON nids.id = samples_ost.nid
-                        join
-                    timestamps ON timestamps.id = samples_ost.timestamp_id
-                        and timestamps.c_timestamp between %s and %s
-                group by timestamps.c_timestamp'''  # by nids.nid ,
-
-        values_np = db.query_to_npArray(query, (job, start, end,))
-
-        query = ''' select
-                        c_timestamp
-                    from
-                        timestamps
-                    where
-                        c_timestamp
-                            between
-                                %s and %s
-                                '''
-        allTimestamps = db.query_to_npArray(query, (start, end,))
-
-        values_np = db.np_fillAndSort(values_np, allTimestamps)
-        # values_np = np.nan_to_num(values_np)
-
-        db.c.execute('''select nid from nodelist where job = %s''', (job,))
-        nids = db.c.fetchall()
-
-        db.c.execute('''
-                select jobs.jobid, users.username , jobs.nodelist
-                from jobs, users
-                where jobs.id = %s
-                and users.id = jobs.owner''', (job,))
-        job_info = db.c.fetchone()
-
-        title = ('Job_' + str(job_info[0]) +
-                 '_NoN_' + str(len(nids)) +
-                 '__Owner_' + str(job_info[1]))
-        #jobObject.setTitle(title)
-        print 'Plot: ', title
-
-        timestamps = values_np[:, 0]
-        wbs = values_np[:, 1]
-        wbs_per_second = wbs / 60
-        wbs_kb_per_s = wbs_per_second / 1024
-        wbs_mb_per_s = wbs_kb_per_s / 1024
-        wio = values_np[:, 2]
-        wio_volume_in_kb = np.nan_to_num((wbs / wio) / 1024)
-
-        rbs = values_np[:, 3]
-        rbs_per_second = rbs / 60
-        rbs_kb_per_s = rbs_per_second / 1024
-        rbs_mb_per_s = rbs_kb_per_s / 1024
-        rio = values_np[:, 4]
-        rio_volume_in_kb = np.nan_to_num((rbs / rio) / 1024)
-
-        plotJob(timestamps,
-                    rbs_mb_per_s, rio_volume_in_kb,
-                    wbs_mb_per_s, wio_volume_in_kb,
-                    title)
-        print 'done'
-        exit()
 
 if __name__ == '__main__':
     time_start = time.time()
@@ -837,6 +628,11 @@ if __name__ == '__main__':
         print 'job=', args.job
         db.print_job(args.job)
         #exit()
+    elif args.experimentel:
+        print 'Printing all Jobs'
+        db.verbose = False
+        db.print_all_jobs()
+        #exit()
     else:
         parser.print_help()
         exit(1)
@@ -844,30 +640,6 @@ if __name__ == '__main__':
 #------------------------------------------------------------------------------
     time_end = time.time()
     print "end with no errors in:", str(time_end - time_start), "sec"
-
-
-def print_all_jobs_test():
-    db.c.execute('''select id, jobid from jobs''')
-    jobs = db.c.fetchall()
-    valid_jobs = []
-
-    print '# of jobs: ' + str(len(jobs))
-    db.conn.commit()
-
-    for job in jobs:
-        start_end = db.get_job_start_end(job[0])
-        if start_end:
-            start = start_end[0]
-            end = start_end[1]
-            if not (end - start < 900):
-                valid_jobs.append(job[0])
-
-    print '# of valid jobs: ' + str(len(valid_jobs))
-
-    pool = Pool()
-    pool.map(print_job, valid_jobs)
-
-    db.conn.commit()
 
 
 def print_all_filesystems_test():
