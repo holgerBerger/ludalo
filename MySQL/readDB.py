@@ -498,7 +498,7 @@ class readDB(object):
 
         values_np = self.query_to_npArray(query, option)
 
-        if values_np:
+        if values_np.any():
             query = ''' select
                             c_timestamp
                         from
