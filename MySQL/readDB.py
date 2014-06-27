@@ -338,7 +338,7 @@ class readDB(object):
                 order by timestamps.c_timestamp''')
         values_np = self.query_to_npArray(query, (fs, int(window)))
 
-        if not values_np:
+        if values_np != None and values_np.any():
             print 'no fs data found'
             exit(1)
 
