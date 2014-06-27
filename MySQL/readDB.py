@@ -805,7 +805,7 @@ class readDB(object):
                             and timestamps.c_timestamp
                                 between (UNIX_TIMESTAMP() - 86400)
                                 and UNIX_TIMESTAMP()
-                            and filesystems.filesystem = ?'''
+                            and filesystems.filesystem = %s'''
         self.c.execute(query, (fs, ))
         fs_total_wb = self.c.fetchone()
 
@@ -825,7 +825,7 @@ class readDB(object):
                             and timestamps.c_timestamp
                                 between (UNIX_TIMESTAMP() - 86400)
                                 and UNIX_TIMESTAMP()
-                            and filesystems.filesystem = ?'''
+                            and filesystems.filesystem = %s'''
         self.c.execute(query, (fs, ))
         fs_total_rb = self.c.fetchone()
 
