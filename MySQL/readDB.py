@@ -622,6 +622,242 @@ class readDB(object):
         for job in valid_jobs:
             print 'job', job
             self.print_job(job[1])
+#------------------------------------------------------------------------------
+
+    def get_all_fs(self):
+        query = ''' select filesystem from filesystems '''
+        self.c.execute(query)
+        fs_db = self.c.fetchall()
+        returnList = []
+        for fs in fs_db:
+            returnList.append(fs[0])
+        print 'get_all_fs return', returnList
+        return returnList
+#------------------------------------------------------------------------------
+
+    def update_fs_web_table(self, fs):
+
+        # Last timestamp
+        query = '''
+                select
+                        distinct c_timestamp
+                    from
+                        timestamps,
+                        samples_ost,
+                        filesystems,
+                        targets
+                    where
+                        timestamps.id = samples_ost.timestamp_id
+                    and
+                        samples_ost.target = targets.id
+                    and
+                        targets.fsid = filesystems.id
+                    and
+                        filesystems.filesystem = %s
+                    order by c_timestamp desc
+                    limit 1 '''
+        self.c.execute(query, (fs, ))
+        fs_last_ts = self.c.fetchone()
+
+# ------- Speed -------
+        # Top Speed WB
+        query = '''
+                select
+                        sum(wb)/(1024*1024*60) as wb_sum
+                    from
+                        timestamps,
+                        ost_values,
+                        filesystems,
+                        targets
+                    where
+                        timestamps.id = ost_values.timestamp_id
+                            and ost_values.target = targets.id
+                            and targets.fsid = filesystems.id
+                            and timestamps.c_timestamp
+                                between (UNIX_TIMESTAMP() - 86400)
+                                and UNIX_TIMESTAMP()
+                            and filesystems.filesystem = %s
+                    group by timestamp_id
+                    order by rb_sum desc
+                    limit 1'''
+        self.c.execute(query, (fs, ))
+        fs_topSpeed_wb = self.c.fetchone()
+
+        # Top Speed RB
+        query = '''
+                select
+                        sum(rb)/(1024*1024*60) as rb_sum
+                    from
+                        timestamps,
+                        ost_values,
+                        filesystems,
+                        targets
+                    where
+                        timestamps.id = ost_values.timestamp_id
+                            and ost_values.target = targets.id
+                            and targets.fsid = filesystems.id
+                            and timestamps.c_timestamp
+                                between (UNIX_TIMESTAMP() - 86400)
+                                and UNIX_TIMESTAMP()
+                            and filesystems.filesystem = %s
+                    group by timestamp_id
+                    order by rb_sum desc
+                    limit 1'''
+        self.c.execute(query, (fs, ))
+        fs_topSpeed_rb = self.c.fetchone()
+
+# ------- AVR Speed -------
+        # Top AVR Speed RB
+        query = '''
+                select
+                        (sum(rb)/(1024*1024)) / 86400
+                    from
+                        timestamps,
+                        ost_values,
+                        filesystems,
+                        targets
+                    where
+                        timestamps.id = ost_values.timestamp_id
+                            and ost_values.target = targets.id
+                            and targets.fsid = filesystems.id
+                            and timestamps.c_timestamp
+                                between (UNIX_TIMESTAMP() - 86400) and
+                                UNIX_TIMESTAMP()
+                            and filesystems.filesystem = %s'''
+        self.c.execute(query, (fs, ))
+        fs_AvrSpeed_rb = self.c.fetchone()
+
+        # Top AVR Speed WB
+        query = '''
+                select
+                        (sum(wb)/(1024*1024)) / 86400
+                    from
+                        timestamps,
+                        ost_values,
+                        filesystems,
+                        targets
+                    where
+                        timestamps.id = ost_values.timestamp_id
+                            and ost_values.target = targets.id
+                            and targets.fsid = filesystems.id
+                            and timestamps.c_timestamp
+                                between (UNIX_TIMESTAMP() - 86400) and
+                                UNIX_TIMESTAMP()
+                            and filesystems.filesystem = %s'''
+        self.c.execute(query, (fs, ))
+        fs_AvrSpeed_wb = self.c.fetchone()
+
+# ------- IO -------
+        # IO WB
+        query = '''
+                select
+                        sum(wio)
+                    from
+                        timestamps,
+                        ost_values,
+                        filesystems,
+                        targets
+                    where
+                        timestamps.id     = ost_values.timestamp_id
+                            and ost_values.target = targets.id
+                            and targets.fsid = filesystems.id
+                            and timestamps.c_timestamp
+                                between (UNIX_TIMESTAMP() - 86400)
+                                and UNIX_TIMESTAMP()
+                            and filesystems.filesystem = %s'''
+        self.c.execute(query, (fs, ))
+        fs_ioSum_wb = self.c.fetchone()
+
+        # IO RB
+        query = '''
+                select
+                        sum(rio)
+                    from
+                        timestamps,
+                        ost_values,
+                        filesystems,
+                        targets
+                    where
+                        timestamps.id     = ost_values.timestamp_id
+                            and ost_values.target = targets.id
+                            and targets.fsid = filesystems.id
+                            and timestamps.c_timestamp
+                                between (UNIX_TIMESTAMP() - 86400)
+                                and UNIX_TIMESTAMP()
+                            and filesystems.filesystem = %s'''
+        self.c.execute(query, (fs, ))
+        fs_ioSum_rb = self.c.fetchone()
+
+# ------- total Trans. -------
+        # total Trans WB
+        query = '''
+                    select
+                        sum(wb)
+                    from
+                        timestamps,
+                        ost_values,
+                        filesystems,
+                        targets
+                    where
+                        timestamps.id = ost_values.timestamp_id
+                            and ost_values.target = targets.id
+                            and targets.fsid = filesystems.id
+                            and timestamps.c_timestamp
+                                between (UNIX_TIMESTAMP() - 86400)
+                                and UNIX_TIMESTAMP()
+                            and filesystems.filesystem = ?'''
+        self.c.execute(query, (fs, ))
+        fs_total_wb = self.c.fetchone()
+
+        # total Trans RB
+        query = '''
+                    select
+                        sum(rb)
+                    from
+                        timestamps,
+                        ost_values,
+                        filesystems,
+                        targets
+                    where
+                        timestamps.id = ost_values.timestamp_id
+                            and ost_values.target = targets.id
+                            and targets.fsid = filesystems.id
+                            and timestamps.c_timestamp
+                                between (UNIX_TIMESTAMP() - 86400)
+                                and UNIX_TIMESTAMP()
+                            and filesystems.filesystem = ?'''
+        self.c.execute(query, (fs, ))
+        fs_total_rb = self.c.fetchone()
+
+        fs_avr_iosize_wio = fs_total_wb / fs_ioSum_wb
+        fs_avr_iosize_rio = fs_total_rb / fs_ioSum_rb
+
+        update_query = '''
+            UPDATE web_fs_cashe
+            SET
+                t_time=%s,
+                topSpeedWB=%s, topSpeedWR=%s,
+                avrSpeedWB=%s, AvrSpeedRB=%s,
+                ioSumWB=%s, IOSumRB=%s,
+                totalWB=%s, totalRB=%s,
+                avrIoSizeW=%s, avrIoSizeR=%s
+           WHERE fs=%s
+        '''
+
+        self.c.execute(update_query, (fs_last_ts,
+                                     fs_topSpeed_wb, fs_topSpeed_rb,
+                                     fs_AvrSpeed_wb, fs_AvrSpeed_rb,
+                                     fs_ioSum_rb, fs_ioSum_wb,
+                                     fs_total_wb, fs_total_rb,
+                                     fs_avr_iosize_wio, fs_avr_iosize_rio, fs))
+#------------------------------------------------------------------------------
+
+    def preComputingFilesystems(self, window):
+        filesystems = self.get_all_fs()
+        for fs in filesystems:
+            self.update_fs_web_table(fs)
+            #self.print_Filesystem(window, fs)
+#------------------------------------------------------------------------------
 
 if __name__ == '__main__':
     time_start = time.time()
@@ -638,8 +874,11 @@ if __name__ == '__main__':
                         help='''specify a time window [in hours],
                                     default = 5 days''', type=str)
     parser.add_argument("-e", "--experimentel",
-                        help='''test for new methodes, in this case fft
-                                    ''', default=False, action='store_true',)
+                        help='''precomputing for webinterface
+                                    ''', default=False, action='store_true')
+    parser.add_argument("-aj", "--analysejobs",
+                        help='''get all jobs and arrange them in classes
+                                    ''', default=False, action='store_true')
     args = parser.parse_args()
     if args.filesystem:
         print 'fs=', args.filesystem
@@ -658,10 +897,16 @@ if __name__ == '__main__':
         print 'job=', args.job
         db.print_job(args.job)
         #exit()
-    elif args.experimentel:
+    elif args.analysejobs:
         print 'Printing all Jobs'
         db.verbose = False
         db.print_all_jobs()
+        #exit()
+    elif args.experimentel:
+        print 'precomputing for webinterface'
+        db.verbose = False
+        window = 432000
+        db.preComputingFilesystems(window)
         #exit()
     else:
         parser.print_help()

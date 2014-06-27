@@ -335,6 +335,25 @@ class MySQLObject(object):
                     filesystems (
                         id serial primary key ,
                         filesystem varchar(32)) engine=innodb''')
+
+        self.c.execute('''
+                create table if not exists
+                web_fs_cashe (
+                    id serial primary key,
+                    fs varchar(32),
+                    t_time integer,
+                    topSpeedWB bigint,
+                    topSpeedWR bigint,
+                    avrSpeedWB bigint,
+                    AvrSpeedRB bigint,
+                    ioSumWB bigint,
+                    IOSumRB bigint,
+                    totalWB bigint,
+                    totalRB bigint,
+                    avrIoSizeW bigint,
+                    avrIoSizeR bigint
+                    )  engine=innodb''')
+
         # self.conn.commit()  # added
 #------------------------------------------------------------------------------
         # create INDEX if not exists
