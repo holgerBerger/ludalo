@@ -315,7 +315,7 @@ class readDB(object):
         print 'Number of Nodes:', number_of_nodes
 #------------------------------------------------------------------------------
 
-    def print_Filesystem(self, window, fs='univ_1'):
+    def print_Filesystem(self, window, fs='univ_1', png_path='/var/www/ludalo-web/calc/'):
         # used in main
         # getting all informations out of the database
 
@@ -374,7 +374,7 @@ class readDB(object):
         rio = values_np[:, 4]
         rio_volume_in_kb = np.nan_to_num((rbs / rio) / 1024)
 
-        path = '/var/www/ludalo-web/calc/' + str(fs)
+        path = png_path + str(fs)
         plotJob(timestamps,
                     rbs_mb_per_s, rio_volume_in_kb,
                     wbs_mb_per_s, wio_volume_in_kb,
@@ -865,7 +865,7 @@ class readDB(object):
         for fs in filesystems:
             print 'updating', fs
             self.update_fs_web_table(fs)
-            #self.print_Filesystem(window, fs)
+            self.print_Filesystem(window, fs, '/plt')
 #------------------------------------------------------------------------------
 
 if __name__ == '__main__':
