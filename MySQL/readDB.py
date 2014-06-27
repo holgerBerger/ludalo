@@ -865,7 +865,7 @@ class readDB(object):
         for fs in filesystems:
             print 'updating', fs
             self.update_fs_web_table(fs)
-            self.print_Filesystem(window, fs, '/plt')
+            self.print_Filesystem(window, fs, 'plt/')
 #------------------------------------------------------------------------------
 
 if __name__ == '__main__':
