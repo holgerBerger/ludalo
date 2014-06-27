@@ -657,7 +657,7 @@ class readDB(object):
                     order by c_timestamp desc
                     limit 1 '''
         self.c.execute(query, (fs, ))
-        fs_last_ts = self.c.fetchone()
+        fs_last_ts = self.c.fetchone()[0]
 
 # ------- Speed -------
         # Top Speed WB
@@ -681,7 +681,7 @@ class readDB(object):
                     order by wb_sum desc
                     limit 1'''
         self.c.execute(query, (fs, ))
-        fs_topSpeed_wb = self.c.fetchone()
+        fs_topSpeed_wb = self.c.fetchone()[0]
 
         # Top Speed RB
         query = '''
@@ -704,7 +704,7 @@ class readDB(object):
                     order by rb_sum desc
                     limit 1'''
         self.c.execute(query, (fs, ))
-        fs_topSpeed_rb = self.c.fetchone()
+        fs_topSpeed_rb = self.c.fetchone()[0]
 
 # ------- AVR Speed -------
         # Top AVR Speed RB
@@ -725,7 +725,7 @@ class readDB(object):
                                 UNIX_TIMESTAMP()
                             and filesystems.filesystem = %s'''
         self.c.execute(query, (fs, ))
-        fs_AvrSpeed_rb = self.c.fetchone()
+        fs_AvrSpeed_rb = self.c.fetchone()[0]
 
         # Top AVR Speed WB
         query = '''
@@ -745,7 +745,7 @@ class readDB(object):
                                 UNIX_TIMESTAMP()
                             and filesystems.filesystem = %s'''
         self.c.execute(query, (fs, ))
-        fs_AvrSpeed_wb = self.c.fetchone()
+        fs_AvrSpeed_wb = self.c.fetchone()[0]
 
 # ------- IO -------
         # IO WB
@@ -766,7 +766,7 @@ class readDB(object):
                                 and UNIX_TIMESTAMP()
                             and filesystems.filesystem = %s'''
         self.c.execute(query, (fs, ))
-        fs_ioSum_wb = self.c.fetchone()
+        fs_ioSum_wb = self.c.fetchone()[0]
 
         # IO RB
         query = '''
@@ -786,7 +786,7 @@ class readDB(object):
                                 and UNIX_TIMESTAMP()
                             and filesystems.filesystem = %s'''
         self.c.execute(query, (fs, ))
-        fs_ioSum_rb = self.c.fetchone()
+        fs_ioSum_rb = self.c.fetchone()[0]
 
 # ------- total Trans. -------
         # total Trans WB
@@ -807,7 +807,7 @@ class readDB(object):
                                 and UNIX_TIMESTAMP()
                             and filesystems.filesystem = %s'''
         self.c.execute(query, (fs, ))
-        fs_total_wb = self.c.fetchone()
+        fs_total_wb = self.c.fetchone()[0]
 
         # total Trans RB
         query = '''
@@ -827,7 +827,7 @@ class readDB(object):
                                 and UNIX_TIMESTAMP()
                             and filesystems.filesystem = %s'''
         self.c.execute(query, (fs, ))
-        fs_total_rb = self.c.fetchone()
+        fs_total_rb = self.c.fetchone()[0]
 
         fs_avr_iosize_wio = fs_total_wb / fs_ioSum_wb
         fs_avr_iosize_rio = fs_total_rb / fs_ioSum_rb
