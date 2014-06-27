@@ -678,7 +678,7 @@ class readDB(object):
                                 and UNIX_TIMESTAMP()
                             and filesystems.filesystem = %s
                     group by timestamp_id
-                    order by rb_sum desc
+                    order by wb_sum desc
                     limit 1'''
         self.c.execute(query, (fs, ))
         fs_topSpeed_wb = self.c.fetchone()
@@ -855,6 +855,7 @@ class readDB(object):
     def preComputingFilesystems(self, window):
         filesystems = self.get_all_fs()
         for fs in filesystems:
+            print 'updating', fs
             self.update_fs_web_table(fs)
             #self.print_Filesystem(window, fs)
 #------------------------------------------------------------------------------
