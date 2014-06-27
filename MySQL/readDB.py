@@ -353,7 +353,7 @@ class readDB(object):
                                 '''
         allTimestamps = self.query_to_npArray(query, int(window))
 
-        if not values_np:
+        if values_np == None and not values_np.any():
             print 'no fs timestamps found'
             exit(1)
 
