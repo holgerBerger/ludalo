@@ -829,8 +829,15 @@ class readDB(object):
         self.c.execute(query, (fs, ))
         fs_total_rb = self.c.fetchone()[0]
 
-        fs_avr_iosize_wio = fs_total_wb / fs_ioSum_wb
-        fs_avr_iosize_rio = fs_total_rb / fs_ioSum_rb
+        if fs_ioSum_wb != 0:
+            fs_avr_iosize_wio = fs_total_wb / fs_ioSum_wb
+        else:
+            fs_avr_iosize_wio = 0
+
+        if fs_ioSum_rb != 0:
+            fs_avr_iosize_rio = fs_total_rb / fs_ioSum_rb
+        else:
+            fs_avr_iosize_rio = 0
 
         update_query = '''
             UPDATE web_fs_cashe
@@ -850,6 +857,7 @@ class readDB(object):
                                      fs_ioSum_rb, fs_ioSum_wb,
                                      fs_total_wb, fs_total_rb,
                                      fs_avr_iosize_wio, fs_avr_iosize_rio, fs))
+        self.conn.commit()
 #------------------------------------------------------------------------------
 
     def preComputingFilesystems(self, window):
