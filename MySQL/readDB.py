@@ -380,8 +380,9 @@ class readDB(object):
                     wbs_mb_per_s, wio_volume_in_kb,
                     path)
 
-        print 'done'
-        exit()
+        if self.verbose:
+            print 'done'
+            exit()
 #------------------------------------------------------------------------------
 
     def print_user(self, user):
