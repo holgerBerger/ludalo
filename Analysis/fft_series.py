@@ -42,12 +42,22 @@ def get_Spectrum(y, Fs=60.0):
 
 def class_1(duration):
     ''' duration in hours '''
-    if duration < 3:
+    if duration < 1:
         return '1'
-    elif duration < 24:
+    elif duration < 2:
         return '2'
-    else:
+    elif duration < 3:
         return '3'
+    elif duration < 8:
+        return '4'
+    elif duration < 16:
+        return '5'
+    elif duration < 24:
+        return '6'
+    elif duration < 48:
+        return '7'
+    else:
+        return '8'
 
 
 def class_2(rb, wb, fs=None, duration=None):
@@ -91,23 +101,31 @@ def class_3(rio, wio, rbs, wbs):
         return_st = return_st + '3'
     elif wio_aver < 800:
         return_st = return_st + '4'
-    elif wio_aver <= 1000:
+    elif wio_aver < 1000:
         return_st = return_st + '5'
-    else:
+    elif wio_aver < 1300:
         return_st = return_st + '6'
+    elif wio_aver < 1500:
+        return_st = return_st + '7'
+    else:
+        return_st = return_st + '8'
 
-    if rio_aver < 100:
+    if rio_aver < 10:
         return_st = return_st + '1'
-    elif rio_aver < 300:
+    elif rio_aver < 50:
         return_st = return_st + '2'
-    elif rio_aver < 500:
+    elif rio_aver < 100:
         return_st = return_st + '3'
-    elif rio_aver < 800:
+    elif rio_aver < 300:
         return_st = return_st + '4'
-    elif rio_aver <= 1000:
+    elif rio_aver < 500:
         return_st = return_st + '5'
-    else:
+    elif rio_aver < 800:
         return_st = return_st + '6'
+    elif rio_aver <= 1000:
+        return_st = return_st + '7'
+    else:
+        return_st = return_st + '8'
     return return_st
 
 
