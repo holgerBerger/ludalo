@@ -380,9 +380,31 @@ class readDB(object):
                     wbs_mb_per_s, wio_volume_in_kb,
                     path, self.verbose)
 
+        update_query = '''
+            UPDATE web_fs_cashe
+            SET
+                t_time=%s,
+                topSpeedWB=%s, topSpeedWR=%s,
+                avrSpeedWB=%s, AvrSpeedRB=%s,
+                ioSumWB=%s, IOSumRB=%s,
+                totalWB=%s, totalRB=%s,
+                avrIoSizeW=%s, avrIoSizeR=%s
+           WHERE fs=%s
+        '''
+
+        self.c.execute(update_query, (np.max(timestamps),
+                                     np.max(wbs), np.max(rbs),
+                                     np.average(wbs), np.average(rbs),
+                                     np.sum(wio), np.sum(rio),
+                                     np.sum(wbs), np.sum(rbs),
+                                     np.average(wio_volume_in_kb),
+                                     np.average(rio_volume_in_kb),
+                                     fs))
+        self.conn.commit()
+
         if self.verbose:
             print 'Read Informations: \n -----------'
-            print 'Total bytes:', np.sum(rbs), 'Avr [MB/s]:', round(np.average(rbs_mb_per_s),2), 'std [MB/s]:', round(np.std(rbs_mb_per_s), 2)
+            print 'Total bytes:', np.sum(rbs), 'Avr [MB/s]:', round(np.average(rbs_mb_per_s), 2), 'std [MB/s]:', round(np.std(rbs_mb_per_s), 2)
             print 'Total IOs:', np.sum(rio), 'Avr [IO/s]:', round(np.average(rio/60), 2), 'std [IO/s]:', round(np.std(rio/60), 2)
             print 'Avr [KB/IO]', round(np.average(rio_volume_in_kb), 2), 'std [KB/IO]:', round(np.std(rio_volume_in_kb), 2), '\n'
             print 'Write Informations: \n -----------'
@@ -567,13 +589,13 @@ class readDB(object):
                             wbs_mb_per_s, wio_volume_in_kb,
                             path, self.verbose)
                 print 'Read Informations: \n -----------'
-                print 'Total bytes:', np.sum(rbs), 'Avr [MB/s]:', round(np.average(rbs_mb_per_s),2), 'std [MB/s]:', round(np.std(rbs_mb_per_s), 2)
-                print 'Total IOs:', np.sum(rio), 'Avr [IO/s]:', round(np.average(rio/60), 2), 'std [IO/s]:', round(np.std(rio/60), 2)
-                print 'Avr [KB/IO]', round(np.average(rio_volume_in_kb), 2), 'std [KB/IO]:', round(np.std(rio_volume_in_kb), 2), '\n'
+                print ' Total bytes:', np.sum(rbs), 'Avr [MB/s]:', round(np.average(rbs_mb_per_s),2), 'std [MB/s]:', round(np.std(rbs_mb_per_s), 2)
+                print ' Total IOs:', np.sum(rio), 'Avr [IO/s]:', round(np.average(rio/60), 2), 'std [IO/s]:', round(np.std(rio/60), 2)
+                print ' Avr [KB/IO]', round(np.average(rio_volume_in_kb), 2), 'std [KB/IO]:', round(np.std(rio_volume_in_kb), 2), '\n'
                 print 'Write Informations: \n -----------'
-                print 'Total bytes:', np.sum(wbs), 'Avr [MB/s]:', round(np.average(wbs_mb_per_s), 2), 'std [MB/s]:', round(np.std(wbs_mb_per_s), 2)
-                print 'Total IOs:', round(np.sum(wio), 2), 'Avr [IO/s]:', round(np.average(wio/60), 2), 'std [IO/s]:', round(np.std(wio/60), 2)
-                print 'Avr [KB/IO]', round(np.average(wio_volume_in_kb), 2), 'std [KB/IO]:', round(np.std(wio_volume_in_kb), 2), '\n'
+                print ' Total bytes:', np.sum(wbs), 'Avr [MB/s]:', round(np.average(wbs_mb_per_s), 2), 'std [MB/s]:', round(np.std(wbs_mb_per_s), 2)
+                print ' Total IOs:', round(np.sum(wio), 2), 'Avr [IO/s]:', round(np.average(wio/60), 2), 'std [IO/s]:', round(np.std(wio/60), 2)
+                print ' Avr [KB/IO]', round(np.average(wio_volume_in_kb), 2), 'std [KB/IO]:', round(np.std(wio_volume_in_kb), 2), '\n'
                 print 'done'
                 exit()
         else:
@@ -890,7 +912,7 @@ class readDB(object):
         filesystems = self.get_all_fs()
         for fs in filesystems:
             print 'updating', fs
-            self.update_fs_web_table(fs)
+            #self.update_fs_web_table(fs)
             self.print_Filesystem(window, fs, 'plt/')
 #------------------------------------------------------------------------------
 
