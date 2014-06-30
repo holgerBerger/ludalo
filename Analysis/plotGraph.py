@@ -6,7 +6,7 @@ Created on 19.02.2014
 
 import matplotlib
 import math
-matplotlib.use('AGG')
+#matplotlib.use('AGG')
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
@@ -205,10 +205,8 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose):
         ax6.set_title('Scatter Plots Read')
 
     # show data plot
-    plt.tight_layout()
-    print 'verbose', verbose
-    if verbose:
-        plt.show()
-    else:
-        plt.savefig(str(title) + '.png', dpi=120)
+
+    plt.savefig(str(title) + '.png', dpi=120)
+    print 'plot to', str(title) + '.png'
+    plt.show()
     plt.close('all')
