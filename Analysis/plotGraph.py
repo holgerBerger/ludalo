@@ -6,7 +6,7 @@ Created on 19.02.2014
 
 import matplotlib
 import math
-#matplotlib.use('AGG')
+matplotlib.use('AGG')
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
@@ -208,5 +208,5 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose):
 
     plt.savefig(str(title) + '.png', dpi=120)
     print 'plot to', str(title) + '.png'
-    plt.show()
+    #plt.show()
     plt.close('all')
