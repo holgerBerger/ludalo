@@ -206,7 +206,9 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose):
 
     # show data plot
     plt.tight_layout()
-    plt.savefig(str(title) + '.png', dpi=120)
+
     if verbose:
         plt.show()
+    else:
+        plt.savefig(str(title) + '.png', dpi=120)
     plt.close('all')
