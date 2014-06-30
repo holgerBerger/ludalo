@@ -552,11 +552,11 @@ class readDB(object):
                 print 'Read Informations: \n -----------'
                 print 'Total bytes:', np.sum(rbs), 'Avr [MB/s]:', round(np.average(rbs_mb_per_s),2), 'std [MB/s]:', round(np.std(rbs_mb_per_s), 2)
                 print 'Total IOs:', np.sum(rio), 'Avr [IO/s]:', round(np.average(rio/60), 2), 'std [IO/s]:', round(np.std(rio/60), 2)
-                print 'Avr [KB/IO]', round(np.average(rio_volume_in_kb), 2), 'std [KB/IO]:', round(np.std(rio_volume_in_kb), 2),'std [KB/IO]:', round(np.std(rio_volume_in_kb), 2), '\n'
+                print 'Avr [KB/IO]', round(np.average(rio_volume_in_kb), 2), 'std [KB/IO]:', round(np.std(rio_volume_in_kb), 2), '\n'
                 print 'Write Informations: \n -----------'
                 print 'Total bytes:', np.sum(wbs), 'Avr [MB/s]:', round(np.average(wbs_mb_per_s), 2), 'std [MB/s]:', round(np.std(wbs_mb_per_s), 2)
                 print 'Total IOs:', round(np.sum(wio), 2), 'Avr [IO/s]:', round(np.average(wio/60), 2), 'std [IO/s]:', round(np.std(wio/60), 2)
-                print 'Avr [KB/IO]', round(np.average(wio_volume_in_kb), 2), 'std [KB/IO]:', round(np.std(wio_volume_in_kb), 2),'std [KB/IO]:', round(np.std(wio_volume_in_kb), 2), '\n'
+                print 'Avr [KB/IO]', round(np.average(wio_volume_in_kb), 2), 'std [KB/IO]:', round(np.std(wio_volume_in_kb), 2), '\n'
                 print 'done'
                 exit()
         else:
