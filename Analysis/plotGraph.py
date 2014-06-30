@@ -107,7 +107,7 @@ def plotGraph(list_of_list, diagramName='', mvaLength=21):
     #plt.show()
 
 
-def plotJob(timestamps, rbs, rio, wbs, wio, title):
+def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose):
 
     # convert timestamps
     dates1 = [dt.datetime.fromtimestamp(ts) for ts in timestamps]
@@ -208,4 +208,5 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title):
     plt.tight_layout()
     plt.savefig(str(title) + '.png', dpi=120)
     plt.close('all')
-    #plt.show()
+    if verbose:
+        plt.show()

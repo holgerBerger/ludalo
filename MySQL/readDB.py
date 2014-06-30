@@ -548,7 +548,15 @@ class readDB(object):
                 plotJob(timestamps,
                             rbs_mb_per_s, rio_volume_in_kb,
                             wbs_mb_per_s, wio_volume_in_kb,
-                            path)
+                            path, self.verbose)
+                print 'Read Informations: \n -----------'
+                print 'Total bytes:', np.sum(rbs), 'Avr [MB/s]:', np.average(rbs_mb_per_s), 'std [MB/s]:', np.std(rbs_mb_per_s)
+                print 'Total IOs:', np.sum(rio), 'Avr [IO/s]:', np.average(rio/60), 'std [IO/s]:', np.std(rio/60)
+                print 'Avr [KB/IO]', np.average(rio_volume_in_kb), 'std [IO/s]:', np.std(rio_volume_in_kb),'std [KB/IO]:', np.std(rio_volume_in_kb), '\n'
+                print 'Write Informations: \n -----------'
+                print 'Total bytes:', np.sum(wbs), 'Avr [MB/s]:', np.average(wbs_mb_per_s), 'std [MB/s]:', np.std(wbs_mb_per_s)
+                print 'Total IOs:', np.sum(wio), 'Avr [IO/s]:', np.average(wio/60), 'std [IO/s]:', np.std(wio/60)
+                print 'Avr [KB/IO]', np.average(wio_volume_in_kb), 'std [IO/s]:', np.std(wio_volume_in_kb),'std [KB/IO]:', np.std(wio_volume_in_kb), '\n'
                 print 'done'
                 exit()
         else:
