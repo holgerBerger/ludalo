@@ -390,7 +390,6 @@ class readDB(object):
         userCounter = db.c.fetchone()
         print userCounter[0], ' users total'
 
-        testUser = 'xhcmarku'  # 13 Jobs 38.54 Days Jobs runtime
         db.c.execute('''
                 select
                     jobs.id
@@ -400,10 +399,11 @@ class readDB(object):
                 where
                     jobs.owner = users.id
                 and
-                    users.username = %s;''', testUser)
+                    users.username = %s;''', user)
         rows = db.c.fetchall()
         jobID_list = []
         for row in rows:
+            print row[0]
             jobID_list.append(row[0])
 #------------------------------------------------------------------------------
 
@@ -908,7 +908,7 @@ if __name__ == '__main__':
         #exit()
     elif args.user:
         print 'user=', args.user
-        print 'Not implemented yet'
+        print 'Not fully implemented yet'
         db.print_user(args.user)
         #exit()
     elif args.job:
