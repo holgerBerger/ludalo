@@ -468,7 +468,7 @@ class readDB(object):
             self.explainJob(jobID)
             print 'job Running? ', jobRunning
             print 'job_end ', job_end
-            print 'job_start ', job_start
+            print 'job_start ', job_start, '\n'
 
         # get job data
         option = (jobID, job_start, job_end)
@@ -542,7 +542,7 @@ class readDB(object):
             else:
                 path = '/var/www/ludalo-web/calc/jobs/' + str(jobName)
 
-            print jobName, get_fingerprint(duration, wbs, rbs, rio, wio)
+            print jobName, get_fingerprint(duration, wbs, rbs, rio, wio),
 
             if self.verbose:
                 plotJob(timestamps,
@@ -550,13 +550,13 @@ class readDB(object):
                             wbs_mb_per_s, wio_volume_in_kb,
                             path, self.verbose)
                 print 'Read Informations: \n -----------'
-                print 'Total bytes:', np.sum(rbs), 'Avr [MB/s]:', np.average(rbs_mb_per_s), 'std [MB/s]:', np.std(rbs_mb_per_s)
-                print 'Total IOs:', np.sum(rio), 'Avr [IO/s]:', np.average(rio/60), 'std [IO/s]:', np.std(rio/60)
-                print 'Avr [KB/IO]', np.average(rio_volume_in_kb), 'std [IO/s]:', np.std(rio_volume_in_kb),'std [KB/IO]:', np.std(rio_volume_in_kb), '\n'
+                print 'Total bytes:', np.sum(rbs), 'Avr [MB/s]:', round(np.average(rbs_mb_per_s),2), 'std [MB/s]:', round(np.std(rbs_mb_per_s), 2)
+                print 'Total IOs:', np.sum(rio), 'Avr [IO/s]:', round(np.average(rio/60), 2), 'std [IO/s]:', round(np.std(rio/60), 2)
+                print 'Avr [KB/IO]', round(np.average(rio_volume_in_kb), 2), 'std [KB/IO]:', round(np.std(rio_volume_in_kb), 2),'std [KB/IO]:', round(np.std(rio_volume_in_kb), 2), '\n'
                 print 'Write Informations: \n -----------'
-                print 'Total bytes:', np.sum(wbs), 'Avr [MB/s]:', np.average(wbs_mb_per_s), 'std [MB/s]:', np.std(wbs_mb_per_s)
-                print 'Total IOs:', np.sum(wio), 'Avr [IO/s]:', np.average(wio/60), 'std [IO/s]:', np.std(wio/60)
-                print 'Avr [KB/IO]', np.average(wio_volume_in_kb), 'std [IO/s]:', np.std(wio_volume_in_kb),'std [KB/IO]:', np.std(wio_volume_in_kb), '\n'
+                print 'Total bytes:', np.sum(wbs), 'Avr [MB/s]:', round(np.average(wbs_mb_per_s), 2), 'std [MB/s]:', round(np.std(wbs_mb_per_s), 2)
+                print 'Total IOs:', round(np.sum(wio), 2), 'Avr [IO/s]:', round(np.average(wio/60), 2), 'std [IO/s]:', round(np.std(wio/60), 2)
+                print 'Avr [KB/IO]', round(np.average(wio_volume_in_kb), 2), 'std [KB/IO]:', round(np.std(wio_volume_in_kb), 2),'std [KB/IO]:', round(np.std(wio_volume_in_kb), 2), '\n'
                 print 'done'
                 exit()
         else:
