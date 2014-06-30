@@ -403,10 +403,16 @@ class readDB(object):
                 and
                     users.username = %s;''', user)
         rows = db.c.fetchall()
-        jobID_list = []
         for row in rows:
-            print row[0], row[1], row[2], str(row[2] - row[1])
-            jobID_list.append(row[0])
+            start = datetime.datetime.fromtimestamp(row[1]).strftime('%Y-%m-%d %H:%M:%S')
+            if row[2] > 0:
+                end = datetime.datetime.fromtimestamp(row[2]).strftime('%Y-%m-%d %H:%M:%S')
+                duration = str(row[2] - row[1])
+            else:
+                end = 'runing'
+                duration = ''
+            print row[0], start, end, duration
+
 #------------------------------------------------------------------------------
 
     def getJobID(self, jobName):
