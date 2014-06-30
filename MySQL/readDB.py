@@ -411,7 +411,7 @@ class readDB(object):
             else:
                 end = 'runing'
                 duration = ''
-            print row[0], start, end, duration
+            print row[0], '\t', start, '\t', end, '\t', duration
 
 #------------------------------------------------------------------------------
 
