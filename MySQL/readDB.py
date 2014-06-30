@@ -401,7 +401,8 @@ class readDB(object):
                 where
                     jobs.owner = users.id
                 and
-                    users.username = %s;''', user)
+                    users.username = %s
+                order by t_start''', user)
         rows = db.c.fetchall()
         for row in rows:
             start = datetime.datetime.fromtimestamp(row[1]).strftime('%Y-%m-%d %H:%M:%S')
