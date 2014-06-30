@@ -206,7 +206,7 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose):
 
     # show data plot
     plt.tight_layout()
-
+    print 'verbose', verbose
     if verbose:
         plt.show()
     else:
