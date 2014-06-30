@@ -392,7 +392,7 @@ class readDB(object):
 
         db.c.execute('''
                 select
-                    jobs.id
+                    jobs.jobid
                 from
                     jobs,
                     users
