@@ -386,7 +386,7 @@ class readDB(object):
 #------------------------------------------------------------------------------
 
     def print_user(self, user):
-        db.c.execute('''select count(*) form users; ''')
+        db.c.execute('''select count(*) from users ''')
         userCounter = db.c.fetchone()
         print userCounter[0], ' users total'
 
