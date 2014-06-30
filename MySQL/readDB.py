@@ -359,6 +359,12 @@ class readDB(object):
 
         values_np = self.np_fillAndSort(values_np, allTimestamps)
 
+        # ignore division by zero
+        # it is posibel that wbs has a value but wio is zero. in this case
+        # replaced with 0 (np.nan_to_num)
+
+        np.seterr(divide='ignore', invalid='ignore')
+
         timestamps = values_np[:, 0]
         wbs = values_np[:, 1]
         wbs_per_second = wbs / 60
@@ -704,7 +710,7 @@ if __name__ == '__main__':
     parser.add_argument("-w", "--window",
                         help='''specify a time window [in hours],
                                     default = 5 days''', type=str)
-    parser.add_argument("-e", "--experimentel",
+    parser.add_argument("-wc", "--webCache",
                         help='''precomputing for webinterface
                                     ''', default=False, action='store_true')
     parser.add_argument("-aj", "--analysejobs",
@@ -733,7 +739,7 @@ if __name__ == '__main__':
         db.verbose = False
         db.print_all_jobs()
         #exit()
-    elif args.experimentel:
+    elif args.webCache:
         print 'precomputing for webinterface'
         db.verbose = False
         window = 432000
@@ -746,20 +752,3 @@ if __name__ == '__main__':
 #------------------------------------------------------------------------------
     time_end = time.time()
     print "end with no errors in:", str(time_end - time_start), "sec"
-
-
-def print_all_filesystems_test():
-    print 'univ_1'
-    db.print_Filesystem('univ_1')
-
-    print 'univ_2'
-    db.print_Filesystem('univ_2')
-
-    print 'ind_1'
-    db.print_Filesystem('ind_1')
-
-    print 'ind_2'
-    db.print_Filesystem('ind_2')
-
-    print 'res_1'
-    db.print_Filesystem('res_1')
