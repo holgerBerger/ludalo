@@ -392,7 +392,9 @@ class readDB(object):
 
         db.c.execute('''
                 select
-                    jobs.jobid
+                    jobs.jobid,
+                    t_start,
+                    t_end
                 from
                     jobs,
                     users
@@ -403,7 +405,7 @@ class readDB(object):
         rows = db.c.fetchall()
         jobID_list = []
         for row in rows:
-            print row[0]
+            print row[0], row[1], row[2], str(row[2] - row[1])
             jobID_list.append(row[0])
 #------------------------------------------------------------------------------
 
