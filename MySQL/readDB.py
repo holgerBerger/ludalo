@@ -418,7 +418,7 @@ class readDB(object):
             print 'Total IOs:', round(np.sum(wio), 2), 'Avr [IO/s]:', round(np.average(wio/60), 2), 'std [IO/s]:', round(np.std(wio/60), 2)
             print 'Avr [KB/IO]', round(np.average(wio_volume_in_kb), 2), 'std [KB/IO]:', round(np.std(wio_volume_in_kb), 2), '\n'
             print 'done'
-            exit()
+
 #------------------------------------------------------------------------------
 
     def print_user(self, user):
@@ -603,7 +603,6 @@ class readDB(object):
                 print ' Total IOs:', round(np.sum(wio), 2), 'Avr [IO/s]:', round(np.average(wio/60), 2), 'std [IO/s]:', round(np.std(wio/60), 2)
                 print ' Avr [KB/IO]', round(np.average(wio_volume_in_kb), 2), 'std [KB/IO]:', round(np.std(wio_volume_in_kb), 2), '\n'
                 print 'done'
-                exit()
         else:
             print 'job not in sample range'
 #------------------------------------------------------------------------------

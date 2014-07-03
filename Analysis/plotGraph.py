@@ -205,7 +205,7 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose):
         ax6.set_title('Scatter Plots Read')
 
     # show data plot
-
+    plt.tight_layout()
     plt.savefig(str(title) + '.png', dpi=120)
     print 'plot to', str(title) + '.png'
     #plt.show()
