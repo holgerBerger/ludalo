@@ -525,7 +525,8 @@ class readDB(object):
                         and users.id = jobs.owner'''
         self.c.execute(query, jobID)
         non = self.c.fetchall()
-        non = non[0]
+        non = non[0][0]
+        print non
         non = len(non.split(','))
 
         # get job data
