@@ -526,7 +526,7 @@ class readDB(object):
         self.c.execute(query, jobID)
         non = self.c.fetchall()
         non = non[0]
-        non = len(non)
+        non = len(non.split(','))
 
         # get job data
         option = (jobID, job_start, job_end)
