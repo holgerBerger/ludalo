@@ -54,13 +54,36 @@ def class_1(duration):
         return '5'
     elif duration < 24:
         return '6'
-    elif duration < 48:
+    elif duration < 36:
         return '7'
-    else:
+    elif duration < 48:
         return '8'
+    else:
+        return '9'
 
 
-def class_2(rb, wb, fs=None, duration=None):
+def class_2(non):
+    if non < 2:
+        return '1'
+    elif non <= 4:
+        return '2'
+    elif non <= 8:
+        return '3'
+    elif non <= 12:
+        return '4'
+    elif non <= 16:
+        return '5'
+    elif non <= 32:
+        return '6'
+    elif non <= 64:
+        return '7'
+    elif non <= 128:
+        return '8'
+    else:
+        return '9'
+
+
+def class_3(rb, wb, fs=None, duration=None):
     ''' volumen in byte '''
     total = rb + wb
 
@@ -70,21 +93,23 @@ def class_2(rb, wb, fs=None, duration=None):
         return '1'
     elif total_mb < 200:
         return '2'
-    elif total_mb < 2000:
+    elif total_mb < 2000:       # 2 GB
         return '3'
-    elif total_mb < 20000:
+    elif total_mb < 20000:      # 20 GB
         return '4'
-    elif total_mb < 200000:
+    elif total_mb < 200000:     # 200 Gb
         return '5'
-    elif total_mb < 2000000:
+    elif total_mb < 2000000:    # 2 TB
         return '6'
-    elif total_mb < 20000000:
+    elif total_mb < 4000000:    # 4 TB
         return '7'
-    else:
+    elif total_mb < 8000000:    # 8 TB
         return '8'
+    else:
+        return '9'
 
 
-def class_3(rio, wio, rbs, wbs):
+def class_4(rio, wio, rbs, wbs):
     rio_volume_in_kb = np.nan_to_num((rbs / rio) / 1024)
     wio_volume_in_kb = np.nan_to_num((wbs / wio) / 1024)
 
@@ -93,24 +118,26 @@ def class_3(rio, wio, rbs, wbs):
 
     return_st = ''
 
-    if wio_aver < 100:
+    if wio_aver < 20:
         return_st = return_st + '1'
-    elif wio_aver < 300:
+    elif wio_aver < 50:
         return_st = return_st + '2'
-    elif wio_aver < 500:
+    elif wio_aver < 100:
         return_st = return_st + '3'
-    elif wio_aver < 800:
+    elif wio_aver < 300:
         return_st = return_st + '4'
-    elif wio_aver < 1000:
+    elif wio_aver < 500:
         return_st = return_st + '5'
-    elif wio_aver < 1300:
+    elif wio_aver < 800:
         return_st = return_st + '6'
-    elif wio_aver < 1500:
+    elif wio_aver < 1000:
         return_st = return_st + '7'
-    else:
+    elif wio_aver < 1500:
         return_st = return_st + '8'
+    else:
+        return_st = return_st + '9'
 
-    if rio_aver < 10:
+    if rio_aver < 20:
         return_st = return_st + '1'
     elif rio_aver < 50:
         return_st = return_st + '2'
@@ -122,14 +149,16 @@ def class_3(rio, wio, rbs, wbs):
         return_st = return_st + '5'
     elif rio_aver < 800:
         return_st = return_st + '6'
-    elif rio_aver <= 1000:
+    elif rio_aver < 1000:
         return_st = return_st + '7'
-    else:
+    elif rio_aver < 1500:
         return_st = return_st + '8'
+    else:
+        return_st = return_st + '9'
     return return_st
 
 
-def class_4(rio, wio, rb, wb):
+def class_5(rio, wio, rb, wb):
     total_io = rio + wio
     total_b = rb + wb
 
@@ -143,11 +172,12 @@ def class_4(rio, wio, rb, wb):
     return str(return_value)[4:-1]  # Srip set() and ceep the rest
 
 
-def get_fingerprint(duration, rio, wio, wbs, rbs, fs=None):
+def get_fingerprint(duration, rio, wio, wbs, rbs, non, fs=None):
     a = class_1(duration)
-    b = class_2(rbs, wbs, fs=None, duration=None)
-    c = class_3(rio, wio, rbs, wbs)
-    d = class_4(rio, wio, rbs, wbs)
+    b = class_2(non)
+    b = class_3(rbs, wbs, fs=None, duration=None)
+    c = class_4(rio, wio, rbs, wbs)
+    d = class_5(rio, wio, rbs, wbs)
     return a + b + c + ';' + d
 
 if __name__ == '__main__':

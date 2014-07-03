@@ -515,6 +515,19 @@ class readDB(object):
             print 'job_end ', job_end
             print 'job_start ', job_start, '\n'
 
+        query = ''' select
+                        jobs.nodelist
+                    from
+                        jobs,
+                        users
+                    where
+                        jobs.id = %s
+                        and users.id = jobs.owner'''
+        self.c.execute(query, jobID)
+        non = self.c.fetchall()
+        non = non[0]
+        non = len(non)
+
         # get job data
         option = (jobID, job_start, job_end)
 
@@ -587,7 +600,7 @@ class readDB(object):
             else:
                 path = '/var/www/ludalo-web/calc/jobs/' + str(jobName)
 
-            print jobName, get_fingerprint(duration, wbs, rbs, rio, wio),
+            print jobName, get_fingerprint(duration, wbs, rbs, rio, wio, non)
 
             if self.verbose:
                 plotJob(timestamps,
