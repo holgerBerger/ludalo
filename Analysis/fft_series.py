@@ -175,9 +175,9 @@ def class_5(rio, wio, rb, wb):
 def get_fingerprint(duration, rio, wio, wbs, rbs, non, fs=None):
     a = class_1(duration)
     b = class_2(non)
-    b = class_3(rbs, wbs, fs=None, duration=None)
-    c = class_4(rio, wio, rbs, wbs)
-    d = class_5(rio, wio, rbs, wbs)
+    c = class_3(rbs, wbs, fs=None, duration=None)
+    d = class_4(rio, wio, rbs, wbs)
+    e = class_5(rio, wio, rbs, wbs)
     return a + b + c + ';' + d
 
 if __name__ == '__main__':
