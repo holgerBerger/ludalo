@@ -178,7 +178,7 @@ def get_fingerprint(duration, rio, wio, wbs, rbs, non, fs=None):
     c = class_3(rbs, wbs, fs=None, duration=None)
     d = class_4(rio, wio, rbs, wbs)
     e = class_5(rio, wio, rbs, wbs)
-    return a + b + c + ';' + d
+    return a + b + c + d + ';' + e
 
 if __name__ == '__main__':
     a1 = np.sort([3, 7, -8, 3, -4, -14, 5, 9, -1, 1, -4, 12])
