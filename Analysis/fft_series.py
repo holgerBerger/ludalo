@@ -41,20 +41,24 @@ def get_Spectrum(y, Fs=60.0):
 
 
 def class_1(duration):
-    ''' duration in hours '''
-    if duration < 1:
+    ''' duration in minutes '''
+
+    duration_in_min = duration
+    duration = duration / 60  # in houers
+
+    if duration_in_min < 15:
         return '1'
-    elif duration < 2:
+    elif duration_in_min < 30:
         return '2'
-    elif duration < 3:
+    elif duration < 1:
         return '3'
-    elif duration < 8:
+    elif duration < 4:
         return '4'
-    elif duration < 16:
+    elif duration < 8:
         return '5'
-    elif duration < 24:
+    elif duration < 16:
         return '6'
-    elif duration < 36:
+    elif duration < 24:
         return '7'
     elif duration < 48:
         return '8'

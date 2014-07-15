@@ -579,7 +579,7 @@ class readDB(object):
             # transform data
             timestamps = values_np[:, 0]
             duration = max(timestamps) - min(timestamps)  # in seconds
-            duration = duration / 60 / 60  # in hours
+            duration = duration / 60  # in minutes
             wbs = values_np[:, 1]
             wbs_per_second = wbs / 60
             wbs_kb_per_s = wbs_per_second / 1024
