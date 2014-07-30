@@ -15,7 +15,7 @@ class MySQLObject(object):
         '''
         Constructor
         '''
-        self.DB_VERSION = 4
+        self.DB_VERSION = 5
         self.config = ConfigParser()
         try:
             self.config.readfp(open("db.conf"))
@@ -256,13 +256,13 @@ class MySQLObject(object):
         self.c.execute('''
                         CREATE TABLE IF NOT EXISTS ost_values (
                             id serial primary key,
-                            timestamp_id integer
+                            timestamp_id BIGINT
                             COMMENT
                             'map to the timestamps table',
-                            target integer
+                            target BIGINT
                             COMMENT
                             'map to the targets table',
-                            server integer
+                            server BIGINT
                             COMMENT
                             'map to the servers table',
                             rio integer
@@ -287,9 +287,9 @@ class MySQLObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             samples_ost (
                                 id serial primary key,
-                                timestamp_id integer,
-                                target integer,
-                                nid integer,
+                                timestamp_id BIGINT,
+                                target BIGINT,
+                                nid BIGINT,
                                 rio integer,
                                 rb bigint,
                                 wio integer,
@@ -298,9 +298,9 @@ class MySQLObject(object):
         self.c.execute('''CREATE TABLE IF NOT EXISTS
                             samples_mdt (
                                 id serial primary key,
-                                  timestamp_id integer,
-                                  target integer,
-                                  nid integer,
+                                  timestamp_id BIGINT,
+                                  target BIGINT,
+                                  nid BIGINT,
                                   reqs integer) engine=innodb;''')
 
         self.c.execute(''' CREATE TABLE IF NOT EXISTS
@@ -314,7 +314,7 @@ class MySQLObject(object):
                                 jobid varchar(32),
                                 t_start integer,
                                 t_end integer,
-                                owner integer,
+                                owner BIGINT,
                                 nodelist text,
                                 cmd text,
                                 r_sum bigint,
@@ -324,8 +324,8 @@ class MySQLObject(object):
         self.c.execute(''' CREATE TABLE IF NOT EXISTS
                             nodelist (
                                 id serial primary key,
-                                job integer,
-                                nid integer) engine=innodb; ''')
+                                job BIGINT,
+                                nid BIGINT) engine=innodb; ''')
 
         self.c.execute(''' CREATE TABLE IF NOT EXISTS
                             hashes (
@@ -343,11 +343,11 @@ class MySQLObject(object):
                     fs varchar(32),
                     t_time integer,
                     topSpeedWB bigint,
-                    topSpeedWR bigint,
+                    topSpeedRB bigint,
                     avrSpeedWB bigint,
-                    AvrSpeedRB bigint,
+                    avrSpeedRB bigint,
                     ioSumWB bigint,
-                    IOSumRB bigint,
+                    ioSumRB bigint,
                     totalWB bigint,
                     totalRB bigint,
                     avrIoSizeW bigint,

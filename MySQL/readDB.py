@@ -9,7 +9,6 @@ import sys
 import time
 import datetime
 import MySQLdb
-from multiprocessing.pool import Pool
 from ConfigParser import ConfigParser
 import argparse
 import numpy as np
@@ -19,7 +18,6 @@ import numpy as np
 sys.path.append("/home/uwe/projects/ludalo/Analysis")
 
 #from User import User
-from Job import Job
 from fft_series import get_fingerprint
 from plotGraph import plotJob
 
@@ -30,7 +28,7 @@ class readDB(object):
         '''
         Constructor
         '''
-        self.DB_VERSION = 4
+        self.DB_VERSION = 5
         self.config = ConfigParser()
         try:
             self.config.readfp(open("db.conf"))
@@ -62,10 +60,13 @@ class readDB(object):
                 print 'please regenerate database!!!'
                 sys.exit(1)
             version = v[0]
-            print ('\nThere is something wrong with the Database\n' +
-                       'DB version is ' + str(version) +
-                       ''' but expect version ''' +
-                       str(self.DB_VERSION) + '\n')
+            print (
+                '\nThere is something wrong with the Database\n'
+                + 'DB version is '
+                + str(version)
+                + ''' but expect version '''
+                + str(self.DB_VERSION)
+                + '\n')
             sys.exit(0)
 #------------------------------------------------------------------------------
 
@@ -177,8 +178,7 @@ class readDB(object):
         return user
 #------------------------------------------------------------------------------
 
-    def getAll_Jobs_to_Nid_ID_Between(self, timeStamp_start,
-                                        timeStamp_end, nidID):
+    def getAll_Jobs_to_Nid_ID_Between(self, timeStamp_start, timeStamp_end, nidID):
 
         self.c.execute('''
             select owner, nodelist.nid, jobs.jobid, jobs.t_start, jobs.t_end
@@ -212,8 +212,9 @@ class readDB(object):
             return (t_start[0], t_end[0])
 #------------------------------------------------------------------------------
 
-    def getAll_Nid_IDs_Between(self, timeStamp_start,
-                                timeStamp_end, threshold_b=0):
+    def getAll_Nid_IDs_Between(
+            self, timeStamp_start, timeStamp_end, threshold_b=0):
+
         ''' get all nids between two timestamps  if thershold only nids with
             more rb or wb between this timestamps'''
 
@@ -276,7 +277,7 @@ class readDB(object):
     def timeStampToDate(self, timeStamp):
         ''' converts form time stamp to year day month '''
         return datetime.datetime.fromtimestamp(
-                                float(timeStamp)).strftime('%Y-%m-%d %H:%M:%S')
+            float(timeStamp)).strftime('%Y-%m-%d %H:%M:%S')
 #------------------------------------------------------------------------------
 
     def explainJob(self, jobID):
@@ -296,20 +297,21 @@ class readDB(object):
         head = self.c.description
         informations = zip(zip(*head)[0], self.c.fetchall()[0])
         print str(
-                  str(informations[0][0]) + ' ' +
-                  str(informations[0][1]) + ' ' +
-                  str(informations[3][0]) + ' ' +
-                  str(informations[3][1]))
+            str(informations[0][0]) + ' ' +
+            str(informations[0][1]) + ' ' +
+            str(informations[3][0]) + ' ' +
+            str(informations[3][1])
+        )
         if informations[2][1] < 0:
             t_end = time.time()
             print str('Duration [running job]: ' +
-               str(int(t_end - informations[1][1]) / 60) +
-               'min')
+                      str(int(t_end - informations[1][1]) / 60) +
+                      'min')
         else:
             t_end = informations[2][1]
             print str('Duration: ' +
-               str(int(t_end - informations[1][1]) / 60) +
-               'min')
+                      str(int(t_end - informations[1][1]) / 60) +
+                      'min')
 
         number_of_nodes = len(informations[4][1].split(','))
         print 'Number of Nodes:', number_of_nodes
@@ -338,7 +340,7 @@ class readDB(object):
                 order by timestamps.c_timestamp''')
         values_np = self.query_to_npArray(query, (fs, int(window)))
 
-        if values_np != None and not values_np.any():
+        if values_np is not None and not values_np.any():
             print 'no fs data found'
             exit(1)
 
@@ -353,7 +355,7 @@ class readDB(object):
                                 '''
         allTimestamps = self.query_to_npArray(query, int(window))
 
-        if values_np != None and not values_np.any():
+        if values_np is not None and not values_np.any():
             print 'no fs timestamps found'
             exit(1)
 
@@ -382,40 +384,40 @@ class readDB(object):
 
         path = png_path + str(fs)
         plotJob(timestamps,
-                    rbs_mb_per_s, rio_volume_in_kb,
-                    wbs_mb_per_s, wio_volume_in_kb,
-                    path, self.verbose)
+                rbs_mb_per_s, rio_volume_in_kb,
+                wbs_mb_per_s, wio_volume_in_kb,
+                path, self.verbose)
 
         update_query = '''
             UPDATE web_fs_cashe
             SET
                 t_time=%s,
-                topSpeedWB=%s, topSpeedWR=%s,
-                avrSpeedWB=%s, AvrSpeedRB=%s,
-                ioSumWB=%s, IOSumRB=%s,
+                topSpeedWB=%s, topSpeedRB=%s,
+                avrSpeedWB=%s, avrSpeedRB=%s,
+                ioSumWB=%s, ioSumRB=%s,
                 totalWB=%s, totalRB=%s,
                 avrIoSizeW=%s, avrIoSizeR=%s
            WHERE fs=%s
         '''
 
         self.c.execute(update_query, (np.max(timestamps),
-                                     np.max(wbs), np.max(rbs),
-                                     np.average(wbs), np.average(rbs),
-                                     np.sum(wio), np.sum(rio),
-                                     np.sum(wbs), np.sum(rbs),
-                                     np.average(wio_volume_in_kb),
-                                     np.average(rio_volume_in_kb),
-                                     fs))
+                                      np.max(wbs), np.max(rbs),
+                                      np.average(wbs), np.average(rbs),
+                                      np.sum(wio), np.sum(rio),
+                                      np.sum(wbs), np.sum(rbs),
+                                      np.average(wio_volume_in_kb),
+                                      np.average(rio_volume_in_kb),
+                                      fs))
         self.conn.commit()
 
         if self.verbose:
             print 'Read Informations: \n -----------'
             print 'Total bytes:', np.sum(rbs), 'Avr [MB/s]:', round(np.average(rbs_mb_per_s), 2), 'std [MB/s]:', round(np.std(rbs_mb_per_s), 2)
-            print 'Total IOs:', np.sum(rio), 'Avr [IO/s]:', round(np.average(rio/60), 2), 'std [IO/s]:', round(np.std(rio/60), 2)
+            print 'Total IOs:', np.sum(rio), 'Avr [IO/s]:', round(np.average(rio / 60), 2), 'std [IO/s]:', round(np.std(rio / 60), 2)
             print 'Avr [KB/IO]', round(np.average(rio_volume_in_kb), 2), 'std [KB/IO]:', round(np.std(rio_volume_in_kb), 2), '\n'
             print 'Write Informations: \n -----------'
             print 'Total bytes:', np.sum(wbs), 'Avr [MB/s]:', round(np.average(wbs_mb_per_s), 2), 'std [MB/s]:', round(np.std(wbs_mb_per_s), 2)
-            print 'Total IOs:', round(np.sum(wio), 2), 'Avr [IO/s]:', round(np.average(wio/60), 2), 'std [IO/s]:', round(np.std(wio/60), 2)
+            print 'Total IOs:', round(np.sum(wio), 2), 'Avr [IO/s]:', round(np.average(wio / 60), 2), 'std [IO/s]:', round(np.std(wio / 60), 2)
             print 'Avr [KB/IO]', round(np.average(wio_volume_in_kb), 2), 'std [KB/IO]:', round(np.std(wio_volume_in_kb), 2), '\n'
             print 'done'
 
@@ -441,9 +443,11 @@ class readDB(object):
                 order by t_start''', user)
         rows = db.c.fetchall()
         for row in rows:
-            start = datetime.datetime.fromtimestamp(row[1]).strftime('%Y-%m-%d %H:%M:%S')
+            start = datetime.datetime.fromtimestamp(
+                row[1]).strftime('%Y-%m-%d %H:%M:%S')
             if row[2] > 0:
-                end = datetime.datetime.fromtimestamp(row[2]).strftime('%Y-%m-%d %H:%M:%S')
+                end = datetime.datetime.fromtimestamp(
+                    row[2]).strftime('%Y-%m-%d %H:%M:%S')
                 duration = str(row[2] - row[1])
             else:
                 end = 'runing'
@@ -557,7 +561,7 @@ class readDB(object):
 
         values_np = self.query_to_npArray(query, option)
 
-        if values_np != None and values_np.any():
+        if values_np is not None and values_np.any():
             query = ''' select
                             c_timestamp
                         from
@@ -604,16 +608,16 @@ class readDB(object):
 
             if self.verbose:
                 plotJob(timestamps,
-                            rbs_mb_per_s, rio_volume_in_kb,
-                            wbs_mb_per_s, wio_volume_in_kb,
-                            path, self.verbose)
+                        rbs_mb_per_s, rio_volume_in_kb,
+                        wbs_mb_per_s, wio_volume_in_kb,
+                        path, self.verbose)
                 print 'Read Informations: \n -----------'
-                print ' Total bytes:', np.sum(rbs), 'Avr [MB/s]:', round(np.average(rbs_mb_per_s),2), 'std [MB/s]:', round(np.std(rbs_mb_per_s), 2)
-                print ' Total IOs:', np.sum(rio), 'Avr [IO/s]:', round(np.average(rio/60), 2), 'std [IO/s]:', round(np.std(rio/60), 2)
+                print ' Total bytes:', np.sum(rbs), 'Avr [MB/s]:', round(np.average(rbs_mb_per_s), 2), 'std [MB/s]:', round(np.std(rbs_mb_per_s), 2)
+                print ' Total IOs:', np.sum(rio), 'Avr [IO/s]:', round(np.average(rio / 60), 2), 'std [IO/s]:', round(np.std(rio / 60), 2)
                 print ' Avr [KB/IO]', round(np.average(rio_volume_in_kb), 2), 'std [KB/IO]:', round(np.std(rio_volume_in_kb), 2), '\n'
                 print 'Write Informations: \n -----------'
                 print ' Total bytes:', np.sum(wbs), 'Avr [MB/s]:', round(np.average(wbs_mb_per_s), 2), 'std [MB/s]:', round(np.std(wbs_mb_per_s), 2)
-                print ' Total IOs:', round(np.sum(wio), 2), 'Avr [IO/s]:', round(np.average(wio/60), 2), 'std [IO/s]:', round(np.std(wio/60), 2)
+                print ' Total IOs:', round(np.sum(wio), 2), 'Avr [IO/s]:', round(np.average(wio / 60), 2), 'std [IO/s]:', round(np.std(wio / 60), 2)
                 print ' Avr [KB/IO]', round(np.average(wio_volume_in_kb), 2), 'std [KB/IO]:', round(np.std(wio_volume_in_kb), 2), '\n'
                 print 'done'
         else:
@@ -634,7 +638,7 @@ class readDB(object):
             # by 'fromiter' in other words, to restore original dimensions
             # of the results set
             num_rows = int(self.c.rowcount)
-            #print num_rows
+            # print num_rows
 
             # recast this nested tuple to a python list and flatten it
             # so it's a proper iterable:
@@ -736,27 +740,27 @@ if __name__ == '__main__':
         else:
             window = int(args.window) * 3600  # hours to seconds
         db.print_Filesystem(window, args.filesystem)
-        #exit()
+        # exit()
     elif args.user:
         print 'user=', args.user
         print 'Not fully implemented yet'
         db.print_user(args.user)
-        #exit()
+        # exit()
     elif args.job:
         print 'job=', args.job
         db.print_job(args.job)
-        #exit()
+        # exit()
     elif args.analysejobs:
         print 'Printing all Jobs'
         db.verbose = False
         db.print_all_jobs()
-        #exit()
+        # exit()
     elif args.webCache:
         print 'precomputing for webinterface'
         db.verbose = False
         window = 432000
         db.preComputingFilesystems(window)
-        #exit()
+        # exit()
     else:
         parser.print_help()
         exit(1)
