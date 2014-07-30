@@ -11,14 +11,15 @@ import dateutil.parser
 import calendar
 
 sys.path.append("MySQL")
-import MySQLObject 
+import MySQLObject
 
 # ROOTDIR="/var/spool/torque/server_priv/accounting"
 ROOTDIR = "/home/berger/Lustre/testdata/watch"
-FILEPREFIX="apssched"
+FILEPREFIX = "apssched"
 
 
 class Logfile:
+
     def __init__(self, prefix, path, filename):
         ''' path: directory where the file is
             filename: name of file to read
@@ -30,7 +31,8 @@ class Logfile:
         self.f = open(self.filename, "r")
         self.db = MySQLObject.MySQLObject()
 
-        # map resid to job - make it persistent as Bound line is only line containing jobid
+        # map resid to job - make it persistent as Bound line is only line
+        # containing jobid
         self.resToJob = anydbm.open('resToJob', 'c')
         # print "init:",self.resToJob
         self.usermap = {}
@@ -40,7 +42,7 @@ class Logfile:
 
     def readusermap(self):
         '''read mapping file in format of /etc/passwd'''
-        f = open(self.db.usermapping,"r")
+        f = open(self.db.usermapping, "r")
         for l in f:
             sp = l.split(":")
             self.usermap(sp[2]) = sp[0]
@@ -50,7 +52,8 @@ class Logfile:
     def mapuser(self, uid):
         ''' map uid to username, read mapping file at most every 5 minutes, if a user is not known
             try to read mapping file, if still not known, return uid'''
-        if uid not in self.usermap and time.time()>self.usermapage+300:   # read only every 5 minutes in case of unknown users
+        # read only every 5 minutes in case of unknown users
+        if uid not in self.usermap and time.time() > self.usermapage + 300:
             self.readusermap()
         if uid not in self.usermap:
             return uid
@@ -75,17 +78,19 @@ class Logfile:
         jobends = {}
 
 #        b = self.f.read()
-#        ### aps #######
+# aps #######
 #        for l in b.split("\n"):
 
         # code to ignore incomplete lines, ignore garbage and seek back to last end of line
         # in case of single incomplete line, it is supposed to work as well
         lines = self.f.readlines()
-        if len(lines)==0: return
+        if len(lines) == 0:
+            return
         if lines[-1][-1] != '\n':
-            self.f.seek(0-len(lines[-1]),1)    # seek back to last end of line
+            # seek back to last end of line
+            self.f.seek(0 - len(lines[-1]), 1)
             del lines[-1]
-        ### aps #######
+        # aps #######
         for l in lines:
             if "Bound apid" in l:
                 sp = l[:-1].split()
@@ -94,7 +99,9 @@ class Logfile:
                 # Cray resid is used in logfile to identfy jobs, this "Bound apid" line is the only line containing batchId
                 # so later on we will map resid to batchId as batchId is used in database, to make it easyer to map
                 # database data to existing jobs
-                self.resToJob[resid] = jobid + self.db.batchpostfix    # we add batchserver here as cray log files do not contain it!!!
+                # we add batchserver here as cray log files do not contain
+                # it!!!
+                self.resToJob[resid] = jobid + self.db.batchpostfix
                 self.resToJob.sync()
                 #jobs[jobid] = {'jobid': jobid}
 
@@ -104,7 +111,8 @@ class Logfile:
                 #  sstart = sp[0] + " " + sp[1][:-1]
                 #  start = int( time.mktime( time.strptime(sstart, "%Y-%m-%d %H:%M:%S") ) )
                 # NEW time format after syslog 2014-06-12T16:01:59.829416+02:00
-                start = calendar.timegm(dateutil.parser.parse(sp[0]).utctimetuple())
+                start = calendar.timegm(
+                    dateutil.parser.parse(sp[0]).utctimetuple())
                 resid = self.getvalue(sp, "resId")
                 uid = self.getvalue(sp, "uid")
                 cmd = self.getvalue(sp, "cmd0")[1:-1]
@@ -113,11 +121,12 @@ class Logfile:
                     try:
                         owner = pwd.getpwuid(int(uid)).pw_name
                     except KeyError:
-                        # in case /etc/passwd does not contain user, we check file mapping
+                        # in case /etc/passwd does not contain user, we check
+                        # file mapping
                         owner = self.mapuser(uid)
                     jobid = self.resToJob[resid]
                     self.db.insert_job(jobid, start, -1, owner, nids, cmd)
-                    print "jobstart:",jobid,"owner:",owner
+                    print "jobstart:", jobid, "owner:", owner
                 except KeyError:
                     print "job without binding", resid
 
@@ -127,7 +136,8 @@ class Logfile:
                 # send = sp[0] + " " + sp[1][:-1]
                 # end = int(time.mktime(time.strptime(send, "%Y-%m-%d %H:%M:%S")))
                 # NEW format
-                end = calendar.timegm(dateutil.parser.parse(sp[0]).utctimetuple())
+                end = calendar.timegm(
+                    dateutil.parser.parse(sp[0]).utctimetuple())
                 resid = self.getvalue(sp, "resId")
                 try:
                     jobid = self.resToJob[resid]
@@ -138,7 +148,7 @@ class Logfile:
                 try:
                     del self.resToJob[resid]
                 except KeyError:
-                    pass # we give a ...
+                    pass  # we give a ...
 
         self.db.commit()
 
