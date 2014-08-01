@@ -5,37 +5,48 @@
 # tested with lustre 1.8 and python 2.4
 # Holger Berger 2014
 
-import sys
-sys.path.append("MySQL")
+# Refactored by Uwe Schilling 1.aug 2014
 
+# ---------- global imports --------------
+import sys
 import xmlrpclib
 import time
 import socket
-import sys
+
+# ---------- parital imports --------------
 from threading import Thread, Lock
+
+# ---------- project imports --------------
+sys.path.append("MySQL")
 from data_inserter import Logfile
 
+# -----------------------------------------------------------------------------
+# Setup
+# -----------------------------------------------------------------------------
+
+# Objects
+db = Logfile()
+iolock = Lock()
+
+# Constants
 SLEEP = 60   # > 10 sec
 TIMEOUT = 30  # has to be < SLEEP
 FILEVERSION = "1.0"
 
-servers = sys.argv[1:]
+# Variables
+first = True
 
-db = Logfile()
-
+# Data
 rpcs = {}
 types = {}
 nids = {}
 oldnids = {}
 hostnames = {}
 threads = {}
-
-iolock = Lock()
-
-first = True
 timings = {}
 bws = {}
 reqs = {}
+# -----------------------------------------------------------------------------
 
 
 def worker(srv):
@@ -79,7 +90,7 @@ def worker(srv):
         iolock.acquire()
 # --------- switch to db here ---------
         line = str(hostnames[srv] + ";" +
-                   str(int(sample)) + ";" +
+                   str(int(sample_start_time)) + ";" +
                    ";" .join(map(str, l)) + "\n")
         db.readData(line)
         iolock.release()
@@ -90,12 +101,10 @@ def worker(srv):
             (wb, rb) = bws.setdefault(srv, (0, 0))
             bws[srv] = (wb + int(vs[1]), rb + int(vs[3]))
     print "  time to insert data   [sec]:", (time.time() - t_insert)
-
 #------------------------------------------------------------------------------
 
-socket.setdefaulttimeout(TIMEOUT)
 
-for srv in servers:
+def connect_to(srv):
     try:
         rpcs[srv] = xmlrpclib.ServerProxy('http://' + srv + ':8000')
         types[srv] = rpcs[srv].get_type()
@@ -103,21 +112,10 @@ for srv in servers:
         print "connected to %s running a %s" % (hostnames[srv], types[srv])
     except socket.error:
         print >>sys.stderr, "could not connect to ", srv
+#------------------------------------------------------------------------------
 
-while True:
-    sample = time.time()
 
-    for srv in servers:
-        threads[srv] = Thread(target=worker, args=(srv,))
-        threads[srv].start()
-
-    for srv in servers:
-        threads[srv].join()
-
-    e = time.time()
-    # set this here, to have a good chance to get it right during sleep
-    first = False
-    print "%3.3fs for sample collection," % (e - sample),
+def print_stats():
     minT = ("", 10000)
     maxT = ("", 0)
     avg = 0
@@ -143,5 +141,41 @@ while True:
     print "  === total bandwidth === : read %7.1f MB/s - write %7.1f MB/s" % (
         trbs / (1024.0 * 1024.0 * float(SLEEP)),
         twbs / (1024.0 * 1024.0 * float(SLEEP)))
+#------------------------------------------------------------------------------
 
-    time.sleep(SLEEP - ((e - sample) % SLEEP))
+socket.setdefaulttimeout(TIMEOUT)
+
+if __name__ == '__main__':
+
+    # Args
+    servers = sys.argv[1:]
+
+    for srv in servers:
+        connect_to(srv)
+
+    # main loop
+    while True:
+        # Time mesure for sync
+        sample_start_time = time.time()
+
+        # Start workers
+        for srv in servers:
+            threads[srv] = Thread(target=worker, args=(srv,))
+            threads[srv].start()
+
+        # Collect data
+        for srv in servers:
+            threads[srv].join()
+
+        # Time mesure
+        sample_end_time = time.time()
+
+        # Flag to handle first collection different
+        first = False
+
+        # Print Stats
+        print "%3.3fs for sample collection," % (sample_end_time - sample_start_time),
+        print_stats()
+
+        # Sleep and try to ceep the samples in sync
+        time.sleep(SLEEP - ((sample_end_time - sample_start_time) % SLEEP))
