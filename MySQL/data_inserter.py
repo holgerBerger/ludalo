@@ -17,7 +17,8 @@
 # supported db at this moment, sqlite, mysql, psql
 #
 
-import sys, atexit
+import sys
+import atexit
 import os.path
 import time
 from MySQLObject import MySQLObject
@@ -46,7 +47,7 @@ class Logfile:
     def readHead(self, line):
         sp = line[:-1].split(";")  # ignore the line break at the end
         server = sp[1]
-        timestamp = sp[2]
+        # timestamp = sp[2]
         stype = sp[3]  # mdt or ost
 
         # add server and type to the db
@@ -64,7 +65,7 @@ class Logfile:
     # sums over data
         hexdigest = hashlib.sha224(line).hexdigest()
         if self.myDB.has_hash(hexdigest):
-            #print "line collision"
+            # print "line collision"
             return
 
         server = sp[0]
@@ -89,8 +90,8 @@ class Logfile:
         acounter = 0
         starttime = time.time()
 
-        #1.0;hmds1;time;mdt;reqs;
-        #1.0;hoss3;time;ost;rio,rb,wio,wb;
+        # 1.0;hmds1;time;mdt;reqs;
+        # 1.0;hoss3;time;ost;rio,rb,wio,wb;
         for line in f:
             if line.startswith("#"):  # this is a head line
                 self.readHead(line)
@@ -105,12 +106,12 @@ class Logfile:
                     duration = (time.time() - starttime)
                     fraction = (float(f.tell()) / float(self.filesize))
                     endtime = duration * (1.0 / fraction) - duration
-                #printString = str("\rinserted %d records / %d%% ETA = %s"
+                # printString = str("\rinserted %d records / %d%% ETA = %s"
                 #                 %(counter,int(fraction*100.0), self.eta(endtime)))
                     printString = str("\rinserted %9d records [%s] ETA = %s"
-                             % (counter, "|" * int(fraction * 20.0) +
-                             "\\|/-"[acounter % 4] +
-                             "-" * (19 - int(fraction * 20.0)), self.eta(endtime)))
+                                      % (counter, "|" * int(fraction * 20.0) +
+                                         "\\|/-"[acounter % 4] +
+                                         "-" * (19 - int(fraction * 20.0)), self.eta(endtime)))
                     print printString,
                     sys.stdout.flush()
                     acounter += 1
@@ -153,7 +154,8 @@ class Logfile:
         il_mdt = []
 
         for i in range(len(nidvals)):
-            nidid = self.myDB.globalnidmap[self.myDB.per_server_nids[server][i]]
+            nidid = self.myDB.globalnidmap[
+                self.myDB.per_server_nids[server][i]]
             timeid = self.myDB.timestamps[timestamp]
             sourceid = self.myDB.sources[source]
 
