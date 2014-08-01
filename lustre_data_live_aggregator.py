@@ -7,6 +7,10 @@
 
 # Refactored by Uwe Schilling 1.aug 2014
 
+# Intruduce main funktion
+# extract parts of the main loop to clean up main
+# clean imports, new order
+
 # ---------- global imports --------------
 import sys
 import xmlrpclib
