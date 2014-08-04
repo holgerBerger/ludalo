@@ -1,185 +1,115 @@
-#!/usr/bin/env python
+'''
+    this programm is based on this thread:
+    http://stefaanlippens.net/python-asynchronous-subprocess-pipe-reading
+'''
 
-# simple data gathering client for lustre performance data
-# multithreaded
-# tested with lustre 1.8 and python 2.4
-# Holger Berger 2014
 
-# Refactored by Uwe Schilling 1.aug 2014
-
-# Intruduce main funktion
-# extract parts of the main loop to clean up main
-# clean imports, new order
-
-# ---------- global imports --------------
-import sys
-import xmlrpclib
+import subprocess
 import time
-import socket
-
-# ---------- parital imports --------------
-from threading import Thread, Lock
-
-# ---------- project imports --------------
-sys.path.append("MySQL")
-from data_inserter import Logfile
-
-# -----------------------------------------------------------------------------
-# Setup
-# -----------------------------------------------------------------------------
-
-# Objects
-db = Logfile()
-iolock = Lock()
-
-# Constants
-SLEEP = 60   # > 10 sec
-TIMEOUT = 30  # has to be < SLEEP
-FILEVERSION = "1.0"
-
-# Variables
-first = True
-
-# Data
-rpcs = {}
-types = {}
-nids = {}
-oldnids = {}
-hostnames = {}
-threads = {}
-timings = {}
-bws = {}
-reqs = {}
-# -----------------------------------------------------------------------------
+import threading
+import Queue
+import json
+import sys
 
 
-def worker(srv):
-    global oldnids, first, timings, bws, reqs
+class AsynchronousFileReader(threading.Thread):
 
-    t1 = time.time()
+    '''
+    Helper class to implement asynchronous reading of a file
+    in a separate thread. Pushes read lines on a queue to
+    be consumed in another thread.
+    '''
 
-    try:
-        r = rpcs[srv].get_sample()
-    except:
-        print >>sys.stderr, "failed to connect to server:", srv
-        timings[srv] = time.time() - t1
-        return
-    timings[srv] = time.time() - t1
+    def __init__(self, fd, queue):
+        assert isinstance(queue, Queue.Queue)
+        assert callable(fd.readline)
+        threading.Thread.__init__(self)
+        self._fd = fd
+        self._queue = queue
 
-    if len(r) == 0:
-        return
-    nids[srv] = r[0].split(";")
-    if first or nids[srv] != oldnids[srv]:
-        iolock.acquire()
-# --------- switch to db here ---------
-        t_insert = time.time()
-        line = str("#" +
-                   FILEVERSION + ";" +
-                   hostnames[srv] + ";" +
-                   nids[srv][0] + ";" +
-                   ";".join(nids[srv][1:]) + "\n")
-        db.readHead(line)
-        print "  time to insert header [sec]:", (time.time() - t_insert)
-        iolock.release()
-    oldnids[srv] = nids[srv]
-    t_insert = time.time()
-    for ost in r[1:]:
-        l = []
-        sp = ost.split(";")
-        for i in sp:
-            if type(i) == list:
-                l.append(",".join(map(str, i)))
-            else:
-                l.append(i)
-        iolock.acquire()
-# --------- switch to db here ---------
-        line = str(hostnames[srv] + ";" +
-                   str(int(sample_start_time)) + ";" +
-                   ";" .join(map(str, l)) + "\n")
-        db.readData(line)
-        iolock.release()
-        vs = sp[1].split(',')
-        if len(vs) == 1:
-            reqs[srv] = reqs.setdefault(srv, 0) + int(sp[1])
-        else:
-            (wb, rb) = bws.setdefault(srv, (0, 0))
-            bws[srv] = (wb + int(vs[1]), rb + int(vs[3]))
-    print "  time to insert data   [sec]:", (time.time() - t_insert)
-#------------------------------------------------------------------------------
+    def run(self):
+        '''The body of the tread: read lines and put them on the queue.'''
+        for line in iter(self._fd.readline, ''):
+            self._queue.put(line)
+
+    def eof(self):
+        '''Check whether there is no more content to expect.'''
+        return not self.is_alive() and self._queue.empty()
 
 
-def connect_to(srv):
-    try:
-        rpcs[srv] = xmlrpclib.ServerProxy('http://' + srv + ':8000')
-        types[srv] = rpcs[srv].get_type()
-        hostnames[srv] = rpcs[srv].get_hostname()
-        print "connected to %s running a %s" % (hostnames[srv], types[srv])
-    except socket.error:
-        print >>sys.stderr, "could not connect to ", srv
-#------------------------------------------------------------------------------
+class Collector(threading.Thread):
 
+    def __init__(self, command, name, waitTime=60):
+        threading.Thread.__init__(self)
+        self._name = name
+        self.command = command
+        self.out = sys.stdout
+        self.waitTime = waitTime
 
-def print_stats():
-    minT = ("", 10000)
-    maxT = ("", 0)
-    avg = 0
-    for (s, v) in timings.iteritems():
-        if v < minT[1]:
-            minT = (s, v)
-        if v > maxT[1]:
-            maxT = (s, v)
-        avg += float(v)
-    print "transfer times - max: %s %3.3fs" % maxT, "- min: %s %3.3fs" % minT, "- avg: %3.3fs" % (avg / len(timings))
-    for mdt in reqs:
-        print "  metadata requests  %s: %6.1f/s" % (mdt, reqs[mdt] / float(SLEEP))
-        reqs[mdt] = 0
-    trbs = 0
-    twbs = 0
-    for oss in bws:
-        print "  oss data bandwidth %s: read %7.1f MB/s - write %7.1f MB/s" % (
-            oss, bws[oss][0] / (1024.0 * 1024.0 * float(SLEEP)),
-            bws[oss][1] / (1024.0 * 1024.0 * float(SLEEP)))
-        trbs += bws[oss][0]
-        twbs += bws[oss][1]
-        bws[oss] = (0, 0)
-    print "  === total bandwidth === : read %7.1f MB/s - write %7.1f MB/s" % (
-        trbs / (1024.0 * 1024.0 * float(SLEEP)),
-        twbs / (1024.0 * 1024.0 * float(SLEEP)))
-#------------------------------------------------------------------------------
+    def run(self):
+        '''
+        Example of how to consume standard output and standard error of
+        a subprocess asynchronously without risk on deadlocking.
+        '''
 
-socket.setdefaulttimeout(TIMEOUT)
+        # Launch the command as subprocess.
+        process = subprocess.Popen(
+            self.command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        # Launch the asynchronous readers of the process' stdout and stderr.
+        stdout_queue = Queue.Queue()
+        stdout_reader = AsynchronousFileReader(process.stdout, stdout_queue)
+        stdout_reader.start()
+        stderr_queue = Queue.Queue()
+        stderr_reader = AsynchronousFileReader(process.stderr, stderr_queue)
+        stderr_reader.start()
+
+        print 'queue start:', self.name
+
+        # Check the queues if we received some output (until there is nothing more
+        # to get).
+        while not stdout_reader.eof() or not stderr_reader.eof():
+            t1 = time.time()
+            # Show what we received from standard output.
+            while not stdout_queue.empty():
+                line = stdout_queue.get()
+
+                # Do Stuff!!!!
+                print self.name, json.loads(line)
+                # print self.name + 'Received line on standard output: ' +
+                # repr(line)
+
+            # Show what we received from standard error.
+            while not stderr_queue.empty():
+                line = stderr_queue.get()
+                print self.name + 'Received line on standard error: ' + repr(line)
+
+            self.out.write('\n')
+            self.out.flush()
+            # Sleep a bit before asking the readers again.
+            time.sleep(3)
+            t2 = time.time()
+            sleepTime = self.waitTime - (t2 - t1)
+            print sleepTime
+            time.sleep(sleepTime)
+
+        # Let's be tidy and join the threads we've started.
+        stdout_reader.join()
+        stderr_reader.join()
+
+        # Close subprocess' file descriptors.
+        process.stdout.close()
+        process.stderr.close()
+
 
 if __name__ == '__main__':
+    # names and ip-adress
+    cfg = open('collector.cfg', 'r')
 
-    # Args
-    servers = sys.argv[1:]
-
-    for srv in servers:
-        connect_to(srv)
-
-    # main loop
-    while True:
-        # Time mesure for sync
-        sample_start_time = time.time()
-
-        # Start workers
-        for srv in servers:
-            threads[srv] = Thread(target=worker, args=(srv,))
-            threads[srv].start()
-
-        # Collect data
-        for srv in servers:
-            threads[srv].join()
-
-        # Time mesure
-        sample_end_time = time.time()
-
-        # Flag to handle first collection different
-        first = False
-
-        # Print Stats
-        print "%3.3fs for sample collection," % (sample_end_time - sample_start_time),
-        print_stats()
-
-        # Sleep and try to ceep the samples in sync
-        time.sleep(SLEEP - ((sample_end_time - sample_start_time) % SLEEP))
+    a = {}
+    a = json.loads(cfg.read())
+    c1 = Collector(['python', 'subprozess_test.py'], 'a', 4)
+    c2 = Collector(['python', 'subprozess_test.py'], 'b', 4)
+    # blub
+    c1.start()
+    c2.start()
