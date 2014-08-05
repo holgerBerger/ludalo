@@ -12,6 +12,19 @@ import json
 import sys
 
 
+class DatabeseInserter(object):
+
+    def __init__(self):
+        self.conn
+        self.c
+
+    def _execute(query, data):
+        pass
+
+    def insert(jsonDict):
+        pass
+
+
 class AsynchronousFileReader(threading.Thread):
 
     '''
@@ -28,9 +41,16 @@ class AsynchronousFileReader(threading.Thread):
         self._queue = queue
 
     def run(self):
-        '''The body of the tread: read lines and put them on the queue.'''
+        '''The body of the tread: read lines and decode json
+        then put them on the queue.'''
+
         for line in iter(self._fd.readline, ''):
-            self._queue.put(line)
+                # if not json print the exeption and the string
+                try:
+                    self._queue.put(json.loads(line))
+                except Exception, e:
+                    print e
+                    print 'in:', line
 
     def eof(self):
         '''Check whether there is no more content to expect.'''
@@ -39,12 +59,15 @@ class AsynchronousFileReader(threading.Thread):
 
 class Collector(threading.Thread):
 
-    def __init__(self, command, name, waitTime=60):
+    def __init__(self, command, name, insertQueue, waitTime=60):
         threading.Thread.__init__(self)
         self._name = name
         self.command = command
         self.out = sys.stdout
         self.waitTime = waitTime
+        self.insertQueue = insertQueue
+
+        self.start()
 
     def run(self):
         '''
@@ -65,6 +88,8 @@ class Collector(threading.Thread):
         stderr_reader.start()
 
         print 'queue start:', self.name
+        print 'started:', stdout_queue.get()
+        time.sleep(60)
 
         # Check the queues if we received some output (until there is nothing more
         # to get).
@@ -75,7 +100,8 @@ class Collector(threading.Thread):
                 line = stdout_queue.get()
 
                 # Do Stuff!!!!
-                print self.name, json.loads(line)
+                self.insertQueue.put(line)
+                # print self.name, json.loads(line)
                 # print self.name + 'Received line on standard output: ' +
                 # repr(line)
 
@@ -106,10 +132,21 @@ if __name__ == '__main__':
     # names and ip-adress
     cfg = open('collector.cfg', 'r')
 
-    a = {}
-    a = json.loads(cfg.read())
-    c1 = Collector(['python', 'subprozess_test.py'], 'a', 4)
-    c2 = Collector(['python', 'subprozess_test.py'], 'b', 4)
+    db = DatabeseInserter()
+
+    insertQueue = Queue.Queue()
+    c1 = Collector(['python', 'subprozess_test.py'], 'a', insertQueue)
+
+    while True:
+        if not insertQueue.empty():
+            db.insert(insertQueue.get())
+        time.sleep(1)
+
+
+    # a = {}
+    # a = json.loads(cfg.read())
+    # c1 = Collector(['python', 'subprozess_test.py'], 'a', 4)
+    # c2 = Collector(['python', 'subprozess_test.py'], 'b', 4)
     # blub
-    c1.start()
-    c2.start()
+    # c1.start()
+    # c2.start()
