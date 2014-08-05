@@ -15,8 +15,9 @@ import sys
 class DatabeseInserter(object):
 
     def __init__(self):
-        self.conn
-        self.c
+        #self.conn
+        #self.c
+	pass
 
     def _execute(query, data):
         pass
@@ -49,8 +50,9 @@ class AsynchronousFileReader(threading.Thread):
                 try:
                     self._queue.put(json.loads(line))
                 except Exception, e:
-                    print e
-                    print 'in:', line
+                    self._queue.put(line)
+                    #print e
+                    #print 'in:', line
 
     def eof(self):
         '''Check whether there is no more content to expect.'''
@@ -61,7 +63,7 @@ class Collector(threading.Thread):
 
     def __init__(self, command, insertQueue, waitTime=60):
         threading.Thread.__init__(self)
-        self._name
+        #self._name
         self.command = command
         self.out = sys.stdout
         self.waitTime = waitTime
@@ -77,7 +79,7 @@ class Collector(threading.Thread):
 
         # Launch the command as subprocess.
         process = subprocess.Popen(
-            self.command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         # Launch the asynchronous readers of the process' stdout and stderr.
         stdout_queue = Queue.Queue()
@@ -87,11 +89,15 @@ class Collector(threading.Thread):
         stderr_reader = AsynchronousFileReader(process.stderr, stderr_queue)
         stderr_reader.start()
 
-        self.name = stdout_queue.get()
+        print 'vor stdout_queue.get()'
+	try:
+        	self.name = stdout_queue.get(True, 10)
+	except Empty:
+		pass	
 
         print 'started:', self.name
 
-        time.sleep(60)
+        #time.sleep(60)
 
         # Check the queues if we received some output (until there is nothing more
         # to get).
@@ -101,6 +107,7 @@ class Collector(threading.Thread):
             while not stdout_queue.empty():
                 line = stdout_queue.get()
 
+		print line
                 # Do Stuff!!!!
                 self.insertQueue.put(line)
                 # print self.name, json.loads(line)
@@ -112,8 +119,8 @@ class Collector(threading.Thread):
                 line = stderr_queue.get()
                 print self.name + 'Received line on standard error: ' + repr(line)
 
-            self.out.write('\n')
-            self.out.flush()
+            process.stdin.write('\n')
+            #self.out.flush()
             # Sleep a bit before asking the readers again.
             time.sleep(3)
             t2 = time.time()
@@ -132,12 +139,12 @@ class Collector(threading.Thread):
 
 if __name__ == '__main__':
     # names and ip-adress
-    cfg = open('collector.cfg', 'r')
+    #cfg = open('collector.cfg', 'r')
 
     db = DatabeseInserter()
 
     insertQueue = Queue.Queue()
-    c1 = Collector(['python', 'subprozess_test.py'], insertQueue)
+    c1 = Collector(['ssh','-C','hoss1','/tmp/collector'], insertQueue, 4)
 
     counter = 0
     while True:
