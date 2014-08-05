@@ -59,9 +59,9 @@ class AsynchronousFileReader(threading.Thread):
 
 class Collector(threading.Thread):
 
-    def __init__(self, command, name, insertQueue, waitTime=60):
+    def __init__(self, command, insertQueue, waitTime=60):
         threading.Thread.__init__(self)
-        self._name = name
+        self._name
         self.command = command
         self.out = sys.stdout
         self.waitTime = waitTime
@@ -87,8 +87,10 @@ class Collector(threading.Thread):
         stderr_reader = AsynchronousFileReader(process.stderr, stderr_queue)
         stderr_reader.start()
 
-        print 'queue start:', self.name
-        print 'started:', stdout_queue.get()
+        self.name = stdout_queue.get()
+
+        print 'started:', self.name
+
         time.sleep(60)
 
         # Check the queues if we received some output (until there is nothing more
@@ -135,11 +137,14 @@ if __name__ == '__main__':
     db = DatabeseInserter()
 
     insertQueue = Queue.Queue()
-    c1 = Collector(['python', 'subprozess_test.py'], 'a', insertQueue)
+    c1 = Collector(['python', 'subprozess_test.py'], insertQueue)
 
+    counter = 0
     while True:
         if not insertQueue.empty():
-            db.insert(insertQueue.get())
+            print 'insert', counter
+            # db.insert(insertQueue.get())
+            counter += 1
         time.sleep(1)
 
 
