@@ -61,15 +61,28 @@ class AsynchronousFileReader(threading.Thread):
 
 class Collector(threading.Thread):
 
-    def __init__(self, command, insertQueue, waitTime=60):
+    def __init__(self, command, insertQueue):
         threading.Thread.__init__(self)
-        # self._name
         self.command = command
         self.out = sys.stdout
-        self.waitTime = waitTime
         self.insertQueue = insertQueue
 
+        # Launch the command as subprocess.
+        self.process = subprocess.Popen(
+            self.command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        # Launch the asynchronous readers of the process' stdout and stderr.
+        self.stdout_queue = Queue.Queue()
+        self.stdout_reader = AsynchronousFileReader(
+            self.process.stdout, self.stdout_queue)
+        self.stdout_reader.start()
+        self.stderr_queue = Queue.Queue()
+        self.stderr_reader = AsynchronousFileReader(
+            self.process.stderr, self.stderr_queue)
+        self.stderr_reader.start()
+
         self.start()
+        print 'created', self.name
 
     def run(self):
         '''
@@ -77,63 +90,40 @@ class Collector(threading.Thread):
         a subprocess asynchronously without risk on deadlocking.
         '''
 
-        # Launch the command as subprocess.
-        process = subprocess.Popen(
-            self.command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-        # Launch the asynchronous readers of the process' stdout and stderr.
-        stdout_queue = Queue.Queue()
-        stdout_reader = AsynchronousFileReader(process.stdout, stdout_queue)
-        stdout_reader.start()
-        stderr_queue = Queue.Queue()
-        stderr_reader = AsynchronousFileReader(process.stderr, stderr_queue)
-        stderr_reader.start()
-
-        print 'vor stdout_queue.get()'
         try:
-            self.name = stdout_queue.get(True, 10)
+            self.name = self.stdout_queue.get(True, 10)
         except Exception, e:
             print 'no correct name get form ssh', e
             pass
 
         print 'started:', self.name
 
-        # time.sleep(60)
-
         # Check the queues if we received some output (until there is nothing more
         # to get).
-        while not stdout_reader.eof() or not stderr_reader.eof():
-            t1 = time.time()
+        while not self.stdout_reader.eof() or not self.stderr_reader.eof():
             # Show what we received from standard output.
-            while not stdout_queue.empty():
-                line = stdout_queue.get()
+            while not self.stdout_queue.empty():
+                line = self.stdout_queue.get()
 
                 # Do Stuff!!!!
                 self.insertQueue.put(line)
-                # print self.name, json.loads(line)
-                # print self.name + 'Received line on standard output: ' +
-                # repr(line)
 
             # Show what we received from standard error.
-            while not stderr_queue.empty():
-                line = stderr_queue.get()
+            while not self.stderr_queue.empty():
+                line = self.stderr_queue.get()
                 print self.name + 'Received line on standard error: ' + repr(line)
 
-            process.stdin.write('\n')
             # self.out.flush()
             # Sleep a bit before asking the readers again.
-            time.sleep(3)
-            t2 = time.time()
-            sleepTime = self.waitTime - (t2 - t1)
-            time.sleep(sleepTime)
+            time.sleep(0.1)
 
         # Let's be tidy and join the threads we've started.
-        stdout_reader.join()
-        stderr_reader.join()
+        self.stdout_reader.join()
+        self.stderr_reader.join()
 
         # Close subprocess' file descriptors.
-        process.stdout.close()
-        process.stderr.close()
+        self.process.stdout.close()
+        self.process.stderr.close()
 
 
 if __name__ == '__main__':
@@ -161,7 +151,6 @@ if __name__ == '__main__':
                 pass
                 # remove thread from list
                 # recover thred....
-                # send request
             else:
                 t.sendRequest()
         if not db.isAlive():
@@ -173,20 +162,3 @@ if __name__ == '__main__':
         insertTimestamp = int(t_end)
 
         time.sleep(ts_delay - (t_end - t_start))
-
-    counter = 0
-    while True:
-        if not insertQueue.empty():
-            print len(insertQueue)
-            # db.insert(insertQueue.get())
-            counter += 1
-        time.sleep(1)
-
-
-    # a = {}
-    # a = json.loads(cfg.read())
-    # c1 = Collector(['python', 'subprozess_test.py'], 'a', 4)
-    # c2 = Collector(['python', 'subprozess_test.py'], 'b', 4)
-    # blub
-    # c1.start()
-    # c2.start()
