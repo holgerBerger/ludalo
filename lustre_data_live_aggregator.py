@@ -137,13 +137,42 @@ class Collector(threading.Thread):
 
 
 if __name__ == '__main__':
-    # names and ip-adress
-    #cfg = open('collector.cfg', 'r')
 
-    db = DatabeseInserter()
+    # read names and ip-adress
+    cfg = open('collector.cfg', 'r')
+    ips = json.loads(cfg)
 
-    insertQueue = Queue.Queue()
-    c1 = Collector(['ssh', '-C', 'hoss1', '/tmp/collector'], insertQueue, 4)
+    ts_delay = 60
+    data = Queue.Queue()     # create dataqueue
+    db = DatabeseInserter()  # create DB connection
+    sshObjects = []
+
+    # for all ip's creat connections to the collector
+
+    for key in ips.keys():
+        command = ['ssh', '-C', ips[key], '/tmp/collector']
+        sshObjects.append(Collector(command, data))
+
+    # loop over all connections look if they alive
+    while True:
+        t_start = time.time()
+        for t in sshObjects:
+            if not t.t.isAlive():
+                pass
+                # remove thread from list
+                # recover thred....
+                # send request
+            else:
+                t.sendRequest()
+        if not db.isAlive():
+            pass
+            # recover database connection
+
+        # look at db connectionen if this is alaive
+        t_end = time.time()
+        insertTimestamp = int(t_end)
+
+        time.sleep(ts_delay - (t_end - t_start))
 
     counter = 0
     while True:
