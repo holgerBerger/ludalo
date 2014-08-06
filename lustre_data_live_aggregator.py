@@ -14,7 +14,7 @@ import sys
 
 class DatabeseInserter(object):
 
-    def __init__(self):
+    def __init__(self, queue):
         # self.conn
         # self.c
         pass
@@ -25,6 +25,11 @@ class DatabeseInserter(object):
     def insert(jsonDict):
         pass
 
+    def start(self):
+	pass
+
+    def isAlive(self):
+	return True
 
 class AsynchronousFileReader(threading.Thread):
 
@@ -97,8 +102,7 @@ class Collector(threading.Thread):
         try:
             self.name = self.stdout_queue.get(True, 10)
         except Exception, e:
-            print 'no correct name get form ssh', e
-            pass
+            print 'got no correct name from ssh', e, self.name
 
         print 'started:', self.name
 
@@ -136,9 +140,9 @@ if __name__ == '__main__':
 
     # read names and ip-adress
     cfg = open('collector.cfg', 'r')
-    ips = json.loads(cfg)
+    ips = json.load(cfg)
 
-    ts_delay = 60
+    ts_delay = 10
     data_Queue = Queue.Queue()     # create dataqueue
     db_Queue = Queue.Queue()
     db = DatabeseInserter(db_Queue)  # create DB connection
@@ -150,18 +154,22 @@ if __name__ == '__main__':
     for key in ips.keys():
         sshObjects.append(Collector(ips[key], data_Queue))
 
-    # loop over all connections look if they alive
+    time.sleep(1)
+
+    # loop over all connections look if they are alive
     while True:
         t_start = time.time()
         for t in sshObjects:
-            if not t.t.isAlive():
+            if not t.isAlive():
                 ip = t.ip
                 # remove thread from list
                 sshObjects.remove(t)
-                # recover thred....
+                # recover thread....
+		print "recover", ip
                 sshObjects.append(Collector(ip, data_Queue))
             else:
                 t.sendRequest()
+        	#t.process.stdin.write('\n')
 
         # Database Timestamp !!!
         insertTimestamp = int(time.time())
@@ -172,7 +180,7 @@ if __name__ == '__main__':
         else:
             # put data form collectors into db queue
             while not data_Queue.empty():
-                print 'database Queue lenght:', len(db_Queue)
+                print 'database Queue lenght:', db_Queue.qsize()
                 tmp = data_Queue.get()
                 db_Queue.put((insertTimestamp, tmp))
 
