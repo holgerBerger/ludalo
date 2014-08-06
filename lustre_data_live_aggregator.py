@@ -61,12 +61,15 @@ class AsynchronousFileReader(threading.Thread):
 
 class Collector(threading.Thread):
 
-    def __init__(self, command, insertQueue):
+    def __init__(self, ip, insertQueue):
         threading.Thread.__init__(self)
-        self.command = command
+        self.ip = ip
+        self.command = ['ssh', '-C', self.ip, '/tmp/collector']
         self.out = sys.stdout
         self.insertQueue = insertQueue
 
+        # Copy collector
+        subprocess.call(['scp', 'collector', ip + ':/tmp/'])
         # Launch the command as subprocess.
         self.process = subprocess.Popen(
             self.command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -81,6 +84,7 @@ class Collector(threading.Thread):
             self.process.stderr, self.stderr_queue)
         self.stderr_reader.start()
 
+        # Launch Tread
         self.start()
         print 'created', self.name
 
@@ -113,7 +117,6 @@ class Collector(threading.Thread):
                 line = self.stderr_queue.get()
                 print self.name + 'Received line on standard error: ' + repr(line)
 
-            # self.out.flush()
             # Sleep a bit before asking the readers again.
             time.sleep(0.1)
 
@@ -125,6 +128,9 @@ class Collector(threading.Thread):
         self.process.stdout.close()
         self.process.stderr.close()
 
+    def sendRequest(self):
+        self.process.stdin.write('\n')
+
 
 if __name__ == '__main__':
 
@@ -133,32 +139,44 @@ if __name__ == '__main__':
     ips = json.loads(cfg)
 
     ts_delay = 60
-    data = Queue.Queue()     # create dataqueue
-    db = DatabeseInserter()  # create DB connection
+    data_Queue = Queue.Queue()     # create dataqueue
+    db_Queue = Queue.Queue()
+    db = DatabeseInserter(db_Queue)  # create DB connection
+    db.start()  # start db inserter
     sshObjects = []
 
     # for all ip's creat connections to the collector
 
     for key in ips.keys():
-        command = ['ssh', '-C', ips[key], '/tmp/collector']
-        sshObjects.append(Collector(command, data))
+        sshObjects.append(Collector(ips[key], data_Queue))
 
     # loop over all connections look if they alive
     while True:
         t_start = time.time()
         for t in sshObjects:
             if not t.t.isAlive():
-                pass
+                ip = t.ip
                 # remove thread from list
+                sshObjects.remove(t)
                 # recover thred....
+                sshObjects.append(Collector(ip, data_Queue))
             else:
                 t.sendRequest()
+
+        # Database Timestamp !!!
+        insertTimestamp = int(time.time())
+
         if not db.isAlive():
             pass
             # recover database connection
+        else:
+            # put data form collectors into db queue
+            while not data_Queue.empty():
+                print 'database Queue lenght:', len(db_Queue)
+                tmp = data_Queue.get()
+                db_Queue.put((insertTimestamp, tmp))
 
         # look at db connectionen if this is alaive
         t_end = time.time()
-        insertTimestamp = int(t_end)
 
         time.sleep(ts_delay - (t_end - t_start))
