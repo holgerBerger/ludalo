@@ -1,5 +1,5 @@
 '''
-    Autor uwe.schilling[at]hlrs.de
+    Autor uwe.schilling[at]hlrs.de 2014
     this programm is based on this thread:
     http://stefaanlippens.net/python-asynchronous-subprocess-pipe-reading
 '''
@@ -9,63 +9,96 @@ import threading
 import Queue
 import json
 import sys
-import ConfigParser
-import MySQLdb
+# import ConfigParser
+# import MySQLdb
 
 
 class DatabeseInserter(threading.Thread):
 
     '''
     This class handels the data form the collectors (inserterQueue)
+    implemented as Thread to insert async and with as less as posibel
+    dependencys to the collector.
     '''
 
     def __init__(self, queue, dbconf):
-        # self.conn
-        # self.c
         self.insertQueue = queue
-        self.config = ConfigParser()
-        try:
-            self.config.readfp(open(dbconf))
-        except IOError:
-            print "no db.conf file found."
-            sys.exit()
-        self.dbname = self.config.get("database", "name")
-        self.dbpassword = self.config.get("database", "password")
-        self.dbhost = self.config.get("database", "host")
-        self.dbuser = self.config.get("database", "user")
-        self.conn = MySQLdb.connect(passwd=self.dbpassword,
-                                    db=self.dbname,
-                                    host=self.dbhost,
-                                    user=self.dbuser)
-        self.c = self.conn.cursor()
+
+        # Dry run !!!!
+
+        # get config settings for the db
+        # self.config = ConfigParser()
+        # try:
+        #     self.config.readfp(open(dbconf))
+        # except IOError:
+        #     print "no db.conf file found."
+        #     sys.exit()
+        # self.dbname = self.config.get("database", "name")
+        # self.dbpassword = self.config.get("database", "password")
+        # self.dbhost = self.config.get("database", "host")
+        # self.dbuser = self.config.get("database", "user")
+        # construct the connection and cursor
+        # self.conn = MySQLdb.connect(passwd=self.dbpassword,
+        #                             db=self.dbname,
+        #                             host=self.dbhost,
+        #                             user=self.dbuser)
+        # self.c = self.conn.cursor()
+        # start the thread and begin to insert if entrys in the queue
         self.start()
 
     def _execute(self, query, data):
         pass
 
     def insert(self, jsonDict):
-        insertTimestamp = jsonDict[0]
+        '''
+            split the json object into the informations for the
+            database. the json object is defined as:
+                {} json
+                    {} fs-ost-/mdsname
+                        [] aggr
+                            [0] rio
+                            [1] rb
+                            [2] wio
+                            [3] wb
+                        [] nodeIP@connection
+                            [0] rio
+                            [1] rb
+                            [2] wio
+                            [3] wb
+                [...]
+        '''
+
+        # insertTimestamp = jsonDict[0]
         data = jsonDict[1]
 
         for base in data.keys():
             sb = base.split('-')
             ost_map = data[base]
-            fs_name = sb[0]
+            # fs_name = sb[0]
             name = sb[1]
 
-            for key in ost_map.keys():
-                resource_values = ost_map[key]
-                if key is 'aggr':
-                    sk = key.split('@')
-                    resourceIP = sk[0]
+            # switch for OST / MDS
+            if 'OST' in name:
+                for key in ost_map.keys():
+                    # resource_values = ost_map[key]
+                    if key is not 'aggr':
+                        pass
+                        # sk = key.split('@')
+                        # resourceIP = sk[0]
 
-                    rio = resource_values[0]
-                    rb = resource_values[1]
-                    wio = resource_values[2]
-                    wb = resource_values[3]
-                else:
-                    # handle aggr values...
-                    pass
+                        # rio = resource_values[0]
+                        # rb = resource_values[1]
+                        # wio = resource_values[2]
+                        # wb = resource_values[3]
+                    else:
+                        # handle aggr values...
+                        pass
+            elif 'MDS' in name:
+                # handle MDS
+                pass
+            else:
+                print 'weird things in the json... pleas check it.'
+                print 'no MDS or MDT string is', name
 
     def run(self):
         while True:
@@ -74,8 +107,12 @@ class DatabeseInserter(threading.Thread):
                 self.insert(insert)
 
     def close(self):
-        self.conn.commit()
-        self.conn.close()
+        '''
+            to close the connectionen properly if the db thread has problems
+        '''
+        # self.conn.commit()
+        # self.conn.close()
+        pass  # dry run !!!
 
 
 class AsynchronousFileReader(threading.Thread):
@@ -112,6 +149,12 @@ class AsynchronousFileReader(threading.Thread):
 
 
 class Collector(threading.Thread):
+
+    '''
+        This class is to manage connections over ssh and copy
+        the real collector to the machines over scp
+        this create 2 more Threads one
+    '''
 
     def __init__(self, ip, insertQueue):
         threading.Thread.__init__(self)
