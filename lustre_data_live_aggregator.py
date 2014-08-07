@@ -13,7 +13,7 @@ import sys
 # import MySQLdb
 
 
-class DatabeseInserter(threading.Thread):
+class DatabaseInserter(threading.Thread):
 
     '''
     This class handels the data form the collectors (inserterQueue)
@@ -22,6 +22,8 @@ class DatabeseInserter(threading.Thread):
     '''
 
     def __init__(self, queue, dbconf):
+        threading.Thread.__init__(self)
+
         self.insertQueue = queue
 
         # Dry run !!!!
@@ -93,7 +95,7 @@ class DatabeseInserter(threading.Thread):
                     else:
                         # handle aggr values...
                         pass
-            elif 'MDS' in name:
+            elif 'MDT' in name:
                 # handle MDS
                 pass
             else:
@@ -234,10 +236,10 @@ if __name__ == '__main__':
     ips = json.load(cfg)
     dbconf = 'db.cfg'
 
-    ts_delay = 60
+    ts_delay = 10
     data_Queue = Queue.Queue()     # create dataqueue
     db_Queue = Queue.Queue()
-    db = DatabeseInserter(db_Queue, dbconf)  # create DB connection
+    db = DatabaseInserter(db_Queue, dbconf)  # create DB connection
 
     sshObjects = []
 
@@ -271,7 +273,7 @@ if __name__ == '__main__':
             print 'recover database'
             db.close()
             del(db)
-            db = DatabeseInserter(db_Queue, dbconf)
+            db = DatabaseInserter(db_Queue, dbconf)
 
             # put data form collectors into db queue
             print 'database Queue lenght:', db_Queue.qsize()
