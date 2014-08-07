@@ -1,35 +1,82 @@
 '''
+    Autor uwe.schilling[at]hlrs.de
     this programm is based on this thread:
     http://stefaanlippens.net/python-asynchronous-subprocess-pipe-reading
 '''
-
-
 import subprocess
 import time
 import threading
 import Queue
 import json
 import sys
+import ConfigParser
+import MySQLdb
 
 
-class DatabeseInserter(object):
+class DatabeseInserter(threading.Thread):
 
-    def __init__(self, queue):
+    '''
+    This class handels the data form the collectors (inserterQueue)
+    '''
+
+    def __init__(self, queue, dbconf):
         # self.conn
         # self.c
+        self.insertQueue = queue
+        self.config = ConfigParser()
+        try:
+            self.config.readfp(open(dbconf))
+        except IOError:
+            print "no db.conf file found."
+            sys.exit()
+        self.dbname = self.config.get("database", "name")
+        self.dbpassword = self.config.get("database", "password")
+        self.dbhost = self.config.get("database", "host")
+        self.dbuser = self.config.get("database", "user")
+        self.conn = MySQLdb.connect(passwd=self.dbpassword,
+                                    db=self.dbname,
+                                    host=self.dbhost,
+                                    user=self.dbuser)
+        self.c = self.conn.cursor()
+        self.start()
+
+    def _execute(self, query, data):
         pass
 
-    def _execute(query, data):
-        pass
+    def insert(self, jsonDict):
+        insertTimestamp = jsonDict[0]
+        data = jsonDict[1]
 
-    def insert(jsonDict):
-        pass
+        for base in data.keys():
+            sb = base.split('-')
+            ost_map = data[base]
+            fs_name = sb[0]
+            name = sb[1]
 
-    def start(self):
-	pass
+            for key in ost_map.keys():
+                resource_values = ost_map[key]
+                if key is 'aggr':
+                    sk = key.split('@')
+                    resourceIP = sk[0]
 
-    def isAlive(self):
-	return True
+                    rio = resource_values[0]
+                    rb = resource_values[1]
+                    wio = resource_values[2]
+                    wb = resource_values[3]
+                else:
+                    # handle aggr values...
+                    pass
+
+    def run(self):
+        while True:
+            if not self.insertQueue.empty():
+                insert = self.insertQueue.get()
+                self.insert(insert)
+
+    def close(self):
+        self.conn.commit()
+        self.conn.close()
+
 
 class AsynchronousFileReader(threading.Thread):
 
@@ -95,7 +142,7 @@ class Collector(threading.Thread):
 
     def run(self):
         '''
-        Example of how to consume standard output and standard error of
+        Consume standard output and standard error of
         a subprocess asynchronously without risk on deadlocking.
         '''
 
@@ -133,6 +180,7 @@ class Collector(threading.Thread):
         self.process.stderr.close()
 
     def sendRequest(self):
+        # getting data form collector
         self.process.stdin.write('\n')
 
 
@@ -141,12 +189,13 @@ if __name__ == '__main__':
     # read names and ip-adress
     cfg = open('collector.cfg', 'r')
     ips = json.load(cfg)
+    dbconf = 'db.cfg'
 
-    ts_delay = 10
+    ts_delay = 60
     data_Queue = Queue.Queue()     # create dataqueue
     db_Queue = Queue.Queue()
-    db = DatabeseInserter(db_Queue)  # create DB connection
-    db.start()  # start db inserter
+    db = DatabeseInserter(db_Queue, dbconf)  # create DB connection
+
     sshObjects = []
 
     # for all ip's creat connections to the collector
@@ -165,22 +214,32 @@ if __name__ == '__main__':
                 # remove thread from list
                 sshObjects.remove(t)
                 # recover thread....
-		print "recover", ip
+                print "recover", ip
                 sshObjects.append(Collector(ip, data_Queue))
             else:
                 t.sendRequest()
-        	#t.process.stdin.write('\n')
+                # t.process.stdin.write('\n')
 
         # Database Timestamp !!!
         insertTimestamp = int(time.time())
 
         if not db.isAlive():
-            pass
             # recover database connection
+            print 'recover database'
+            db.close()
+            del(db)
+            db = DatabeseInserter(db_Queue, dbconf)
+
+            # put data form collectors into db queue
+            print 'database Queue lenght:', db_Queue.qsize()
+            while not data_Queue.empty():
+                tmp = data_Queue.get()
+                db_Queue.put((insertTimestamp, tmp))
+
         else:
             # put data form collectors into db queue
+            print 'database Queue lenght:', db_Queue.qsize()
             while not data_Queue.empty():
-                print 'database Queue lenght:', db_Queue.qsize()
                 tmp = data_Queue.get()
                 db_Queue.put((insertTimestamp, tmp))
 
