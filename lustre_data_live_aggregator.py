@@ -9,8 +9,90 @@ import threading
 import Queue
 import json
 import sys
+import MySQLdb
+from pymongo import MongoClient
+
+
 # import ConfigParser
 # import MySQLdb
+
+class PerformanceData(object):
+
+    """
+        this class holds the data and information about the Performance Data
+        it will return the right data object for the different databases.
+    """
+
+    def __init__(self, timestamp, target, nid, values, fs, s_type, aggre=False):
+        super(PerformanceData, self).__init__()
+
+        self.timestamp = timestamp
+        self.s_type = s_type
+        self.target = target
+        self.nid = nid
+        self.values = values
+        self.fs = fs
+        self.isAggr = aggre
+
+    def getMongo_Obj(self):
+        obj = {"timestamps": self.timestamp,
+               "s_type": self.s_type,
+               "target": self.target,
+               "nid": self.nid,
+               "fs": self.fs,
+               "values": self.values}
+        return obj
+
+    def getMySQL_Obj(self):
+        pass
+
+
+class MySQL_Conn(object):
+
+    """docstring for MySQL_Conn"""
+
+    def __init__(self, dbpassword, dbname, dbhost, dbuser):
+        super(MySQL_Conn, self).__init__()
+
+        # construct the connection and cursor
+        self.conn = MySQLdb.connect(passwd=dbpassword,
+                                    db=dbname,
+                                    host=dbhost,
+                                    user=dbuser)
+        self.c = self.conn.cursor()
+
+
+class Mongo_Conn(object):
+
+    """docstring for Mongo_Conn"""
+
+    def __init__(self, port='', ip='', db_name='testdb'):
+        super(Mongo_Conn, self).__init__()
+
+        # geting client and connect
+        self.client = MongoClient()
+
+        # getting db
+        self.db = self.client[db_name]
+
+        # getting collection
+        self.collectionAggre = db['Aggre']
+        self.collectionNotAggre = db['notAggre']
+        self.collectionJobs = db['jobs']
+
+    def insert_performanceAggre(self, obj):
+        self.collectionAggre.insert(obj)
+
+    def insert_performanceNotAggre(self, obj):
+        self.collectionNotAggre.insert(obj)
+
+    def insert_values(self, timestamps, target, nid, values, fs, aggre=False):
+        obj = self.get_object(timestamps, target, nid, values, fs)
+
+        if aggre:
+            self.insert_performanceAggre(obj)
+        else:
+            self.collectionNotAggre(obj)
 
 
 class DatabaseInserter(threading.Thread):
@@ -39,12 +121,7 @@ class DatabaseInserter(threading.Thread):
         # self.dbpassword = self.config.get("database", "password")
         # self.dbhost = self.config.get("database", "host")
         # self.dbuser = self.config.get("database", "user")
-        # construct the connection and cursor
-        # self.conn = MySQLdb.connect(passwd=self.dbpassword,
-        #                             db=self.dbname,
-        #                             host=self.dbhost,
-        #                             user=self.dbuser)
-        # self.c = self.conn.cursor()
+
         # start the thread and begin to insert if entrys in the queue
         self.start()
 
@@ -72,26 +149,26 @@ class DatabaseInserter(threading.Thread):
 
         # insertTimestamp = jsonDict[0]
         data = jsonDict[1]
+        insert_me = []
 
         for base in data.keys():
             sb = base.split('-')
             ost_map = data[base]
-            # fs_name = sb[0]
+            fs_name = sb[0]
             name = sb[1]
 
             # switch for OST / MDS
             if 'OST' in name:
                 for key in ost_map.keys():
-                    # resource_values = ost_map[key]
+                    resource_values = ost_map[key]
                     if key is not 'aggr':
-                        pass
-                        # sk = key.split('@')
-                        # resourceIP = sk[0]
+                        sk = key.split('@')
+                        resourceIP = sk[0]
 
-                        # rio = resource_values[0]
-                        # rb = resource_values[1]
-                        # wio = resource_values[2]
-                        # wb = resource_values[3]
+                        rio = resource_values[0]
+                        rb = resource_values[1]
+                        wio = resource_values[2]
+                        wb = resource_values[3]
                     else:
                         # handle aggr values...
                         pass
