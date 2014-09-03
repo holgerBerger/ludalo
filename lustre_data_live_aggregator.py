@@ -68,11 +68,11 @@ class Mongo_Conn(object):
 
     """docstring for Mongo_Conn"""
 
-    def __init__(self, port='', ip='', db_name='testdb'):
+    def __init__(self, port='', ip='', db_name='testdb1'):
         super(Mongo_Conn, self).__init__()
 
         # geting client and connect
-        self.client = MongoClient()
+        self.client = MongoClient(host='intern2-ext')
 
         # getting db
         self.db = self.client[db_name]
@@ -82,7 +82,7 @@ class Mongo_Conn(object):
         self.collectionJobs = self.db['jobs']
 
     def insert_performance(self, obj):
-        self.db[obj['fs']].insert(obj.getMongo_Obj)
+        self.db[obj.fs].insert(obj.getMongo_Obj())
 
 
 class DatabaseInserter(threading.Thread):
@@ -165,14 +165,8 @@ class DatabaseInserter(threading.Thread):
                 sk = key.split('@')
                 resourceIP = sk[0]
 
-                rio = resource_values[0]
-                rb = resource_values[1]
-                wio = resource_values[2]
-                wb = resource_values[3]
-
-                values = [rio, rb, wio, wb]
                 ins = PerformanceData(
-                    insertTimestamp, name, resourceIP, values, fs_name, s_type)
+                    insertTimestamp, name, resourceIP, resource_values, fs_name, s_type)
                 insert_me.append(ins)
 
         # Insert data Obj
@@ -320,7 +314,7 @@ if __name__ == '__main__':
     dbMongo_conn = Mongo_Conn()  # connection to mongo db
 
     # create DB connection
-    db_mongo = DatabaseInserter(dbdbMongo_Queue, dbconf, dbMongo_conn)
+    db_mongo = DatabaseInserter(dbdbMongo_Queue, dbMongo_conn)
 
     sshObjects = []
 
@@ -354,7 +348,7 @@ if __name__ == '__main__':
             print 'recover database'
             db_mongo.close()
             del(db_mongo)
-            db_mongo = DatabaseInserter(dbdbMongo_Queue, dbconf, dbMongo_conn)
+            db_mongo = DatabaseInserter(dbdbMongo_Queue, dbMongo_conn)
 
             # put data form collectors into db queue
             print 'database Queue lenght:', dbdbMongo_Queue.qsize()
