@@ -23,7 +23,7 @@ class PerformanceData(object):
         it will return the right data object for the different databases.
     """
 
-    def __init__(self, timestamp, target, nid, values, fs, s_type, aggre=False):
+    def __init__(self, timestamp, target, nid, values, fs, s_type):
         super(PerformanceData, self).__init__()
 
         self.timestamp = timestamp
@@ -32,15 +32,14 @@ class PerformanceData(object):
         self.nid = nid
         self.values = values
         self.fs = fs
-        self.isAggr = aggre
 
     def getMongo_Obj(self):
-        obj = {"timestamps": self.timestamp,
-               "s_type": self.s_type,
-               "target": self.target,
+        obj = {"ts": self.timestamp,
+               "st": self.s_type,
+               "tgt": self.target,
                "nid": self.nid,
                "fs": self.fs,
-               "values": self.values}
+               "val": self.values}
         return obj
 
     def getMySQL_Obj(self):
@@ -61,6 +60,9 @@ class MySQL_Conn(object):
                                     user=dbuser)
         self.c = self.conn.cursor()
 
+    def insert_performance(self, obj):
+        pass
+
 
 class Mongo_Conn(object):
 
@@ -76,23 +78,11 @@ class Mongo_Conn(object):
         self.db = self.client[db_name]
 
         # getting collection
-        self.collectionAggre = db['Aggre']
-        self.collectionNotAggre = db['notAggre']
-        self.collectionJobs = db['jobs']
+        self.collection = self.db['performanceData']
+        self.collectionJobs = self.db['jobs']
 
-    def insert_performanceAggre(self, obj):
-        self.collectionAggre.insert(obj)
-
-    def insert_performanceNotAggre(self, obj):
-        self.collectionNotAggre.insert(obj)
-
-    def insert_values(self, timestamps, target, nid, values, fs, aggre=False):
-        obj = self.get_object(timestamps, target, nid, values, fs)
-
-        if aggre:
-            self.insert_performanceAggre(obj)
-        else:
-            self.collectionNotAggre(obj)
+    def insert_performance(self, obj):
+        self.db[obj['fs']].insert(obj.getMongo_Obj)
 
 
 class DatabaseInserter(threading.Thread):
@@ -103,10 +93,11 @@ class DatabaseInserter(threading.Thread):
     dependencys to the collector.
     '''
 
-    def __init__(self, queue, dbconf):
+    def __init__(self, queue, db):
         threading.Thread.__init__(self)
 
         self.insertQueue = queue
+        self.db = db
 
         # Dry run !!!!
 
@@ -147,37 +138,46 @@ class DatabaseInserter(threading.Thread):
                 [...]
         '''
 
-        # insertTimestamp = jsonDict[0]
+        insertTimestamp = jsonDict[0]
         data = jsonDict[1]
         insert_me = []
 
+        # Split the json into data obj
         for base in data.keys():
-            sb = base.split('-')
+            sb = base.split('-')  # "alnec-OST0002"
             ost_map = data[base]
-            fs_name = sb[0]
-            name = sb[1]
+            fs_name = sb[0]  # alnec
+            name = sb[1]  # OST0002
 
             # switch for OST / MDS
             if 'OST' in name:
-                for key in ost_map.keys():
-                    resource_values = ost_map[key]
-                    if key is not 'aggr':
-                        sk = key.split('@')
-                        resourceIP = sk[0]
-
-                        rio = resource_values[0]
-                        rb = resource_values[1]
-                        wio = resource_values[2]
-                        wb = resource_values[3]
-                    else:
-                        # handle aggr values...
-                        pass
+                s_type = 'OST'
             elif 'MDT' in name:
-                # handle MDS
-                pass
+                s_type = 'MDT'
             else:
                 print 'weird things in the json... pleas check it.'
                 print 'no MDS or MDT string is', name
+                break
+
+            for key in ost_map.keys():
+                # key = "aggr" or "10.132.10.0@o2ib42"
+                resource_values = ost_map[key]
+                sk = key.split('@')
+                resourceIP = sk[0]
+
+                rio = resource_values[0]
+                rb = resource_values[1]
+                wio = resource_values[2]
+                wb = resource_values[3]
+
+                values = [rio, rb, wio, wb]
+                ins = PerformanceData(
+                    insertTimestamp, name, resourceIP, values, fs_name, s_type)
+                insert_me.append(ins)
+
+        # Insert data Obj
+        for obj in insert_me:
+            self.db.insert_performance(obj)
 
     def run(self):
         while True:
@@ -315,8 +315,12 @@ if __name__ == '__main__':
 
     ts_delay = 10
     data_Queue = Queue.Queue()     # create dataqueue
-    db_Queue = Queue.Queue()
-    db = DatabaseInserter(db_Queue, dbconf)  # create DB connection
+
+    dbdbMongo_Queue = Queue.Queue()  # mongo queue
+    dbMongo_conn = Mongo_Conn()  # connection to mongo db
+
+    # create DB connection
+    db_mongo = DatabaseInserter(dbdbMongo_Queue, dbconf, dbMongo_conn)
 
     sshObjects = []
 
@@ -345,25 +349,25 @@ if __name__ == '__main__':
         # Database Timestamp !!!
         insertTimestamp = int(time.time())
 
-        if not db.isAlive():
+        if not db_mongo.isAlive():
             # recover database connection
             print 'recover database'
-            db.close()
-            del(db)
-            db = DatabaseInserter(db_Queue, dbconf)
+            db_mongo.close()
+            del(db_mongo)
+            db_mongo = DatabaseInserter(dbdbMongo_Queue, dbconf, dbMongo_conn)
 
             # put data form collectors into db queue
-            print 'database Queue lenght:', db_Queue.qsize()
+            print 'database Queue lenght:', dbdbMongo_Queue.qsize()
             while not data_Queue.empty():
                 tmp = data_Queue.get()
-                db_Queue.put((insertTimestamp, tmp))
+                dbdbMongo_Queue.put((insertTimestamp, tmp))
 
         else:
             # put data form collectors into db queue
-            print 'database Queue lenght:', db_Queue.qsize()
+            print 'database Queue lenght:', dbdbMongo_Queue.qsize()
             while not data_Queue.empty():
                 tmp = data_Queue.get()
-                db_Queue.put((insertTimestamp, tmp))
+                dbdbMongo_Queue.put((insertTimestamp, tmp))
 
         # look at db connectionen if this is alaive
         t_end = time.time()
