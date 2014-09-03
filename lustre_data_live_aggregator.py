@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 '''
     Autor uwe.schilling[at]hlrs.de 2014
     this programm is based on this thread:
@@ -72,7 +74,7 @@ class Mongo_Conn(object):
         super(Mongo_Conn, self).__init__()
 
         # geting client and connect
-        self.client = MongoClient(host='intern2-ext')
+        self.client = MongoClient(host='localhost')
 
         # getting db
         self.db = self.client[db_name]
@@ -81,8 +83,21 @@ class Mongo_Conn(object):
         self.collection = self.db['performanceData']
         self.collectionJobs = self.db['jobs']
 
-    def insert_performance(self, obj):
-        self.db[obj.fs].insert(obj.getMongo_Obj())
+    def insert_performance(self, ip, objlist):
+	fslist = {}
+	for obj in objlist:
+		if obj.fs not in fslist:
+			fslist[obj.fs] = []
+		fslist[obj.fs].append(obj.getMongo_Obj())
+
+	sum = 0
+	t1 = time.time()
+	for fs in fslist.keys():
+        	self.db[fs].insert(fslist[fs])
+		sum += len(fslist[fs])
+	t2 = time.time()
+	print " inserted %d documents into mongodb (%d inserts/sec)" % (sum, sum/(t2-t1))
+	
 
 
 class DatabaseInserter(threading.Thread):
@@ -119,7 +134,8 @@ class DatabaseInserter(threading.Thread):
     def _execute(self, query, data):
         pass
 
-    def insert(self, jsonDict):
+    #def insert(self, jsonDict):
+    def insert(self, args):
         '''
             split the json object into the informations for the
             database. the json object is defined as:
@@ -138,6 +154,8 @@ class DatabaseInserter(threading.Thread):
                 [...]
         '''
 
+	(ip, jsonDict) = args
+
         insertTimestamp = jsonDict[0]
         data = jsonDict[1]
         insert_me = []
@@ -155,7 +173,7 @@ class DatabaseInserter(threading.Thread):
             elif 'MDT' in name:
                 s_type = 'MDT'
             else:
-                print 'weird things in the json... pleas check it.'
+                print 'weird things in the json... please check it.'
                 print 'no MDS or MDT string is', name
                 break
 
@@ -170,14 +188,15 @@ class DatabaseInserter(threading.Thread):
                 insert_me.append(ins)
 
         # Insert data Obj
-        for obj in insert_me:
-            self.db.insert_performance(obj)
+        self.db.insert_performance(ip, insert_me)
 
     def run(self):
         while True:
             if not self.insertQueue.empty():
                 insert = self.insertQueue.get()
                 self.insert(insert)
+            else:
+                time.sleep(0.1)		  # play nice with others, no sleep no rest -> 100% load
 
     def close(self):
         '''
@@ -277,7 +296,7 @@ class Collector(threading.Thread):
                 line = self.stdout_queue.get()
 
                 # Do Stuff!!!!
-                self.insertQueue.put(line)
+                self.insertQueue.put((self.ip,line))
 
             # Show what we received from standard error.
             while not self.stderr_queue.empty():
@@ -351,14 +370,14 @@ if __name__ == '__main__':
             db_mongo = DatabaseInserter(dbdbMongo_Queue, dbMongo_conn)
 
             # put data form collectors into db queue
-            print 'database Queue lenght:', dbdbMongo_Queue.qsize()
+            print 'database Queue length:', dbdbMongo_Queue.qsize()
             while not data_Queue.empty():
                 tmp = data_Queue.get()
                 dbdbMongo_Queue.put((insertTimestamp, tmp))
 
         else:
             # put data form collectors into db queue
-            print 'database Queue lenght:', dbdbMongo_Queue.qsize()
+            print 'database Queue length:', dbdbMongo_Queue.qsize()
             while not data_Queue.empty():
                 tmp = data_Queue.get()
                 dbdbMongo_Queue.put((insertTimestamp, tmp))
