@@ -431,6 +431,8 @@ if __name__ == '__main__':
     cfg = open('collector.cfg', 'r')
     ips = json.load(cfg)
     dbconf = 'db.cfg'
+    ts_delay = 10
+    test_dummy_insert = True
 
     # get config settings for the db
     config = ConfigParser()
@@ -447,7 +449,6 @@ if __name__ == '__main__':
     # tmp config
     dbname = 'test'
 
-    ts_delay = 10
     data_Queue = Queue.Queue()     # create dataqueue
 
     # Mongo
@@ -466,8 +467,11 @@ if __name__ == '__main__':
 
     # for all ip's creat connections to the collector
 
-    for key in ips.keys():
-        sshObjects.append(Collector(ips[key], data_Queue))
+    if test_dummy_insert:
+        sshObjects.append(DummyCollector(ip='blub', data_Queue, mds=1, ost=2, nid=10))
+    else:
+        for key in ips.keys():
+            sshObjects.append(Collector(ips[key], data_Queue))
 
     time.sleep(1)
 
