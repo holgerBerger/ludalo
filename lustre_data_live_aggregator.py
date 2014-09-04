@@ -6,6 +6,7 @@
     http://stefaanlippens.net/python-asynchronous-subprocess-pipe-reading
 '''
 import subprocess
+import ConfigParser
 import time
 import threading
 import Queue
@@ -115,6 +116,10 @@ class MySQL_Conn(object):
                                   wb INT UNSIGNED)'''
         self.c.execute(performanceTable)
 
+    def closeConn(self):
+        self.conn.commit()
+        self.conn.close()
+
 
 class Mongo_Conn(object):
 
@@ -148,6 +153,9 @@ class Mongo_Conn(object):
         t2 = time.time()
         print " inserted %d documents into mongodb (%d inserts/sec)" % (sum, sum / (t2 - t1))
 
+    def closeConn(self):
+        self.client.close()
+
 
 class DatabaseInserter(threading.Thread):
 
@@ -162,20 +170,6 @@ class DatabaseInserter(threading.Thread):
 
         self.insertQueue = queue
         self.db = db
-
-        # Dry run !!!!
-
-        # get config settings for the db
-        # self.config = ConfigParser()
-        # try:
-        #     self.config.readfp(open(dbconf))
-        # except IOError:
-        #     print "no db.conf file found."
-        #     sys.exit()
-        # self.dbname = self.config.get("database", "name")
-        # self.dbpassword = self.config.get("database", "password")
-        # self.dbhost = self.config.get("database", "host")
-        # self.dbuser = self.config.get("database", "user")
 
         # start the thread and begin to insert if entrys in the queue
         self.start()
@@ -252,9 +246,7 @@ class DatabaseInserter(threading.Thread):
         '''
             to close the connectionen properly if the db thread has problems
         '''
-        # self.conn.commit()
-        # self.conn.close()
-        pass  # dry run !!!
+        self.db.closeConn()
 
 
 class AsynchronousFileReader(threading.Thread):
@@ -376,11 +368,20 @@ if __name__ == '__main__':
     ips = json.load(cfg)
     dbconf = 'db.cfg'
 
+    # get config settings for the db
+    config = ConfigParser()
+    try:
+        config.readfp(open(dbconf))
+    except IOError:
+        print "no db.conf file found."
+        sys.exit()
+    dbname = config.get("database", "name")
+    dbpassword = config.get("database", "password")
+    dbhost = config.get("database", "host")
+    dbuser = config.get("database", "user")
+
     # tmp config
-    dbpassword = ''
     dbname = 'test'
-    dbhost = ''
-    dbuser = ''
 
     ts_delay = 10
     data_Queue = Queue.Queue()     # create dataqueue
