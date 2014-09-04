@@ -591,14 +591,9 @@ class MySQLObject(object):
         #print jobid, start, end, owner, nids, cmd
         # check if job is already in DB
         #  OLD self.c.execute(''' SELECT jobid FROM jobs WHERE jobid = %s AND t_start = %s''', (jobid, start))
-        self.c.execute('''
-                        SELECT
-                            jobid
-                        FROM
-                            jobs
-                        WHERE
-                            jobid = %s
-                        ''', (jobid, ))
+        self.c.execute('''SELECT jobid
+                          FROM jobs
+                          WHERE jobid = %s ''', (jobid, ))
         
         if not self.c.fetchone():
             # check if user is already in DB
