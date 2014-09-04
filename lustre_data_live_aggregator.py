@@ -45,6 +45,7 @@ class PerformanceData(object):
         return obj
 
     def getMySQL_Obj(self):
+        # this will crash :-(
         if len(self.values) < 3:
             newValues = []
             newValues[0] = self.values
@@ -280,6 +281,69 @@ class AsynchronousFileReader(threading.Thread):
     def eof(self):
         '''Check whether there is no more content to expect.'''
         return not self.is_alive() and self._queue.empty()
+
+
+class DummyCollector(threading.Thread):
+
+    """docstring for DummyCollector"""
+
+    def __init__(self, ip, insertQueue, mds=1, ost=2, nid=10):
+        super(DummyCollector, self).__init__()
+        self.ip = ip
+        self.insertQueue = insertQueue
+        self.mds = mds
+        self.ost = ost
+        self.nid = nid
+
+        # Launch Tread
+        self.start()
+        print 'created DUMMY', self.name
+
+    def run(self):
+        '''
+        Consume standard output and standard error of
+        a subprocess asynchronously without risk on deadlocking.
+        '''
+
+        print 'started DUMMY:', self.name
+
+        while True:
+
+            time.sleep(0.1)
+
+    def sendRequest(self):
+        self.getDummyData()
+
+    def getDummyData(self):
+
+        data = {}
+
+        mdsNames = []
+        ostNames = []
+        nidNames = []
+        ostValues = [81680085, 81680085, 81680085, 81680085]
+
+        # Pleas append mds to map !!!
+
+        # mdsValues = 81680085
+
+        for x in xrange(1, self.mds):
+            mdsNames.add('MDS_DUMMY-' + '{:06}'.format(x))  # DUMMY-1
+
+        for x in xrange(1, self.ost):
+            ostNames.add('OST_DUMMY-' + '{:06}'.format(x))  # DUMMY-1
+
+        for x in xrange(1, self.nid):
+            # DUMMY-1
+            nidNames.add('Nid_DUMMY-' + '{:06}'.format(x) + '@alpha')
+
+        for ost in ostNames:
+            tmp = {}
+            for nid in nidNames:
+                tmp[str(nid)] = ostValues
+            data[str(ost)] = tmp
+
+        self.insertQueue.put(json.dumps(data))
 
 
 class Collector(threading.Thread):
