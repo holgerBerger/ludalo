@@ -40,12 +40,27 @@ class PerformanceData(object):
                "st": self.s_type,
                "tgt": self.target,
                "nid": self.nid,
-               "fs": self.fs,
                "val": self.values}
         return obj
 
     def getMySQL_Obj(self):
-        pass
+        if len(self.values) < 3:
+            newValues = []
+            newValues[0] = self.values
+            newValues[1] = 0
+            newValues[2] = 0
+            newValues[3] = 0
+            self.values = newValues
+
+        obj = (self.timestamp,
+               self.s_type,
+               self.target,
+               self.nid,
+               self.values[0],
+               self.values[1],
+               self.values[2],
+               self.values[3])
+        return obj
 
 
 class MySQL_Conn(object):
@@ -61,9 +76,44 @@ class MySQL_Conn(object):
                                     host=dbhost,
                                     user=dbuser)
         self.c = self.conn.cursor()
+        self.generateDatabase()
 
-    def insert_performance(self, obj):
-        pass
+    def insert_performance(self, ip, objlist):
+        fslist = {}
+        for obj in objlist:
+            if obj.fs not in fslist:
+                fslist[obj.fs] = []
+            fslist[obj.fs].append(obj.getMySQL_Obj())
+
+        sum = 0
+        t1 = time.time()
+        for fs in fslist.keys():
+            self.generateDatabaseTable(fs)
+            query = ''' INSERT INTO  ''' + str(fs) + ''' (
+                                            c_timestamp,
+                                            c_servertype,
+                                            c_target,
+                                            nid,
+                                            rio,rb,
+                                            wio,wb)
+                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s)'''
+            self.c.executemany(query, fslist[fs])
+            sum += len(fslist[fs])
+        t2 = time.time()
+        print " inserted %d documents into MySQL (%d inserts/sec)" % (sum, sum / (t2 - t1))
+
+    def generateDatabaseTable(self, fs):
+        performanceTable = ''' CREATE TABLE IF NOT EXISTS ''' + str(fs) + '''(
+                                  id serial primary key,
+                                  c_timestamp BIGINT UNSIGNED NOT NULL,
+                                  c_servertype VARCHAR(16) NOT NULL,
+                                  c_target VARCHAR(16) NOT NULL,
+                                  nid VARCHAR(26) NOT NULL,
+                                  rio INT UNSIGNED,
+                                  rb INT UNSIGNED,
+                                  wio INT UNSIGNED,
+                                  wb INT UNSIGNED)'''
+        self.c.execute(performanceTable)
 
 
 class Mongo_Conn(object):
@@ -84,20 +134,19 @@ class Mongo_Conn(object):
         self.collectionJobs = self.db['jobs']
 
     def insert_performance(self, ip, objlist):
-	fslist = {}
-	for obj in objlist:
-		if obj.fs not in fslist:
-			fslist[obj.fs] = []
-		fslist[obj.fs].append(obj.getMongo_Obj())
+        fslist = {}
+        for obj in objlist:
+            if obj.fs not in fslist:
+                fslist[obj.fs] = []
+            fslist[obj.fs].append(obj.getMongo_Obj())
 
-	sum = 0
-	t1 = time.time()
-	for fs in fslist.keys():
-        	self.db[fs].insert(fslist[fs])
-		sum += len(fslist[fs])
-	t2 = time.time()
-	print " inserted %d documents into mongodb (%d inserts/sec)" % (sum, sum/(t2-t1))
-	
+        sum = 0
+        t1 = time.time()
+        for fs in fslist.keys():
+            self.db[fs].insert(fslist[fs])
+            sum += len(fslist[fs])
+        t2 = time.time()
+        print " inserted %d documents into mongodb (%d inserts/sec)" % (sum, sum / (t2 - t1))
 
 
 class DatabaseInserter(threading.Thread):
@@ -134,7 +183,7 @@ class DatabaseInserter(threading.Thread):
     def _execute(self, query, data):
         pass
 
-    #def insert(self, jsonDict):
+    # def insert(self, jsonDict):
     def insert(self, args):
         '''
             split the json object into the informations for the
@@ -154,7 +203,7 @@ class DatabaseInserter(threading.Thread):
                 [...]
         '''
 
-	(ip, jsonDict) = args
+        (ip, jsonDict) = args
 
         insertTimestamp = jsonDict[0]
         data = jsonDict[1]
@@ -196,7 +245,8 @@ class DatabaseInserter(threading.Thread):
                 insert = self.insertQueue.get()
                 self.insert(insert)
             else:
-                time.sleep(0.1)		  # play nice with others, no sleep no rest -> 100% load
+                # play nice with others, no sleep no rest -> 100% load
+                time.sleep(0.1)
 
     def close(self):
         '''
@@ -296,7 +346,7 @@ class Collector(threading.Thread):
                 line = self.stdout_queue.get()
 
                 # Do Stuff!!!!
-                self.insertQueue.put((self.ip,line))
+                self.insertQueue.put((self.ip, line))
 
             # Show what we received from standard error.
             while not self.stderr_queue.empty():
@@ -329,11 +379,17 @@ if __name__ == '__main__':
     ts_delay = 10
     data_Queue = Queue.Queue()     # create dataqueue
 
-    dbdbMongo_Queue = Queue.Queue()  # mongo queue
+    # Mongo
+    dbMongo_Queue = Queue.Queue()  # mongo queue
     dbMongo_conn = Mongo_Conn()  # connection to mongo db
 
+    # MySQL
+    dbMySQL_Queue = Queue.Queue()
+    dbMySQL_conn = MySQL_Conn(dbpassword, dbname, dbhost, dbuser)
+
     # create DB connection
-    db_mongo = DatabaseInserter(dbdbMongo_Queue, dbMongo_conn)
+    db_mongo = DatabaseInserter(dbMongo_Queue, dbMongo_conn)
+    db_mySQL = DatabaseInserter(dbMySQL_Queue, dbMySQL_conn)
 
     sshObjects = []
 
@@ -362,25 +418,30 @@ if __name__ == '__main__':
         # Database Timestamp !!!
         insertTimestamp = int(time.time())
 
-        if not db_mongo.isAlive():
-            # recover database connection
-            print 'recover database'
-            db_mongo.close()
-            del(db_mongo)
-            db_mongo = DatabaseInserter(dbdbMongo_Queue, dbMongo_conn)
+        while not data_Queue.empty():
+            tmp = data_Queue.get()
+
+            if not db_mongo.isAlive():
+                # recover database connection
+                print 'recover database'
+                db_mongo.close()
+                del(db_mongo)
+                db_mongo = DatabaseInserter(dbMongo_Queue, dbMongo_conn)
 
             # put data form collectors into db queue
-            print 'database Queue length:', dbdbMongo_Queue.qsize()
-            while not data_Queue.empty():
-                tmp = data_Queue.get()
-                dbdbMongo_Queue.put((insertTimestamp, tmp))
+            print 'database Queue length:', dbMongo_Queue.qsize()
+            dbMongo_Queue.put((insertTimestamp, tmp))
 
-        else:
+            if not db_mySQL.isAlive():
+                # recover database connection
+                print 'recover database'
+                db_mySQL.close()
+                del(db_mySQL)
+                db_mySQL = DatabaseInserter(dbMySQL_Queue, dbMySQL_conn)
+
             # put data form collectors into db queue
-            print 'database Queue length:', dbdbMongo_Queue.qsize()
-            while not data_Queue.empty():
-                tmp = data_Queue.get()
-                dbdbMongo_Queue.put((insertTimestamp, tmp))
+            print 'database Queue length:', dbMySQL_Queue.qsize()
+            dbMySQL_Queue.put((insertTimestamp, tmp))
 
         # look at db connectionen if this is alaive
         t_end = time.time()
