@@ -376,6 +376,12 @@ if __name__ == '__main__':
     ips = json.load(cfg)
     dbconf = 'db.cfg'
 
+    # tmp config
+    dbpassword = ''
+    dbname = 'test'
+    dbhost = ''
+    dbuser = ''
+
     ts_delay = 10
     data_Queue = Queue.Queue()     # create dataqueue
 
