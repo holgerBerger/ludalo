@@ -6,7 +6,7 @@
     http://stefaanlippens.net/python-asynchronous-subprocess-pipe-reading
 '''
 import subprocess
-import ConfigParser
+from ConfigParser import ConfigParser
 import time
 import threading
 import Queue
@@ -69,16 +69,18 @@ class MySQL_Conn(object):
 
     """docstring for MySQL_Conn"""
 
-    def __init__(self, dbpassword, dbname, dbhost, dbuser):
+    def __init__(self, dbuser, dbpassword, dbname, dbhost, dbport):
         super(MySQL_Conn, self).__init__()
 
         # construct the connection and cursor
+        print dbuser, dbpassword, dbname, dbhost, dbport
         self.conn = MySQLdb.connect(passwd=dbpassword,
                                     db=dbname,
                                     host=dbhost,
+                                    port=dbport,
                                     user=dbuser)
         self.c = self.conn.cursor()
-        self.generateDatabase()
+        # self.generateDatabase()
 
     def insert_performance(self, ip, objlist):
         fslist = {}
@@ -90,7 +92,7 @@ class MySQL_Conn(object):
         sum = 0
         t1 = time.time()
         for fs in fslist.keys():
-            self.generateDatabaseTable(fs)
+            # self.generateDatabaseTable(fs)
             query = ''' INSERT INTO  ''' + str(fs) + ''' (
                                             c_timestamp,
                                             c_servertype,
@@ -99,7 +101,7 @@ class MySQL_Conn(object):
                                             rio,rb,
                                             wio,wb)
                         VALUES (%s,%s,%s,%s,%s,%s,%s,%s)'''
-            self.c.executemany(query, fslist[fs])
+            # self.c.executemany(query, fslist[fs])
             sum += len(fslist[fs])
         t2 = time.time()
         print " inserted %d documents into MySQL (%d inserts/sec)" % (sum, sum / (t2 - t1))
@@ -149,7 +151,7 @@ class Mongo_Conn(object):
         sum = 0
         t1 = time.time()
         for fs in fslist.keys():
-            self.db[fs].insert(fslist[fs])
+            #  DUMMY INSERT self.db[fs].insert(fslist[fs])
             sum += len(fslist[fs])
         t2 = time.time()
         print " inserted %d documents into mongodb (%d inserts/sec)" % (sum, sum / (t2 - t1))
@@ -204,6 +206,7 @@ class DatabaseInserter(threading.Thread):
         data = jsonDict[1]
         insert_me = []
 
+        # print "before data.keys():", data
         # Split the json into data obj
         for base in data.keys():
             sb = base.split('-')  # "alnec-OST0002"
@@ -307,11 +310,14 @@ class DummyCollector(threading.Thread):
 
         print 'started DUMMY:', self.name
 
+        # self.insertQueue.put("myHostname")
+
         while True:
 
             time.sleep(0.1)
 
     def sendRequest(self):
+        print "self.name",self.name
         self.getDummyData()
 
     def getDummyData(self):
@@ -328,14 +334,14 @@ class DummyCollector(threading.Thread):
         # mdsValues = 81680085
 
         for x in xrange(1, self.mds):
-            mdsNames.add('MDS_DUMMY-' + '{:06}'.format(x))  # DUMMY-1
+            mdsNames.append('dummyfs-MDS_' + '{0:06}'.format(x))  # DUMMY-1
 
         for x in xrange(1, self.ost):
-            ostNames.add('OST_DUMMY-' + '{:06}'.format(x))  # DUMMY-1
+            ostNames.append('dummyfs-OST_' + '{0:06}'.format(x))  # DUMMY-1
 
         for x in xrange(1, self.nid):
             # DUMMY-1
-            nidNames.add('Nid_DUMMY-' + '{:06}'.format(x) + '@alpha')
+            nidNames.append('Nid_DUMMY-' + '{0:06}'.format(x) + '@alpha')
 
         for ost in ostNames:
             tmp = {}
@@ -343,7 +349,9 @@ class DummyCollector(threading.Thread):
                 tmp[str(nid)] = ostValues
             data[str(ost)] = tmp
 
-        self.insertQueue.put(json.dumps(data))
+        # self.insertQueue.put(json.dumps(data))
+        # print "data:", data
+        self.insertQueue.put((int(time.time()),data))
 
 
 class Collector(threading.Thread):
@@ -430,7 +438,7 @@ if __name__ == '__main__':
     # read names and ip-adress
     cfg = open('collector.cfg', 'r')
     ips = json.load(cfg)
-    dbconf = 'db.cfg'
+    dbconf = 'db.conf'
     ts_delay = 10
     test_dummy_insert = True
 
@@ -445,6 +453,7 @@ if __name__ == '__main__':
     dbpassword = config.get("database", "password")
     dbhost = config.get("database", "host")
     dbuser = config.get("database", "user")
+    dbport = int(config.get("database", "port"))
 
     # tmp config
     dbname = 'test'
@@ -457,7 +466,7 @@ if __name__ == '__main__':
 
     # MySQL
     dbMySQL_Queue = Queue.Queue()
-    dbMySQL_conn = MySQL_Conn(dbpassword, dbname, dbhost, dbuser)
+    dbMySQL_conn = MySQL_Conn(dbuser, dbpassword, dbname, dbhost, dbport)
 
     # create DB connection
     db_mongo = DatabaseInserter(dbMongo_Queue, dbMongo_conn)
@@ -468,7 +477,7 @@ if __name__ == '__main__':
     # for all ip's creat connections to the collector
 
     if test_dummy_insert:
-        sshObjects.append(DummyCollector(ip='blub', data_Queue, mds=1, ost=2, nid=10))
+        sshObjects.append(DummyCollector('blub', data_Queue, mds=1, ost=96, nid=4000))
     else:
         for key in ips.keys():
             sshObjects.append(Collector(ips[key], data_Queue))
