@@ -227,7 +227,6 @@ class Mongo_Conn(object):
             # Prevent other threads form execute
             with self.lock:
                 self.db[fs].insert(fslist[fs])
-                pass
 
             sum += len(fslist[fs])
         t2 = time.time()
@@ -612,11 +611,12 @@ if __name__ == '__main__':
 
     # Mongo
     try:
-        dbMongo_conn = cfg.databases[cfg.sectionMongo]   # connection to mongo db
+        # connection to mongo db
+        dbMongo_conn = cfg.databases[cfg.sectionMongo]
         dbMongo_Queue = Queue.Queue()  # mongo queue
         db_mongo = DatabaseInserter(dbMongo_Queue, dbMongo_conn)
         dbMongoactive = True
-    except: 
+    except:
         dbMongoactive = False
 
     # MySQL
@@ -625,7 +625,7 @@ if __name__ == '__main__':
         dbMySQL_Queue = Queue.Queue()
         db_mySQL = DatabaseInserter(dbMySQL_Queue, dbMySQL_conn)
         dbMySQLactive = True
-    except: 
+    except:
         dbMySQLactive = False
 
     # SQLight
@@ -633,9 +633,9 @@ if __name__ == '__main__':
         dbSQLight_conn = cfg.databases[cfg.sectionSQLight]
         dbSQLight_Queue = Queue.Queue()
         db_SQLight = DatabaseInserter(dbSQLight_Queue, dbSQLight_conn)
-	dbSQLightactive = True
-    except: 
-	dbSQLightactive = False
+        dbSQLightactive = True
+    except:
+        dbSQLightactive = False
 
     # create DB inserter
 
