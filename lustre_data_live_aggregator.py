@@ -367,10 +367,11 @@ class DummyCollector(multiprocessing.Process):
 
     """docstring for DummyCollector"""
 
-    def __init__(self, ip, insertQueue, mds=1, ost=2, nid=10):
+    def __init__(self, ip, sOut, oIn, mds=1, ost=2, nid=10):
         super(DummyCollector, self).__init__()
         self.ip = ip
-        self.insertQueue = insertQueue
+        self.sOut = sOut
+        self.oIn = oIn
         self.mds = mds
         self.ost = ost
         self.nid = nid
@@ -384,14 +385,13 @@ class DummyCollector(multiprocessing.Process):
         Consume standard output and standard error of
         a subprocess asynchronously without risk on deadlocking.
         '''
-
         print 'started DUMMY:', self.name
-
-        # self.insertQueue.put("myHostname")
 
         while True:
 
-            time.sleep(0.1)
+            ts = self.sOut.recv()
+            jObject = self.sendRequest()
+            self.oIn.send((ts, jObject))
 
     def sendRequest(self):
         print "self.name", self.name
@@ -428,7 +428,7 @@ class DummyCollector(multiprocessing.Process):
 
         # self.insertQueue.put(json.dumps(data))
         # print "data:", data
-        self.insertQueue.put((int(time.time()), data))
+        return data
 
 
 class Collector(threading.Thread):
@@ -604,14 +604,14 @@ if __name__ == '__main__':
     # read names and ip-adress
     cfg = open('collector.cfg', 'r')
     ips = json.load(cfg)
+
+    # getting db configs
     conf = 'db.conf'
     cfg = DatabaseConfigurator(conf)
+
+    # global delay
     ts_delay = 10
     test_dummy_insert = True
-
-    # get config settings for the db
-
-    data_Queue = Queue.Queue()     # create dataqueue
 
     # Mongo
     dbMongo_Queue = Queue.Queue()  # mongo queue
@@ -625,44 +625,68 @@ if __name__ == '__main__':
     dbSQLight_Queue = Queue.Queue()
     dbSQLight_conn = cfg.databases[cfg.sectionSQLight]
 
-    # create DB connection
+    # create DB inserter
     db_mongo = DatabaseInserter(dbMongo_Queue, dbMongo_conn)
     db_mySQL = DatabaseInserter(dbMySQL_Queue, dbMySQL_conn)
+    db_SQLight = DatabaseInserter(dbSQLight_Queue, dbSQLight_conn)
 
     sshObjects = []
 
-    # for all ip's creat connections to the collector
+    signalPipe = []
 
+    objectPipe = []
+
+    opjectQueue = Queue.Queue()
+
+    # Setup signal pipes
+
+    # for all ip's creat connections to the collector
     if test_dummy_insert:
+
+        (sIn, sOut) = multiprocessing.Pipe()  # pipe for signals
+        (oIn, oOut) = multiprocessing.Pipe()  # pipe for objects
         sshObjects.append(
-            DummyCollector('blub', data_Queue, mds=1, ost=96, nid=4000))
+            DummyCollector('blub', sOut, oIn, mds=1, ost=96, nid=4000))
+
+        signalPipe.append(sIn)
+        objectPipe.append(oOut)
+
     else:
         for key in ips.keys():
-            sshObjects.append(Collector(ips[key], data_Queue))
-
+            # sshObjects.append(Collector(ips[key], data_Queue))
+            pass
     time.sleep(1)
 
-    # loop over all connections look if they are alive
     while True:
         t_start = time.time()
-        for t in sshObjects:
-            if not t.isAlive():
-                ip = t.ip
-                # remove thread from list
-                sshObjects.remove(t)
-                # recover thread....
-                print "recover", ip
-                sshObjects.append(Collector(ip, data_Queue))
-            else:
-                t.sendRequest()
-                # t.process.stdin.write('\n')
 
         # Database Timestamp !!!
         insertTimestamp = int(time.time())
 
-        while not data_Queue.empty():
-            tmp = data_Queue.get()
+        # loop over all connections look if they are alive
+        for t in sshObjects:
+            if not t.is_Alive():
+                ip = t.ip
+                # remove thread from list
+                sshObjects.remove(t)
+                # recover thread....
+                # print "recover", ip
+                #sshObjects.append(Collector(ip, data_Queue))
+                print 'ssh connection lost'
+                exit(1)
 
+        # send requests
+        for pipe in signalPipe:
+            pipe.send(insertTimestamp)
+
+        # recive data
+
+        for pipe in objectPipe:
+            obj = pipe.recv()
+
+            # insert in databases
+
+            # Mongo
             if not db_mongo.isAlive():
                 # recover database connection
                 print 'recover database'
@@ -672,8 +696,9 @@ if __name__ == '__main__':
 
             # put data form collectors into db queue
             print 'database Queue length:', dbMongo_Queue.qsize()
-            dbMongo_Queue.put((insertTimestamp, tmp))
+            dbMongo_Queue.put(obj)
 
+            # MySQL
             if not db_mySQL.isAlive():
                 # recover database connection
                 print 'recover database'
@@ -683,7 +708,19 @@ if __name__ == '__main__':
 
             # put data form collectors into db queue
             print 'database Queue length:', dbMySQL_Queue.qsize()
-            dbMySQL_Queue.put((insertTimestamp, tmp))
+            dbMySQL_Queue.put(obj)
+
+            # SQLight
+            if not db_SQLight.isAlive():
+                # recover database connection
+                print 'recover database'
+                db_SQLight.close()
+                del(db_SQLight)
+                db_SQLight = DatabaseInserter(dbSQLight_Queue, dbSQLight_conn)
+
+            # put data form collectors into db queue
+            print 'database Queue length:', dbSQLight_Queue.qsize()
+            dbSQLight_Queue.put(obj)
 
         # look at db connectionen if this is alaive
         t_end = time.time()
