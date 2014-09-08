@@ -6,6 +6,7 @@
     http://stefaanlippens.net/python-asynchronous-subprocess-pipe-reading
 '''
 import subprocess
+import multiprocessing
 from ConfigParser import ConfigParser
 import time
 import threading
@@ -342,7 +343,7 @@ class AsynchronousFileReader(threading.Thread):
         return not self.is_alive() and self._queue.empty()
 
 
-class DummyCollector(threading.Thread):
+class DummyCollector(multiprocessing.Process):
 
     """docstring for DummyCollector"""
 
@@ -500,7 +501,7 @@ class DatabaseConfigurator(object):
         self.defaultCfgFile = 'default.cfg'
         self.cfg = ConfigParser()
 
-        self.databases = []
+        self.databases = {}
 
         try:
             self.cfg.readfp(open(self.cfgFile))
@@ -511,36 +512,35 @@ class DatabaseConfigurator(object):
             self.writeDefaultConfig(self.defaultCfgFile)
             sys.exit()
 
-        sectionMongo = 'MongoDB'
-        sectionMySQL = 'MySQL'
-        sectionSQLight = 'SQLight'
+        self.sectionMongo = 'MongoDB'
+        self.sectionMySQL = 'MySQL'
+        self.sectionSQLight = 'SQLight'
 
-        if self.cfg.has_section(sectionMongo):
-            if self.cfg.getboolean(sectionMongo, 'aktiv'):
+        if self.cfg.has_section(self.sectionMongo):
+            if self.cfg.getboolean(self.sectionMongo, 'aktiv'):
                 # host, port, dbname
-                host = self.cfg.get(sectionMongo, 'host')
-                port = self.cfg.get(sectionMongo, 'port')
-                dbname = self.cfg.get(sectionMongo, 'dbname')
+                host = self.cfg.get(self.sectionMongo, 'host')
+                port = self.cfg.get(self.sectionMongo, 'port')
+                dbname = self.cfg.get(self.sectionMongo, 'dbname')
                 # do stuff
-                self.databases.append(Mongo_Conn(host, port, dbname))
+                self.databases[self.sectionMongo] = Mongo_Conn(host, port, dbname)
 
-        if self.cfg.has_section(sectionMySQL):
-            if self.cfg.getboolean(sectionMySQL, 'aktiv'):
+        if self.cfg.has_section(self.sectionMySQL):
+            if self.cfg.getboolean(self.sectionMySQL, 'aktiv'):
                 # host, port, user, password, dbname
-                host = self.cfg.get(sectionMySQL, 'host')
-                port = self.cfg.get(sectionMySQL, 'port')
-                user = self.cfg.get(sectionMySQL, 'user')
-                password = self.cfg.get(sectionMySQL, 'password')
-                dbname = self.cfg.get(sectionMySQL, 'dbname')
+                host = self.cfg.get(self.sectionMySQL, 'host')
+                port = self.cfg.get(self.sectionMySQL, 'port')
+                user = self.cfg.get(self.sectionMySQL, 'user')
+                password = self.cfg.get(self.sectionMySQL, 'password')
+                dbname = self.cfg.get(self.sectionMySQL, 'dbname')
                 # do stuff
-                self.databases.append(
-                    MySQL_Conn(host, port, user, password, dbname))
+                self.databases[self.sectionMySQL] = MySQL_Conn(host, port, user, password, dbname)
 
-        if self.cfg.has_section(sectionSQLight):
-            if self.cfg.getboolean(sectionSQLight, 'aktiv'):
+        if self.cfg.has_section(self.sectionSQLight):
+            if self.cfg.getboolean(self.sectionSQLight, 'aktiv'):
                 # path
-                path = self.cfg.get(sectionMySQL, 'path')
-                self.databases.append(SQLight_Conn(path))  # do stuff
+                path = self.cfg.get(self.sectionSQLight, 'path')
+                self.databases[self.sectionSQLight] = SQLight_Conn(path)  # do stuff
 
     def writeDefaultConfig(self, defaultCfgFile):
         cfgString = ('[MongoDB]' + '\n' +
