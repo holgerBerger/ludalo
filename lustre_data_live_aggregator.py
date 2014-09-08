@@ -74,6 +74,7 @@ class MySQL_Conn(object):
     def __init__(self, host, port, user, password, dbname):
         super(MySQL_Conn, self).__init__()
 
+        self.lock = multiprocessing.Lock()
         # construct the connection and cursor
         self.conn = MySQLdb.connect(passwd=password,
                                     db=dbname,
@@ -94,7 +95,6 @@ class MySQL_Conn(object):
         sum = 0
         t1 = time.time()
         for fs in fslist.keys():
-            # self.generateDatabaseTable(fs)
             query = ''' INSERT INTO  ''' + str(fs) + ''' (
                                             c_timestamp,
                                             c_servertype,
@@ -103,7 +103,13 @@ class MySQL_Conn(object):
                                             rio,rb,
                                             wio,wb)
                         VALUES (%s,%s,%s,%s,%s,%s,%s,%s)'''
-            # self.c.executemany(query, fslist[fs])
+
+            # Prevent other threads form execute
+            with self.lock:
+                # self.generateDatabaseTable(fs)
+                # self.c.executemany(query, fslist[fs])
+                pass
+
             sum += len(fslist[fs])
         t2 = time.time()
         print " inserted %d documents into MySQL (%d inserts/sec)" % (sum, sum / (t2 - t1))
@@ -133,6 +139,8 @@ class SQLight_Conn(object):
     def __init__(self, path):
         super(SQLight_Conn, self).__init__()
 
+        self.lock = multiprocessing.Lock()
+
         # construct the connection and cursor
         self.conn = sqlite3.connect(path)
         self.c = self.conn.cursor()
@@ -149,7 +157,7 @@ class SQLight_Conn(object):
         sum = 0
         t1 = time.time()
         for fs in fslist.keys():
-            # self.generateDatabaseTable(fs)
+
             query = ''' INSERT INTO  ''' + str(fs) + ''' (
                                             c_timestamp,
                                             c_servertype,
@@ -158,7 +166,13 @@ class SQLight_Conn(object):
                                             rio,rb,
                                             wio,wb)
                         VALUES (?,?,?,?,?,?,?,?)'''
-            # self.c.executemany(query, fslist[fs])
+
+            # Prevent other threads form execute
+            with self.lock:
+                # self.c.executemany(query, fslist[fs])
+                # self.generateDatabaseTable(fs)
+                pass
+
             sum += len(fslist[fs])
         t2 = time.time()
         print " inserted %d documents into MySQL (%d inserts/sec)" % (sum, sum / (t2 - t1))
@@ -188,6 +202,7 @@ class Mongo_Conn(object):
     def __init__(self, host, port, dbname):
         super(Mongo_Conn, self).__init__()
 
+        self.lock = multiprocessing.Lock()
         # geting client and connect
         self.client = MongoClient(host, port)
 
@@ -208,7 +223,12 @@ class Mongo_Conn(object):
         sum = 0
         t1 = time.time()
         for fs in fslist.keys():
-            #  DUMMY INSERT self.db[fs].insert(fslist[fs])
+
+            # Prevent other threads form execute
+            with self.lock:
+                #  DUMMY INSERT self.db[fs].insert(fslist[fs])
+                pass
+
             sum += len(fslist[fs])
         t2 = time.time()
         print " inserted %d documents into mongodb (%d inserts/sec)" % (sum, sum / (t2 - t1))
@@ -523,7 +543,8 @@ class DatabaseConfigurator(object):
                 port = self.cfg.get(self.sectionMongo, 'port')
                 dbname = self.cfg.get(self.sectionMongo, 'dbname')
                 # do stuff
-                self.databases[self.sectionMongo] = Mongo_Conn(host, port, dbname)
+                self.databases[self.sectionMongo] = Mongo_Conn(
+                    host, port, dbname)
 
         if self.cfg.has_section(self.sectionMySQL):
             if self.cfg.getboolean(self.sectionMySQL, 'aktiv'):
@@ -534,13 +555,15 @@ class DatabaseConfigurator(object):
                 password = self.cfg.get(self.sectionMySQL, 'password')
                 dbname = self.cfg.get(self.sectionMySQL, 'dbname')
                 # do stuff
-                self.databases[self.sectionMySQL] = MySQL_Conn(host, port, user, password, dbname)
+                self.databases[self.sectionMySQL] = MySQL_Conn(
+                    host, port, user, password, dbname)
 
         if self.cfg.has_section(self.sectionSQLight):
             if self.cfg.getboolean(self.sectionSQLight, 'aktiv'):
                 # path
                 path = self.cfg.get(self.sectionSQLight, 'path')
-                self.databases[self.sectionSQLight] = SQLight_Conn(path)  # do stuff
+                # do stuff
+                self.databases[self.sectionSQLight] = SQLight_Conn(path)
 
     def writeDefaultConfig(self, defaultCfgFile):
         cfgString = ('[MongoDB]' + '\n' +
@@ -592,15 +615,15 @@ if __name__ == '__main__':
 
     # Mongo
     dbMongo_Queue = Queue.Queue()  # mongo queue
-    dbMongo_conn = None   # connection to mongo db
+    dbMongo_conn = cfg.databases[cfg.sectionMongo]   # connection to mongo db
 
     # MySQL
     dbMySQL_Queue = Queue.Queue()
-    dbMySQL_conn = None
+    dbMySQL_conn = cfg.databases[cfg.sectionMySQL]
 
     # SQLight
     dbSQLight_Queue = Queue.Queue()
-    dbSQLight_conn = None
+    dbSQLight_conn = cfg.databases[cfg.sectionSQLight]
 
     # create DB connection
     db_mongo = DatabaseInserter(dbMongo_Queue, dbMongo_conn)
