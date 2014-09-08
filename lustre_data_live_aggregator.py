@@ -13,6 +13,7 @@ import Queue
 import json
 import sys
 import MySQLdb
+import sqlite3
 from pymongo import MongoClient
 
 
@@ -44,7 +45,7 @@ class PerformanceData(object):
                "val": self.values}
         return obj
 
-    def getMySQL_Obj(self):
+    def getSQL_Obj(self):
         # this will crash :-(
         if len(self.values) < 3:
             newValues = []
@@ -69,25 +70,25 @@ class MySQL_Conn(object):
 
     """docstring for MySQL_Conn"""
 
-    def __init__(self, dbuser, dbpassword, dbname, dbhost, dbport):
+    def __init__(self, host, port, user, password, dbname):
         super(MySQL_Conn, self).__init__()
 
         # construct the connection and cursor
-        print dbuser, dbpassword, dbname, dbhost, dbport
-        self.conn = MySQLdb.connect(passwd=dbpassword,
+        self.conn = MySQLdb.connect(passwd=password,
                                     db=dbname,
-                                    host=dbhost,
-                                    port=dbport,
-                                    user=dbuser)
+                                    host=host,
+                                    port=port,
+                                    user=user)
         self.c = self.conn.cursor()
         # self.generateDatabase()
+        print 'MySQL Connected'
 
     def insert_performance(self, ip, objlist):
         fslist = {}
         for obj in objlist:
             if obj.fs not in fslist:
                 fslist[obj.fs] = []
-            fslist[obj.fs].append(obj.getMySQL_Obj())
+            fslist[obj.fs].append(obj.getSQL_Obj())
 
         sum = 0
         t1 = time.time()
@@ -124,18 +125,73 @@ class MySQL_Conn(object):
         self.conn.close()
 
 
+class SQLight_Conn(object):
+
+    """docstring for SQLight_Conn"""
+
+    def __init__(self, path):
+        super(SQLight_Conn, self).__init__()
+
+        # construct the connection and cursor
+        self.conn = sqlite3.connect(path)
+        self.c = self.conn.cursor()
+        print 'sqlite3 Connected'
+        # self.generateDatabase()
+
+    def insert_performance(self, ip, objlist):
+        fslist = {}
+        for obj in objlist:
+            if obj.fs not in fslist:
+                fslist[obj.fs] = []
+            fslist[obj.fs].append(obj.getSQL_Obj())
+
+        sum = 0
+        t1 = time.time()
+        for fs in fslist.keys():
+            # self.generateDatabaseTable(fs)
+            query = ''' INSERT INTO  ''' + str(fs) + ''' (
+                                            c_timestamp,
+                                            c_servertype,
+                                            c_target,
+                                            nid,
+                                            rio,rb,
+                                            wio,wb)
+                        VALUES (?,?,?,?,?,?,?,?)'''
+            # self.c.executemany(query, fslist[fs])
+            sum += len(fslist[fs])
+        t2 = time.time()
+        print " inserted %d documents into MySQL (%d inserts/sec)" % (sum, sum / (t2 - t1))
+
+    def generateDatabaseTable(self, fs):
+        performanceTable = ''' CREATE TABLE IF NOT EXISTS ''' + str(fs) + '''(
+                                  id serial primary key,
+                                  c_timestamp BIGINT UNSIGNED NOT NULL,
+                                  c_servertype VARCHAR(16) NOT NULL,
+                                  c_target VARCHAR(16) NOT NULL,
+                                  nid VARCHAR(26) NOT NULL,
+                                  rio INT UNSIGNED,
+                                  rb INT UNSIGNED,
+                                  wio INT UNSIGNED,
+                                  wb INT UNSIGNED)'''
+        self.c.execute(performanceTable)
+
+    def closeConn(self):
+        self.conn.commit()
+        self.conn.close()
+
+
 class Mongo_Conn(object):
 
     """docstring for Mongo_Conn"""
 
-    def __init__(self, port='', ip='', db_name='testdb1'):
+    def __init__(self, host, port, dbname):
         super(Mongo_Conn, self).__init__()
 
         # geting client and connect
-        self.client = MongoClient(host='localhost')
+        self.client = MongoClient(host, port)
 
         # getting db
-        self.db = self.client[db_name]
+        self.db = self.client[dbname]
 
         # getting collection
         self.collection = self.db['performanceData']
@@ -317,7 +373,7 @@ class DummyCollector(threading.Thread):
             time.sleep(0.1)
 
     def sendRequest(self):
-        print "self.name",self.name
+        print "self.name", self.name
         self.getDummyData()
 
     def getDummyData(self):
@@ -351,7 +407,7 @@ class DummyCollector(threading.Thread):
 
         # self.insertQueue.put(json.dumps(data))
         # print "data:", data
-        self.insertQueue.put((int(time.time()),data))
+        self.insertQueue.put((int(time.time()), data))
 
 
 class Collector(threading.Thread):
@@ -433,40 +489,118 @@ class Collector(threading.Thread):
         self.process.stdin.write('\n')
 
 
+class DatabaseConfigurator(object):
+
+    """this class handles the configparser"""
+
+    def __init__(self, cfgFile):
+        super(DatabaseConfigurator, self).__init__()
+
+        self.cfgFile = cfgFile
+        self.defaultCfgFile = 'default.cfg'
+        self.cfg = ConfigParser()
+
+        self.databases = []
+
+        try:
+            self.cfg.readfp(open(self.cfgFile))
+        except IOError:
+            print "no %s file found." % self.cfgFile
+            print 'Generate default config see %s' % self.defaultCfgFile
+            print 'pleas configurate this file and rename it'
+            self.writeDefaultConfig(self.defaultCfgFile)
+            sys.exit()
+
+        sectionMongo = 'MongoDB'
+        sectionMySQL = 'MySQL'
+        sectionSQLight = 'SQLight'
+
+        if self.cfg.has_section(sectionMongo):
+            if self.cfg.getboolean(sectionMongo, 'aktiv'):
+                # host, port, dbname
+                host = self.cfg.get(sectionMongo, 'host')
+                port = self.cfg.get(sectionMongo, 'port')
+                dbname = self.cfg.get(sectionMongo, 'dbname')
+                # do stuff
+                self.databases.append(Mongo_Conn(host, port, dbname))
+
+        if self.cfg.has_section(sectionMySQL):
+            if self.cfg.getboolean(sectionMySQL, 'aktiv'):
+                # host, port, user, password, dbname
+                host = self.cfg.get(sectionMySQL, 'host')
+                port = self.cfg.get(sectionMySQL, 'port')
+                user = self.cfg.get(sectionMySQL, 'user')
+                password = self.cfg.get(sectionMySQL, 'password')
+                dbname = self.cfg.get(sectionMySQL, 'dbname')
+                # do stuff
+                self.databases.append(
+                    MySQL_Conn(host, port, user, password, dbname))
+
+        if self.cfg.has_section(sectionSQLight):
+            if self.cfg.getboolean(sectionSQLight, 'aktiv'):
+                # path
+                path = self.cfg.get(sectionMySQL, 'path')
+                self.databases.append(SQLight_Conn(path))  # do stuff
+
+    def writeDefaultConfig(self, defaultCfgFile):
+        cfgString = ('[MongoDB]' + '\n' +
+                     'aktiv = [1/yes/true/on | 0/no/false/off]' + '\n' +
+                     'host = [IP]' + '\n' +
+                     'port = 3333' + '\n' +
+                     'dbname = [databaseName]' + '\n' + '\n' +
+
+                     '[MySQL]' + '\n' +
+                     'aktiv = [1/yes/true/on | 0/no/false/off]' + '\n' +
+                     'host = [IP]' + '\n' +
+                     'port = 3333' + '\n' +
+                     'user = [userName]' + '\n' +
+                     'password = [userPasswort]' + '\n' +
+                     'dbname = [databaseName]' + '\n' + '\n' +
+
+                     '[SQLight]' + '\n' +
+                     'aktiv = [1/yes/true/on | 0/no/false/off]' + '\n' +
+                     'path = [pathToDatabase]' + '\n' + '\n' +
+
+                     '[hostfile]' + '\n' +
+                     'hosts = [pathToTheHostFile]' + '\n' + '\n' +
+
+                     '[replacePattern]' + '\n' +
+                     'pattern = (.*)(-ib)' + '\n' +
+                     'replace = \1' + '\n' + '\n' +
+
+                     '[batchsystem]' + '\n' +
+                     'postfix = [.name]' + '\n' +
+                     'usermapping = [file]' + '\n' + '\n')
+
+        f = open(defaultCfgFile, 'w')
+        f.write(cfgString)
+
+
 if __name__ == '__main__':
 
     # read names and ip-adress
     cfg = open('collector.cfg', 'r')
     ips = json.load(cfg)
-    dbconf = 'db.conf'
+    conf = 'db.conf'
+    cfg = DatabaseConfigurator(conf)
     ts_delay = 10
     test_dummy_insert = True
 
     # get config settings for the db
-    config = ConfigParser()
-    try:
-        config.readfp(open(dbconf))
-    except IOError:
-        print "no db.conf file found."
-        sys.exit()
-    dbname = config.get("database", "name")
-    dbpassword = config.get("database", "password")
-    dbhost = config.get("database", "host")
-    dbuser = config.get("database", "user")
-    dbport = int(config.get("database", "port"))
-
-    # tmp config
-    dbname = 'test'
 
     data_Queue = Queue.Queue()     # create dataqueue
 
     # Mongo
     dbMongo_Queue = Queue.Queue()  # mongo queue
-    dbMongo_conn = Mongo_Conn()  # connection to mongo db
+    dbMongo_conn = None   # connection to mongo db
 
     # MySQL
     dbMySQL_Queue = Queue.Queue()
-    dbMySQL_conn = MySQL_Conn(dbuser, dbpassword, dbname, dbhost, dbport)
+    dbMySQL_conn = None
+
+    # SQLight
+    dbSQLight_Queue = Queue.Queue()
+    dbSQLight_conn = None
 
     # create DB connection
     db_mongo = DatabaseInserter(dbMongo_Queue, dbMongo_conn)
@@ -477,7 +611,8 @@ if __name__ == '__main__':
     # for all ip's creat connections to the collector
 
     if test_dummy_insert:
-        sshObjects.append(DummyCollector('blub', data_Queue, mds=1, ost=96, nid=4000))
+        sshObjects.append(
+            DummyCollector('blub', data_Queue, mds=1, ost=96, nid=4000))
     else:
         for key in ips.keys():
             sshObjects.append(Collector(ips[key], data_Queue))
