@@ -213,7 +213,7 @@ class Mongo_Conn(object):
         self.collection = self.db['performanceData']
         self.collectionJobs = self.db['jobs']
 
-    def insert_performance(self, ip, objlist):
+    def insert_performance(self, objlist):
         fslist = {}
         for obj in objlist:
             if obj.fs not in fslist:
@@ -226,7 +226,7 @@ class Mongo_Conn(object):
 
             # Prevent other threads form execute
             with self.lock:
-                #  DUMMY INSERT self.db[fs].insert(fslist[fs])
+                self.db[fs].insert(fslist[fs])
                 pass
 
             sum += len(fslist[fs])
@@ -257,8 +257,7 @@ class DatabaseInserter(threading.Thread):
     def _execute(self, query, data):
         pass
 
-    # def insert(self, jsonDict):
-    def insert(self, args):
+    def insert(self, jsonDict):
         '''
             split the json object into the informations for the
             database. the json object is defined as:
@@ -276,8 +275,6 @@ class DatabaseInserter(threading.Thread):
                             [3] wb
                 [...]
         '''
-
-        (ip, jsonDict) = args
 
         insertTimestamp = jsonDict[0]
         data = jsonDict[1]
@@ -312,7 +309,7 @@ class DatabaseInserter(threading.Thread):
                 insert_me.append(ins)
 
         # Insert data Obj
-        self.db.insert_performance(ip, insert_me)
+        self.db.insert_performance(insert_me)
 
     def run(self):
         while True:
@@ -395,7 +392,7 @@ class DummyCollector(multiprocessing.Process):
 
     def sendRequest(self):
         print "self.name", self.name
-        self.getDummyData()
+        return self.getDummyData()
 
     def getDummyData(self):
 
@@ -540,7 +537,7 @@ class DatabaseConfigurator(object):
             if self.cfg.getboolean(self.sectionMongo, 'aktiv'):
                 # host, port, dbname
                 host = self.cfg.get(self.sectionMongo, 'host')
-                port = self.cfg.get(self.sectionMongo, 'port')
+                port = self.cfg.getint(self.sectionMongo, 'port')
                 dbname = self.cfg.get(self.sectionMongo, 'dbname')
                 # do stuff
                 self.databases[self.sectionMongo] = Mongo_Conn(
@@ -614,21 +611,33 @@ if __name__ == '__main__':
     test_dummy_insert = True
 
     # Mongo
-    dbMongo_Queue = Queue.Queue()  # mongo queue
-    dbMongo_conn = cfg.databases[cfg.sectionMongo]   # connection to mongo db
+    try:
+        dbMongo_conn = cfg.databases[cfg.sectionMongo]   # connection to mongo db
+        dbMongo_Queue = Queue.Queue()  # mongo queue
+        db_mongo = DatabaseInserter(dbMongo_Queue, dbMongo_conn)
+        dbMongoactive = True
+    except: 
+        dbMongoactive = False
 
     # MySQL
-    dbMySQL_Queue = Queue.Queue()
-    dbMySQL_conn = cfg.databases[cfg.sectionMySQL]
+    try:
+        dbMySQL_conn = cfg.databases[cfg.sectionMySQL]
+        dbMySQL_Queue = Queue.Queue()
+        db_mySQL = DatabaseInserter(dbMySQL_Queue, dbMySQL_conn)
+        dbMySQLactive = True
+    except: 
+        dbMySQLactive = False
 
     # SQLight
-    dbSQLight_Queue = Queue.Queue()
-    dbSQLight_conn = cfg.databases[cfg.sectionSQLight]
+    try:
+        dbSQLight_conn = cfg.databases[cfg.sectionSQLight]
+        dbSQLight_Queue = Queue.Queue()
+        db_SQLight = DatabaseInserter(dbSQLight_Queue, dbSQLight_conn)
+	dbSQLightactive = True
+    except: 
+	dbSQLightactive = False
 
     # create DB inserter
-    db_mongo = DatabaseInserter(dbMongo_Queue, dbMongo_conn)
-    db_mySQL = DatabaseInserter(dbMySQL_Queue, dbMySQL_conn)
-    db_SQLight = DatabaseInserter(dbSQLight_Queue, dbSQLight_conn)
 
     sshObjects = []
 
@@ -646,7 +655,7 @@ if __name__ == '__main__':
         (sIn, sOut) = multiprocessing.Pipe()  # pipe for signals
         (oIn, oOut) = multiprocessing.Pipe()  # pipe for objects
         sshObjects.append(
-            DummyCollector('blub', sOut, oIn, mds=1, ost=96, nid=4000))
+            DummyCollector('blub', sOut, oIn, mds=1, ost=24, nid=500))
 
         signalPipe.append(sIn)
         objectPipe.append(oOut)
@@ -665,7 +674,7 @@ if __name__ == '__main__':
 
         # loop over all connections look if they are alive
         for t in sshObjects:
-            if not t.is_Alive():
+            if not t.is_alive():
                 ip = t.ip
                 # remove thread from list
                 sshObjects.remove(t)
@@ -687,7 +696,7 @@ if __name__ == '__main__':
             # insert in databases
 
             # Mongo
-            if not db_mongo.isAlive():
+            if dbMongoactive and not db_mongo.isAlive():
                 # recover database connection
                 print 'recover database'
                 db_mongo.close()
@@ -695,11 +704,12 @@ if __name__ == '__main__':
                 db_mongo = DatabaseInserter(dbMongo_Queue, dbMongo_conn)
 
             # put data form collectors into db queue
-            print 'database Queue length:', dbMongo_Queue.qsize()
-            dbMongo_Queue.put(obj)
+            if dbMongoactive:
+                print 'database Queue length:', dbMongo_Queue.qsize()
+                dbMongo_Queue.put(obj)
 
             # MySQL
-            if not db_mySQL.isAlive():
+            if dbMySQLactive and not db_mySQL.isAlive():
                 # recover database connection
                 print 'recover database'
                 db_mySQL.close()
@@ -707,11 +717,12 @@ if __name__ == '__main__':
                 db_mySQL = DatabaseInserter(dbMySQL_Queue, dbMySQL_conn)
 
             # put data form collectors into db queue
-            print 'database Queue length:', dbMySQL_Queue.qsize()
-            dbMySQL_Queue.put(obj)
+            if dbMySQLactive:
+                print 'database Queue length:', dbMySQL_Queue.qsize()
+                dbMySQL_Queue.put(obj)
 
             # SQLight
-            if not db_SQLight.isAlive():
+            if dbSQLightactive and not db_SQLight.isAlive():
                 # recover database connection
                 print 'recover database'
                 db_SQLight.close()
@@ -719,8 +730,9 @@ if __name__ == '__main__':
                 db_SQLight = DatabaseInserter(dbSQLight_Queue, dbSQLight_conn)
 
             # put data form collectors into db queue
-            print 'database Queue length:', dbSQLight_Queue.qsize()
-            dbSQLight_Queue.put(obj)
+            if dbSQLightactive:
+                print 'database Queue length:', dbSQLight_Queue.qsize()
+                dbSQLight_Queue.put(obj)
 
         # look at db connectionen if this is alaive
         t_end = time.time()
