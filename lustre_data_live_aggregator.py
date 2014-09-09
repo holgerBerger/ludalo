@@ -16,6 +16,7 @@ import sys
 import MySQLdb
 import sqlite3
 from pymongo import MongoClient
+import os
 
 
 # import ConfigParser
@@ -225,8 +226,8 @@ class Mongo_Conn(object):
         for fs in fslist.keys():
 
             # Prevent other threads form execute
-            with self.lock:
-                self.db[fs].insert(fslist[fs])
+            #with self.lock:
+            self.db[fs].insert(fslist[fs])
 
             sum += len(fslist[fs])
         t2 = time.time()
@@ -303,6 +304,7 @@ class DatabaseInserter(multiprocessing.Process):
                 insert_me.append(ins)
 
         # Insert data Obj
+        print self.name, os.getpid()
         self.db.insert_performance(insert_me)
 
     def run(self):
@@ -658,6 +660,22 @@ if __name__ == '__main__':
         signalPipe.append(sIn)
         objectPipe.append(oOut)
 
+        (sIn2, sOut2) = multiprocessing.Pipe()  # pipe for signals
+        (oIn2, oOut2) = multiprocessing.Pipe()  # pipe for objects
+        sshObjects.append(
+            DummyCollector('bla', sOut2, oIn2, mds=1, ost=24, nid=500))
+
+        signalPipe.append(sIn2)
+        objectPipe.append(oOut2)
+
+        (sIn3, sOut3) = multiprocessing.Pipe()  # pipe for signals
+        (oIn3, oOut3) = multiprocessing.Pipe()  # pipe for objects
+        sshObjects.append(
+            DummyCollector('bla', sOut3, oIn3, mds=1, ost=24, nid=500))
+
+        signalPipe.append(sIn3)
+        objectPipe.append(oOut3)
+
     else:
         for key in ips.keys():
             # sshObjects.append(Collector(ips[key], data_Queue))
@@ -688,9 +706,10 @@ if __name__ == '__main__':
 
         # recive data
 
+        inserter = 0
+
         for pipe in objectPipe:
             obj = pipe.recv()
-            inserter = 0
 
             # insert in databases
 
