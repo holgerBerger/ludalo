@@ -605,11 +605,11 @@ if __name__ == '__main__':
     try:
         # connection to mongo db
         dbMongo_conn = cfg.databases[cfg.sectionMongo]
-        dbMongo_Queue = Queue.Queue()  # mongo queue
         mongoInserter = {}
         for x in xrange(0, numberOfInserterPerDatabase):
-            db = DatabaseInserter(dbMongo_Queue, dbMongo_conn)
-            mongoInserter[x] = db
+            (pin, pout) = multiprocessing.Pipe()
+            db = DatabaseInserter(pout, dbMongo_conn)
+            mongoInserter[x] = (db, pin)
         dbMongoactive = True
     except:
         dbMongoactive = False
@@ -696,18 +696,20 @@ if __name__ == '__main__':
 
             # Mongo
             if dbMongoactive:
-                for db in mongoInserter.keys():
+                for pair in mongoInserter.keys():
                 # recover database connection
+                    (db, pin) = mongoInserter[pair]
                     if not db.is_alive():
                         print 'recover database'
-                        mongoInserter[db].close()
+                        mongoInserter[db][0].close()
                         del mongoInserter[db]
-                        mongoInserter[db] = DatabaseInserter(
-                            dbMongo_Queue, dbMongo_conn)
+                        (pin, pout) = multiprocessing.Pipe()
+                        mongoInserter[db] = (DatabaseInserter(
+                            pout, dbMongo_conn), pin)
 
             # put data form collectors into db queue
             if dbMongoactive:
-                mongoInserter[inserter].send(obj)
+                mongoInserter[inserter][1].send(obj)
                 inserter += 1
                 if inserter >= numberOfInserterPerDatabase:
                     inserter = 0
