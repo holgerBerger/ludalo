@@ -236,7 +236,7 @@ class Mongo_Conn(object):
         self.client.close()
 
 
-class DatabaseInserter(threading.Thread):
+class DatabaseInserter(multiprocessing.Process):
 
     '''
     This class handels the data form the collectors (inserterQueue)
@@ -244,17 +244,13 @@ class DatabaseInserter(threading.Thread):
     dependencys to the collector.
     '''
 
-    def __init__(self, queue, db):
-        threading.Thread.__init__(self)
-
-        self.insertQueue = queue
+    def __init__(self, oIn, db):
+        super(DatabaseInserter, self).__init__()
+        self.oIn = oIn
         self.db = db
 
         # start the thread and begin to insert if entrys in the queue
         self.start()
-
-    def _execute(self, query, data):
-        pass
 
     def insert(self, jsonDict):
         '''
@@ -279,7 +275,6 @@ class DatabaseInserter(threading.Thread):
         data = jsonDict[1]
         insert_me = []
 
-        # print "before data.keys():", data
         # Split the json into data obj
         for base in data.keys():
             sb = base.split('-')  # "alnec-OST0002"
@@ -311,13 +306,11 @@ class DatabaseInserter(threading.Thread):
         self.db.insert_performance(insert_me)
 
     def run(self):
-        while True:
-            if not self.insertQueue.empty():
-                insert = self.insertQueue.get()
-                self.insert(insert)
-            else:
-                # play nice with others, no sleep no rest -> 100% load
-                time.sleep(0.1)
+
+        # Read pipe
+        insertObject = self.oIn.recv()
+        # Insert the object form pipe db
+        self.insert(insertObject)
 
     def close(self):
         '''
@@ -390,7 +383,6 @@ class DummyCollector(multiprocessing.Process):
             self.oIn.send((ts, jObject))
 
     def sendRequest(self):
-        print "self.name", self.name
         return self.getDummyData()
 
     def getDummyData(self):
@@ -423,7 +415,6 @@ class DummyCollector(multiprocessing.Process):
             data[str(ost)] = tmp
 
         # self.insertQueue.put(json.dumps(data))
-        # print "data:", data
         return data
 
 
@@ -608,13 +599,17 @@ if __name__ == '__main__':
     # global delay
     ts_delay = 10
     test_dummy_insert = True
+    numberOfInserterPerDatabase = 3  # or more?
 
     # Mongo
     try:
         # connection to mongo db
         dbMongo_conn = cfg.databases[cfg.sectionMongo]
         dbMongo_Queue = Queue.Queue()  # mongo queue
-        db_mongo = DatabaseInserter(dbMongo_Queue, dbMongo_conn)
+        mongoInserter = {}
+        for x in xrange(0, numberOfInserterPerDatabase):
+            db = DatabaseInserter(dbMongo_Queue, dbMongo_conn)
+            mongoInserter[x] = db
         dbMongoactive = True
     except:
         dbMongoactive = False
@@ -636,6 +631,9 @@ if __name__ == '__main__':
         dbSQLightactive = True
     except:
         dbSQLightactive = False
+
+    if not dbMongoactive and not dbMySQLactive and not dbSQLightactive:
+        print 'No Database configered. Pleas look at your config.'
 
     # create DB inserter
 
@@ -692,21 +690,26 @@ if __name__ == '__main__':
 
         for pipe in objectPipe:
             obj = pipe.recv()
+            inserter = 0
 
             # insert in databases
 
             # Mongo
-            if dbMongoactive and not db_mongo.isAlive():
+            if dbMongoactive:
+                for db in mongoInserter.keys():
                 # recover database connection
-                print 'recover database'
-                db_mongo.close()
-                del(db_mongo)
-                db_mongo = DatabaseInserter(dbMongo_Queue, dbMongo_conn)
+                    print 'recover database'
+                    mongoInserter[db].close()
+                    del mongoInserter[db]
+                    mongoInserter[db] = DatabaseInserter(
+                        dbMongo_Queue, dbMongo_conn)
 
             # put data form collectors into db queue
             if dbMongoactive:
-                print 'database Queue length:', dbMongo_Queue.qsize()
-                dbMongo_Queue.put(obj)
+                mongoInserter[inserter].send(obj)
+                inserter += 1
+                if inserter >= numberOfInserterPerDatabase:
+                    inserter = 0
 
             # MySQL
             if dbMySQLactive and not db_mySQL.isAlive():
