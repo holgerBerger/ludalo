@@ -698,11 +698,12 @@ if __name__ == '__main__':
             if dbMongoactive:
                 for db in mongoInserter.keys():
                 # recover database connection
-                    print 'recover database'
-                    mongoInserter[db].close()
-                    del mongoInserter[db]
-                    mongoInserter[db] = DatabaseInserter(
-                        dbMongo_Queue, dbMongo_conn)
+                    if not db.is_alive():
+                        print 'recover database'
+                        mongoInserter[db].close()
+                        del mongoInserter[db]
+                        mongoInserter[db] = DatabaseInserter(
+                            dbMongo_Queue, dbMongo_conn)
 
             # put data form collectors into db queue
             if dbMongoactive:
