@@ -306,11 +306,11 @@ class DatabaseInserter(multiprocessing.Process):
         self.db.insert_performance(insert_me)
 
     def run(self):
-
-        # Read pipe
-        insertObject = self.oIn.recv()
-        # Insert the object form pipe db
-        self.insert(insertObject)
+        while True:
+            # Read pipe
+            insertObject = self.oIn.recv()
+            # Insert the object form pipe db
+            self.insert(insertObject)
 
     def close(self):
         '''
@@ -701,10 +701,10 @@ if __name__ == '__main__':
                     (db, pin) = mongoInserter[pair]
                     if not db.is_alive():
                         print 'recover database'
-                        mongoInserter[db][0].close()
-                        del mongoInserter[db]
+                        mongoInserter[pair][0].close()
+                        del mongoInserter[pair]
                         (pin, pout) = multiprocessing.Pipe()
-                        mongoInserter[db] = (DatabaseInserter(
+                        mongoInserter[pair] = (DatabaseInserter(
                             pout, dbMongo_conn), pin)
 
             # put data form collectors into db queue
