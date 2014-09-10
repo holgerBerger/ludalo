@@ -107,13 +107,12 @@ class MySQL_Conn(object):
 
             # Prevent other threads form execute
             with self.lock:
-                # self.generateDatabaseTable(fs)
-                # self.c.executemany(query, fslist[fs])
-                pass
+                self.generateDatabaseTable(fs)
+                self.c.executemany(query, fslist[fs])
 
             sum += len(fslist[fs])
         t2 = time.time()
-        print " inserted %d documents into MySQL (%d inserts/sec)" % (sum, sum / (t2 - t1))
+        print "I am %s and i inserted %d documents into MySQL (%d inserts/sec)" % self.name, (sum, sum / (t2 - t1))
 
     def generateDatabaseTable(self, fs):
         performanceTable = ''' CREATE TABLE IF NOT EXISTS ''' + str(fs) + '''(
@@ -170,13 +169,12 @@ class SQLight_Conn(object):
 
             # Prevent other threads form execute
             with self.lock:
-                # self.c.executemany(query, fslist[fs])
-                # self.generateDatabaseTable(fs)
-                pass
+                self.c.executemany(query, fslist[fs])
+                self.generateDatabaseTable(fs)
 
             sum += len(fslist[fs])
         t2 = time.time()
-        print " inserted %d documents into MySQL (%d inserts/sec)" % (sum, sum / (t2 - t1))
+        print "I am %s and i inserted %d documents into sqlite3 (%d inserts/sec)" % self.name, (sum, sum / (t2 - t1))
 
     def generateDatabaseTable(self, fs):
         performanceTable = ''' CREATE TABLE IF NOT EXISTS ''' + str(fs) + '''(
@@ -226,12 +224,12 @@ class Mongo_Conn(object):
         for fs in fslist.keys():
 
             # Prevent other threads form execute
-            #with self.lock:
+            # with self.lock:
             self.db[fs].insert(fslist[fs])
 
             sum += len(fslist[fs])
         t2 = time.time()
-        print " inserted %d documents into mongodb (%d inserts/sec)" % (sum, sum / (t2 - t1))
+        print "I am %s and i inserted %d documents into MongoDB (%d inserts/sec)" % self.name, (sum, sum / (t2 - t1))
 
     def closeConn(self):
         self.client.close()
@@ -378,8 +376,8 @@ class DummyCollector(multiprocessing.Process):
         '''
         print 'started DUMMY:', self.name
 
+        # main loop
         while True:
-
             ts = self.sOut.recv()
             jObject = self.sendRequest()
             self.oIn.send((ts, jObject))
@@ -420,7 +418,7 @@ class DummyCollector(multiprocessing.Process):
         return data
 
 
-class Collector(threading.Thread):
+class Collector(multiprocessing.Process):
 
     '''
         This class is to manage connections over ssh and copy
@@ -428,12 +426,13 @@ class Collector(threading.Thread):
         this create 2 more Threads one
     '''
 
-    def __init__(self, ip, insertQueue):
-        threading.Thread.__init__(self)
+    def __init__(self, ip, sOut, oIn):
+        super(Collector, self).__init__()
         self.ip = ip
         self.command = ['ssh', '-C', self.ip, '/tmp/collector']
         self.out = sys.stdout
-        self.insertQueue = insertQueue
+        self.sOut = sOut
+        self.oIn = oIn
 
         # Copy collector
         subprocess.call(['scp', 'collector', ip + ':/tmp/'])
@@ -445,10 +444,12 @@ class Collector(threading.Thread):
         self.stdout_queue = Queue.Queue()
         self.stdout_reader = AsynchronousFileReader(
             self.process.stdout, self.stdout_queue)
+
         self.stdout_reader.start()
         self.stderr_queue = Queue.Queue()
         self.stderr_reader = AsynchronousFileReader(
             self.process.stderr, self.stderr_queue)
+
         self.stderr_reader.start()
 
         # Launch Tread
@@ -472,11 +473,16 @@ class Collector(threading.Thread):
         # to get).
         while not self.stdout_reader.eof() or not self.stderr_reader.eof():
             # Show what we received from standard output.
+
+            # wait for signal to send request
+            ts = self.sOut.recv()  # this blocks until a send from main
+            self.sendRequest()
+
             while not self.stdout_queue.empty():
                 line = self.stdout_queue.get()
 
                 # Do Stuff!!!!
-                self.insertQueue.put((self.ip, line))
+                self.oIn.send((ts, line))
 
             # Show what we received from standard error.
             while not self.stderr_queue.empty():
@@ -484,7 +490,6 @@ class Collector(threading.Thread):
                 print self.name + 'Received line on standard error: ' + repr(line)
 
             # Sleep a bit before asking the readers again.
-            time.sleep(0.1)
 
         # Let's be tidy and join the threads we've started.
         self.stdout_reader.join()
@@ -618,24 +623,33 @@ if __name__ == '__main__':
 
     # MySQL
     try:
+        # connection to mysql db
         dbMySQL_conn = cfg.databases[cfg.sectionMySQL]
-        dbMySQL_Queue = Queue.Queue()
-        db_mySQL = DatabaseInserter(dbMySQL_Queue, dbMySQL_conn)
+        mySQLInserter = {}
+        for x in xrange(0, numberOfInserterPerDatabase):
+            (pin, pout) = multiprocessing.Pipe()
+            db = DatabaseInserter(pout, dbMySQL_conn)
+            mySQLInserter[x] = (db, pin)
         dbMySQLactive = True
     except:
         dbMySQLactive = False
 
     # SQLight
     try:
+        # connection to sqlight3 db
+        # note ther is only one connection, one file, one inserter.
         dbSQLight_conn = cfg.databases[cfg.sectionSQLight]
-        dbSQLight_Queue = Queue.Queue()
-        db_SQLight = DatabaseInserter(dbSQLight_Queue, dbSQLight_conn)
+        sqLightInserter = {}
+        (pin, pout) = multiprocessing.Pipe()
+        db = DatabaseInserter(pout, dbSQLight_conn)
+        sqLightInserter[0] = (db, pin)
         dbSQLightactive = True
     except:
         dbSQLightactive = False
 
     if not dbMongoactive and not dbMySQLactive and not dbSQLightactive:
         print 'No Database configered. Pleas look at your config.'
+        exit(1)
 
     # create DB inserter
 
@@ -706,7 +720,9 @@ if __name__ == '__main__':
 
         # recive data
 
-        inserter = 0
+        inserterNomMongo = 0
+        inserterNomMySQL = 0
+        inserterNomSQLight = 0
 
         for pipe in objectPipe:
             obj = pipe.recv()
@@ -728,36 +744,48 @@ if __name__ == '__main__':
 
             # put data form collectors into db queue
             if dbMongoactive:
-                mongoInserter[inserter][1].send(obj)
-                inserter += 1
-                if inserter >= numberOfInserterPerDatabase:
-                    inserter = 0
+                mongoInserter[inserterNomMongo][1].send(obj)
+                inserterNomMongo += 1
+                if inserterNomMongo >= numberOfInserterPerDatabase:
+                    inserterNomMongo = 0
 
             # MySQL
-            if dbMySQLactive and not db_mySQL.isAlive():
+            if dbMySQLactive:
+                for pair in mySQLInserter.keys():
                 # recover database connection
-                print 'recover database'
-                db_mySQL.close()
-                del(db_mySQL)
-                db_mySQL = DatabaseInserter(dbMySQL_Queue, dbMySQL_conn)
+                    (db, pin) = mySQLInserter[pair]
+                    if not db.is_alive():
+                        print 'recover database'
+                        mySQLInserter[pair][0].close()
+                        del mySQLInserter[pair]
+                        (pin, pout) = multiprocessing.Pipe()
+                        mySQLInserter[pair] = (DatabaseInserter(
+                            pout, dbMySQL_conn), pin)
 
             # put data form collectors into db queue
             if dbMySQLactive:
-                print 'database Queue length:', dbMySQL_Queue.qsize()
-                dbMySQL_Queue.put(obj)
+                mySQLInserter[inserterNomMySQL][1].send(obj)
+                inserterNomMySQL += 1
+                if inserterNomMySQL >= numberOfInserterPerDatabase:
+                    inserterNomMySQL = 0
 
             # SQLight
-            if dbSQLightactive and not db_SQLight.isAlive():
+            if dbSQLightactive:
+                for pair in sqLightInserter.keys():
                 # recover database connection
-                print 'recover database'
-                db_SQLight.close()
-                del(db_SQLight)
-                db_SQLight = DatabaseInserter(dbSQLight_Queue, dbSQLight_conn)
+                    (db, pin) = sqLightInserter[pair]
+                    if not db.is_alive():
+                        print 'recover database'
+                        sqLightInserter[pair][0].close()
+                        del sqLightInserter[pair]
+                        (pin, pout) = multiprocessing.Pipe()
+                        sqLightInserter[pair] = (DatabaseInserter(
+                            pout, dbSQLight_conn), pin)
 
             # put data form collectors into db queue
-            if dbSQLightactive:
-                print 'database Queue length:', dbSQLight_Queue.qsize()
-                dbSQLight_Queue.put(obj)
+            if dbMySQLactive:
+                # only one inserter!
+                sqLightInserter[inserterNomMySQL][1].send(obj)
 
         # look at db connectionen if this is alaive
         t_end = time.time()
