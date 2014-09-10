@@ -16,11 +16,20 @@ import sys
 import MySQLdb
 import sqlite3
 from pymongo import MongoClient
-import os
+import os,select
 
 
 # import ConfigParser
 # import MySQLdb
+
+import ctypes
+
+
+def gettid():
+    SYS_gettid = 186
+    libc = ctypes.cdll.LoadLibrary('libc.so.6')
+    tid = libc.syscall(SYS_gettid)
+    return tid
 
 class PerformanceData(object):
 
@@ -229,7 +238,7 @@ class Mongo_Conn(object):
 
             sum += len(fslist[fs])
         t2 = time.time()
-        print "I am %s and i inserted %d documents into MongoDB (%d inserts/sec)" % self.name, (sum, sum / (t2 - t1))
+        print "inserted %d documents into MongoDB (%d inserts/sec)" % (sum, sum / (t2 - t1))
 
     def closeConn(self):
         self.client.close()
@@ -302,7 +311,6 @@ class DatabaseInserter(multiprocessing.Process):
                 insert_me.append(ins)
 
         # Insert data Obj
-        print self.name, os.getpid()
         self.db.insert_performance(insert_me)
 
     def run(self):
@@ -337,12 +345,15 @@ class AsynchronousFileReader(threading.Thread):
     def run(self):
         '''The body of the tread: read lines and decode json
         then put them on the queue.'''
+ 	# print 'AsynchronousFileReader RUN','pid',os.getpid(),self.name, 'ppid',os.getppid(),'tid',gettid()
 
         for line in iter(self._fd.readline, ''):
             # if not json print the exeption and the string
             try:
+		# print "inserted into queue:" ,line
                 self._queue.put(json.loads(line))
             except Exception, e:
+		# print "inserted into queue:" ,line
                 self._queue.put(line)
                 print e
                 # print 'in:', line
@@ -434,8 +445,21 @@ class Collector(multiprocessing.Process):
         self.sOut = sOut
         self.oIn = oIn
 
+
         # Copy collector
         subprocess.call(['scp', 'collector', ip + ':/tmp/'])
+        # Launch Tread
+        self.start()
+        print 'created', self.name
+
+    def run(self):
+        '''
+        Consume standard output and standard error of
+        a subprocess asynchronously without risk on deadlocking.
+        '''
+
+ 	# print 'COLLECTOR RUN','pid',os.getpid(),self.name, 'ppid',os.getppid(),'tid',gettid()
+
         # Launch the command as subprocess.
         self.process = subprocess.Popen(
             self.command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -452,15 +476,6 @@ class Collector(multiprocessing.Process):
 
         self.stderr_reader.start()
 
-        # Launch Tread
-        self.start()
-        print 'created', self.name
-
-    def run(self):
-        '''
-        Consume standard output and standard error of
-        a subprocess asynchronously without risk on deadlocking.
-        '''
 
         try:
             self.name = self.stdout_queue.get(True, 10)
@@ -478,18 +493,22 @@ class Collector(multiprocessing.Process):
             ts = self.sOut.recv()  # this blocks until a send from main
             self.sendRequest()
 
+            while self.stdout_queue.empty():
+            	time.sleep(0.1)
+
+         
             while not self.stdout_queue.empty():
+                print "QL",self.stdout_queue.qsize()
                 line = self.stdout_queue.get()
 
                 # Do Stuff!!!!
                 self.oIn.send((ts, line))
+		print 'sent object'
 
             # Show what we received from standard error.
             while not self.stderr_queue.empty():
                 line = self.stderr_queue.get()
                 print self.name + 'Received line on standard error: ' + repr(line)
-
-            # Sleep a bit before asking the readers again.
 
         # Let's be tidy and join the threads we've started.
         self.stdout_reader.join()
@@ -595,6 +614,8 @@ class DatabaseConfigurator(object):
 
 if __name__ == '__main__':
 
+    print 'MAIN','pid',os.getpid(),'tid',gettid()
+
     # read names and ip-adress
     cfg = open('collector.cfg', 'r')
     ips = json.load(cfg)
@@ -605,7 +626,7 @@ if __name__ == '__main__':
 
     # global delay
     ts_delay = 10
-    test_dummy_insert = True
+    test_dummy_insert = False
     numberOfInserterPerDatabase = 3  # or more?
 
     # Mongo
@@ -692,8 +713,11 @@ if __name__ == '__main__':
 
     else:
         for key in ips.keys():
-            # sshObjects.append(Collector(ips[key], data_Queue))
-            pass
+	    (sIn, sOut) = multiprocessing.Pipe()  # pipe for signals
+	    (oIn, oOut) = multiprocessing.Pipe()  # pipe for objects
+            sshObjects.append(Collector(ips[key], sOut, oIn))
+	    signalPipe.append(sIn)
+	    objectPipe.append(oOut)
     time.sleep(1)
 
     while True:
@@ -724,8 +748,13 @@ if __name__ == '__main__':
         inserterNomMySQL = 0
         inserterNomSQLight = 0
 
-        for pipe in objectPipe:
+	(rp,wp,xp) = select.select(objectPipe,[],[])
+	print 'after select'
+
+        # for pipe in objectPipe:
+        for pipe in rp:
             obj = pipe.recv()
+            print 'reveived',pipe
 
             # insert in databases
 
