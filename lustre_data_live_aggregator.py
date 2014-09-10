@@ -16,7 +16,8 @@ import sys
 import MySQLdb
 import sqlite3
 from pymongo import MongoClient
-import os,select
+import os
+import select
 
 
 # import ConfigParser
@@ -30,6 +31,7 @@ def gettid():
     libc = ctypes.cdll.LoadLibrary('libc.so.6')
     tid = libc.syscall(SYS_gettid)
     return tid
+
 
 class PerformanceData(object):
 
@@ -345,15 +347,16 @@ class AsynchronousFileReader(threading.Thread):
     def run(self):
         '''The body of the tread: read lines and decode json
         then put them on the queue.'''
- 	# print 'AsynchronousFileReader RUN','pid',os.getpid(),self.name, 'ppid',os.getppid(),'tid',gettid()
+        # print 'AsynchronousFileReader RUN','pid',os.getpid(),self.name,
+        # 'ppid',os.getppid(),'tid',gettid()
 
         for line in iter(self._fd.readline, ''):
             # if not json print the exeption and the string
             try:
-		# print "inserted into queue:" ,line
+                # print "inserted into queue:" ,line
                 self._queue.put(json.loads(line))
             except Exception, e:
-		# print "inserted into queue:" ,line
+                # print "inserted into queue:" ,line
                 self._queue.put(line)
                 print e
                 # print 'in:', line
@@ -445,7 +448,6 @@ class Collector(multiprocessing.Process):
         self.sOut = sOut
         self.oIn = oIn
 
-
         # Copy collector
         subprocess.call(['scp', 'collector', ip + ':/tmp/'])
         # Launch Tread
@@ -458,7 +460,8 @@ class Collector(multiprocessing.Process):
         a subprocess asynchronously without risk on deadlocking.
         '''
 
- 	# print 'COLLECTOR RUN','pid',os.getpid(),self.name, 'ppid',os.getppid(),'tid',gettid()
+        # print 'COLLECTOR RUN','pid',os.getpid(),self.name,
+        # 'ppid',os.getppid(),'tid',gettid()
 
         # Launch the command as subprocess.
         self.process = subprocess.Popen(
@@ -475,7 +478,6 @@ class Collector(multiprocessing.Process):
             self.process.stderr, self.stderr_queue)
 
         self.stderr_reader.start()
-
 
         try:
             self.name = self.stdout_queue.get(True, 10)
@@ -494,16 +496,15 @@ class Collector(multiprocessing.Process):
             self.sendRequest()
 
             while self.stdout_queue.empty():
-            	time.sleep(0.1)
+                time.sleep(0.1)
 
-         
             while not self.stdout_queue.empty():
-                print "QL",self.stdout_queue.qsize()
+                print "QL", self.stdout_queue.qsize()
                 line = self.stdout_queue.get()
 
                 # Do Stuff!!!!
                 self.oIn.send((ts, line))
-		print 'sent object'
+                print 'sent object'
 
             # Show what we received from standard error.
             while not self.stderr_queue.empty():
@@ -614,7 +615,7 @@ class DatabaseConfigurator(object):
 
 if __name__ == '__main__':
 
-    print 'MAIN','pid',os.getpid(),'tid',gettid()
+    print 'MAIN', 'pid', os.getpid(), 'tid', gettid()
 
     # read names and ip-adress
     cfg = open('collector.cfg', 'r')
@@ -713,11 +714,11 @@ if __name__ == '__main__':
 
     else:
         for key in ips.keys():
-	    (sIn, sOut) = multiprocessing.Pipe()  # pipe for signals
-	    (oIn, oOut) = multiprocessing.Pipe()  # pipe for objects
+            (sIn, sOut) = multiprocessing.Pipe()  # pipe for signals
+            (oIn, oOut) = multiprocessing.Pipe()  # pipe for objects
             sshObjects.append(Collector(ips[key], sOut, oIn))
-	    signalPipe.append(sIn)
-	    objectPipe.append(oOut)
+            signalPipe.append(sIn)
+            objectPipe.append(oOut)
     time.sleep(1)
 
     while True:
@@ -748,13 +749,13 @@ if __name__ == '__main__':
         inserterNomMySQL = 0
         inserterNomSQLight = 0
 
-	(rp,wp,xp) = select.select(objectPipe,[],[])
-	print 'after select'
+        (rp, wp, xp) = select.select(objectPipe, [], [])
+        print 'after select'
 
         # for pipe in objectPipe:
         for pipe in rp:
             obj = pipe.recv()
-            print 'reveived',pipe
+            print 'reveived', pipe
 
             # insert in databases
 
