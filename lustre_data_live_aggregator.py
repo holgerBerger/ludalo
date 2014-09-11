@@ -16,6 +16,8 @@ import os
 import select
 import ctypes
 
+import database
+
 
 # for debugging... show the tid of one porcess or thread
 def gettid():
@@ -87,7 +89,7 @@ class DatabaseInserter(multiprocessing.Process):
                 sk = key.split('@')
                 resourceIP = sk[0]
 
-                ins = PerformanceData(
+                ins = database.PerformanceData(
                     insertTimestamp, name, resourceIP, resource_values, fs_name, s_type)
                 insert_me.append(ins)
 
@@ -315,7 +317,7 @@ if __name__ == '__main__':
 
     # getting db configs
     conf = 'db.conf'
-    cfg = DatabaseConfigurator(conf)
+    cfg = database.DatabaseConfigurator(conf)
 
     # global delay
     ts_delay = 10
@@ -329,7 +331,7 @@ if __name__ == '__main__':
         mongoInserter = {}
         for x in xrange(0, numberOfInserterPerDatabase):
             (pin, pout) = multiprocessing.Pipe()
-            db = DatabaseInserter(pout, dbMongo_conn)
+            db = DatabaseInserter(pout, cfg.getNewDB_Mongo_Conn())
             mongoInserter[x] = (db, pin)
         dbMongoactive = True
     except:
@@ -342,7 +344,7 @@ if __name__ == '__main__':
         mySQLInserter = {}
         for x in xrange(0, numberOfInserterPerDatabase):
             (pin, pout) = multiprocessing.Pipe()
-            db = DatabaseInserter(pout, dbMySQL_conn)
+            db = DatabaseInserter(pout, cfg.getNewDB_MySQL_Conn())
             mySQLInserter[x] = (db, pin)
         dbMySQLactive = True
     except:
@@ -355,7 +357,7 @@ if __name__ == '__main__':
         dbSQLight_conn = cfg.databases[cfg.sectionSQLight]
         sqLightInserter = {}
         (pin, pout) = multiprocessing.Pipe()
-        db = DatabaseInserter(pout, dbSQLight_conn)
+        db = DatabaseInserter(pout, cfg.getNewDB_SQLight_Conn())
         sqLightInserter[0] = (db, pin)
         dbSQLightactive = True
     except:
@@ -462,7 +464,7 @@ if __name__ == '__main__':
                         del mongoInserter[pair]
                         (pin, pout) = multiprocessing.Pipe()
                         mongoInserter[pair] = (DatabaseInserter(
-                            pout, dbMongo_conn), pin)
+                            pout, cfg.getNewDB_Mongo_Conn()), pin)
 
             # put data form collectors into db queue
             if dbMongoactive:
@@ -482,7 +484,7 @@ if __name__ == '__main__':
                         del mySQLInserter[pair]
                         (pin, pout) = multiprocessing.Pipe()
                         mySQLInserter[pair] = (DatabaseInserter(
-                            pout, dbMySQL_conn), pin)
+                            pout, cfg.getNewDB_MySQL_Conn()), pin)
 
             # put data form collectors into db queue
             if dbMySQLactive:
@@ -502,7 +504,7 @@ if __name__ == '__main__':
                         del sqLightInserter[pair]
                         (pin, pout) = multiprocessing.Pipe()
                         sqLightInserter[pair] = (DatabaseInserter(
-                            pout, dbSQLight_conn), pin)
+                            pout, cfg.getNewDB_SQLight_Conn()), pin)
 
             # put data form collectors into db queue
             if dbMySQLactive:
