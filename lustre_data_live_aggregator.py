@@ -13,7 +13,6 @@ import Queue
 import json
 import sys
 import os
-import select
 import ctypes
 
 import database
@@ -327,7 +326,6 @@ if __name__ == '__main__':
     # Mongo
     try:
         # connection to mongo db
-        dbMongo_conn = cfg.databases[cfg.sectionMongo]
         mongoInserter = {}
         for x in xrange(0, numberOfInserterPerDatabase):
             (pin, pout) = multiprocessing.Pipe()
@@ -340,7 +338,6 @@ if __name__ == '__main__':
     # MySQL
     try:
         # connection to mysql db
-        dbMySQL_conn = cfg.databases[cfg.sectionMySQL]
         mySQLInserter = {}
         for x in xrange(0, numberOfInserterPerDatabase):
             (pin, pout) = multiprocessing.Pipe()
@@ -354,7 +351,6 @@ if __name__ == '__main__':
     try:
         # connection to sqlight3 db
         # note ther is only one connection, one file, one inserter.
-        dbSQLight_conn = cfg.databases[cfg.sectionSQLight]
         sqLightInserter = {}
         (pin, pout) = multiprocessing.Pipe()
         db = DatabaseInserter(pout, cfg.getNewDB_SQLight_Conn())
@@ -382,37 +378,30 @@ if __name__ == '__main__':
     # for all ip's creat connections to the collector
     if test_dummy_insert:
 
-        (sIn, sOut) = multiprocessing.Pipe()  # pipe for signals
-        (oIn, oOut) = multiprocessing.Pipe()  # pipe for objects
+        (pin, pout) = multiprocessing.Pipe()  # pipe for signals and objects
         sshObjects.append(
-            DummyCollector('blub', sOut, oIn, mds=1, ost=24, nid=500))
+            DummyCollector('blub', pout, pin, mds=1, ost=24, nid=500))
+        signalPipe.append(pin)
+        objectPipe.append(pout)
 
-        signalPipe.append(sIn)
-        objectPipe.append(oOut)
-
-        (sIn2, sOut2) = multiprocessing.Pipe()  # pipe for signals
-        (oIn2, oOut2) = multiprocessing.Pipe()  # pipe for objects
+        (pin, pout) = multiprocessing.Pipe()  # pipe for signals and objects
         sshObjects.append(
-            DummyCollector('bla', sOut2, oIn2, mds=1, ost=24, nid=500))
+            DummyCollector('bla', pout, pin, mds=1, ost=24, nid=500))
+        signalPipe.append(pin)
+        objectPipe.append(pout)
 
-        signalPipe.append(sIn2)
-        objectPipe.append(oOut2)
-
-        (sIn3, sOut3) = multiprocessing.Pipe()  # pipe for signals
-        (oIn3, oOut3) = multiprocessing.Pipe()  # pipe for objects
+        (pin, pout) = multiprocessing.Pipe()  # pipe for signals and objects
         sshObjects.append(
-            DummyCollector('bla', sOut3, oIn3, mds=1, ost=24, nid=500))
-
-        signalPipe.append(sIn3)
-        objectPipe.append(oOut3)
+            DummyCollector('bla', pout, pin, mds=1, ost=24, nid=500))
+        signalPipe.append(pin)
+        objectPipe.append(pout)
 
     else:
         for key in ips.keys():
-            (sIn, sOut) = multiprocessing.Pipe()  # pipe for signals
-            (oIn, oOut) = multiprocessing.Pipe()  # pipe for objects
-            sshObjects.append(Collector(ips[key], sOut, oIn))
-            signalPipe.append(sIn)
-            objectPipe.append(oOut)
+            (pin, pout) = multiprocessing.Pipe()  # pipe for signals
+            sshObjects.append(Collector(ips[key], pout, pin))
+            signalPipe.append(pin)
+            objectPipe.append(pout)
     time.sleep(1)
 
     while True:
@@ -443,11 +432,8 @@ if __name__ == '__main__':
         inserterNomMySQL = 0
         inserterNomSQLight = 0
 
-        (rp, wp, xp) = select.select(objectPipe, [], [])
-        print 'after select'
-
         # for pipe in objectPipe:
-        for pipe in rp:
+        for pipe in objectPipe:
             obj = pipe.recv()
             print 'reveived', pipe
 
@@ -465,9 +451,7 @@ if __name__ == '__main__':
                         (pin, pout) = multiprocessing.Pipe()
                         mongoInserter[pair] = (DatabaseInserter(
                             pout, cfg.getNewDB_Mongo_Conn()), pin)
-
-            # put data form collectors into db queue
-            if dbMongoactive:
+                # put data form collectors into db queue
                 mongoInserter[inserterNomMongo][1].send(obj)
                 inserterNomMongo += 1
                 if inserterNomMongo >= numberOfInserterPerDatabase:
@@ -485,9 +469,7 @@ if __name__ == '__main__':
                         (pin, pout) = multiprocessing.Pipe()
                         mySQLInserter[pair] = (DatabaseInserter(
                             pout, cfg.getNewDB_MySQL_Conn()), pin)
-
-            # put data form collectors into db queue
-            if dbMySQLactive:
+                # put data form collectors into db queue
                 mySQLInserter[inserterNomMySQL][1].send(obj)
                 inserterNomMySQL += 1
                 if inserterNomMySQL >= numberOfInserterPerDatabase:
@@ -505,13 +487,10 @@ if __name__ == '__main__':
                         (pin, pout) = multiprocessing.Pipe()
                         sqLightInserter[pair] = (DatabaseInserter(
                             pout, cfg.getNewDB_SQLight_Conn()), pin)
-
-            # put data form collectors into db queue
-            if dbMySQLactive:
+                # put data form collectors into db queue
                 # only one inserter!
                 sqLightInserter[inserterNomMySQL][1].send(obj)
 
-        # look at db connectionen if this is alaive
         t_end = time.time()
 
         time.sleep(ts_delay - (t_end - t_start))
