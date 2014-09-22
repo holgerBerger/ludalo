@@ -2,6 +2,92 @@ import multiprocessing
 import time
 
 
+class DatabaseInserter(multiprocessing.Process):
+
+    '''
+    This class handels the data form the collectors (inserterQueue)
+    implemented as Thread to insert async and with as less as posibel
+    dependencys to the collector.
+    '''
+
+    def __init__(self, comQueue, db):
+        super(DatabaseInserter, self).__init__()
+        self.comQueue = comQueue
+        self.db = db
+
+        # start the thread and begin to insert if entrys in the queue
+        self.start()
+
+    def insert(self, jsonDict):
+        '''
+            split the json object into the informations for the
+            database. the json object is defined as:
+                {} json
+                    {} fs-ost-/mdsname
+                        [] aggr
+                            [0] rio
+                            [1] rb
+                            [2] wio
+                            [3] wb
+                        [] nodeIP@connection
+                            [0] rio
+                            [1] rb
+                            [2] wio
+                            [3] wb
+                [...]
+        '''
+
+        insertTimestamp = jsonDict[0]
+        data = jsonDict[1]
+        insert_me = []
+
+        # Split the json into data obj
+        for base in data.keys():
+            sb = base.split('-')  # "alnec-OST0002"
+            ost_map = data[base]
+            fs_name = sb[0]  # alnec
+            name = sb[1]  # OST0002
+
+            # switch for OST / MDS
+            if 'OST' in name:
+                s_type = 'OST'
+            elif 'MDT' in name:
+                s_type = 'MDT'
+            else:
+                print 'weird things in the json... please check it.'
+                print 'no MDS or MDT string is', name
+                break
+
+            for key in ost_map.keys():
+                # key = "aggr" or "10.132.10.0@o2ib42"
+                resource_values = ost_map[key]
+                sk = key.split('@')
+                resourceIP = sk[0]
+
+                ins = PerformanceData(
+                    insertTimestamp, name, resourceIP, resource_values, fs_name, s_type)
+                insert_me.append(ins)
+
+        # Insert data Obj
+        self.db.insert_performance(insert_me)
+
+    def run(self):
+
+        while True:
+            while self.comQueue.empty():
+                time.sleep(0.1)
+            if not self.comQueue.empty():
+                insertObject = self.comQueue.get()
+                # Insert the object form pipe db
+                self.insert(insertObject)
+
+    def close(self):
+        '''
+            to close the connectionen properly if the db thread has problems
+        '''
+        self.db.closeConn()
+
+
 class PerformanceData(object):
 
     """
