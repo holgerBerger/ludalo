@@ -114,7 +114,7 @@ class PerformanceData(object):
         return obj
 
     def getSQL_Obj(self):
-        # this will crash :-(
+
         if len(self.values) < 3:
             newValues = []
             newValues[0] = self.values
@@ -302,6 +302,25 @@ class Mongo_Conn(object):
             sum += len(fslist[fs])
         t2 = time.time()
         print "inserted %d documents into MongoDB (%d inserts/sec)" % (sum, sum / (t2 - t1))
+
+    def insert_jobData(self, jobid, start, end, owner, nids, cmd):
+        cyear = time.localtime(start).tm_year
+        jobid = jobid + "-" + str(cyear)
+
+        obj = {"jobid": jobid,
+               "owner": owner,
+               "start": start,
+               "end": end,
+               "nids": nids,
+               "cmd": cmd}
+
+        self.db["jobs"].insert(obj)
+
+    def update_jobData(self, jobid, start, end):
+        cyear = time.localtime(start).tm_year
+        jobid = jobid + "-" + str(cyear)
+
+        self.db["jobs"].update({"jobid": jobid}, {"$set": {"end": end}})
 
     def closeConn(self):
         self.client.close()
