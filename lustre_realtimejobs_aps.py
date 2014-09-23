@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import sys
 import time
 import pwd
 import _inotify
@@ -10,8 +9,7 @@ import anydbm
 import dateutil.parser
 import calendar
 
-sys.path.append("MySQL")
-import MySQLObject
+import lib.database as database
 
 # ROOTDIR="/var/spool/torque/server_priv/accounting"
 ROOTDIR = "/home/berger/Lustre/testdata/watch"
@@ -29,7 +27,8 @@ class Logfile:
         self.prefix = prefix
         self.filename = self.path + "/" + filename
         self.f = open(self.filename, "r")
-        self.db = MySQLObject.MySQLObject()
+        dbconfig = database.DatabaseConfigurator('db.conf')
+        self.db = dbconfig.getNewDB_Mongo_Conn()
 
         # map resid to job - make it persistent as Bound line is only line
         # containing jobid
@@ -42,10 +41,17 @@ class Logfile:
 
     def readusermap(self):
         '''read mapping file in format of /etc/passwd'''
-        f = open(self.db.usermapping, "r")
+        try:
+            f = open("/etc/passwd", "r")
+        except Exception, e:
+            raise e
+            exit()
+
         for l in f:
             sp = l.split(":")
-            self.usermap(sp[2]) = sp[0]
+            # self.usermap(sp[2]) = sp[0]  # this is not the funktion you are
+            # looking for...
+            self.usermap[sp[2]] = sp[0]
         f.close()
         self.usermapage = time.time()
 
@@ -72,15 +78,9 @@ class Logfile:
         '''read from file from current position to current end,
         build lists for inserts and updates and do batch execution'''
 
-        jobs = {}
-
-        jobstarts = {}
-        jobends = {}
-
 #        b = self.f.read()
 # aps #######
 #        for l in b.split("\n"):
-
         # code to ignore incomplete lines, ignore garbage and seek back to last end of line
         # in case of single incomplete line, it is supposed to work as well
         lines = self.f.readlines()
@@ -125,7 +125,7 @@ class Logfile:
                         # file mapping
                         owner = self.mapuser(uid)
                     jobid = self.resToJob[resid]
-                    self.db.insert_job(jobid, start, -1, owner, nids, cmd)
+                    self.db.insert_jobData(jobid, start, -1, owner, nids, cmd)
                     print "jobstart:", jobid, "owner:", owner
                 except KeyError:
                     print "job without binding", resid
@@ -141,7 +141,7 @@ class Logfile:
                 resid = self.getvalue(sp, "resId")
                 try:
                     jobid = self.resToJob[resid]
-                    self.db.update_job(jobid, -1, end, "", "", "")
+                    self.db.update_jobData(jobid, -1, end, "", "", "")
                 except KeyError:
                     print "job without binding", resid
                 # be nice and shrink the DB
@@ -170,7 +170,9 @@ class Logfile:
 
 def mainloop():
     fd = _inotify.create()
-    wddir = _inotify.add(fd, ROOTDIR, _inotify.CREATE | _inotify.MODIFY)
+    # wddir = _inotify.add(fd, ROOTDIR, _inotify.CREATE | _inotify.MODIFY)
+    # try without asingment
+    _inotify.add(fd, ROOTDIR, _inotify.CREATE | _inotify.MODIFY)
 
     todayfile = FILEPREFIX + time.strftime("%Y%m%d")
     # todayfile = "apsched20131221"

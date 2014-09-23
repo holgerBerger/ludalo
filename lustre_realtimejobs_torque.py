@@ -100,7 +100,9 @@ class Logfile:
 def mainloop():
 
     fd = _inotify.create()
-    wddir = _inotify.add(fd, ROOTDIR, _inotify.CREATE | _inotify.MODIFY)
+    # wddir = _inotify.add(fd, ROOTDIR, _inotify.CREATE | _inotify.MODIFY)
+    # try without asingment
+    _inotify.add(fd, ROOTDIR, _inotify.CREATE | _inotify.MODIFY)
 
     todayfile = time.strftime("%Y%m%d")
     # todayfile = "20140320"
