@@ -1,6 +1,19 @@
 import multiprocessing
 import time
+'''
+This modul handls all thins assinged to the database.
+Database inserters, data structur casses and database connections.
+Here is also the place for the configparser witch collect the setup
+from the config to connect to the different databases.
 
+support for:
+- mongo db (full)
+
+partially support for:
+- mysql
+- sqlite3
+
+'''
 
 class DatabaseInserter(multiprocessing.Process):
 

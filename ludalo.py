@@ -4,6 +4,13 @@ import lib.database as database
 import lib.collector as collector
 
 
+'''
+
+this is the main function of the ludalo project.
+
+'''
+
+
 if __name__ == '__main__':
 
     # read names and ip-adress
@@ -17,7 +24,6 @@ if __name__ == '__main__':
 
     # TODO move in config!!!
     numberOfInserterPerDatabase = 3  # or more?
-    ssh = 0  # get form config!!!
 
     CollectorInserter = []
 

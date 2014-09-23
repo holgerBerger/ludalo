@@ -7,6 +7,22 @@ import time
 import subprocess
 import database
 
+'''
+
+this modul handles the collection of performance data
+special class CollectorInserterPair handels the tupple of inserter and
+collector. ther are to each collector a list of inserters.
+
+support for:
+- mongo db (full)
+
+partially support for:
+- mysql
+- sqlite3
+
+
+'''
+
 
 class CollectorInserterPair(object):
 
