@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 
-import sys
 import time
 import _inotify
-
-sys.path.append("MySQL")
-import MySQLObject
+import lib.database as database
 
 
 ROOTDIR = "/var/spool/torque/server_priv/accounting"
@@ -22,7 +19,8 @@ class Logfile:
         self.prefix = prefix
         self.filename = self.path + "/" + filename
         self.f = open(self.filename, "r")
-        self.db = MySQLObject.MySQLObject()
+        dbconfig = database.DatabaseConfigurator('db.conf')
+        self.db = dbconfig.getNewDB_Mongo_Conn()
         self.read_from_last_pos_to_end()
 
     def read_from_last_pos_to_end(self):
@@ -78,9 +76,9 @@ class Logfile:
         # insert into DB - executemany is hard to achieve, as we need to insert
         # users as well
         for j in inserts:
-            self.db.insert_job(*j)
+            self.db.insert_jobData(*j)
         for j in updates:
-            self.db.update_job(*j)
+            self.db.update_jobData(*j)
         self.db.commit()
 
     def switch_file(self, filename):

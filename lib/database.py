@@ -325,6 +325,9 @@ class Mongo_Conn(object):
     def closeConn(self):
         self.client.close()
 
+    def commit(self):
+        pass
+
 
 class DatabaseConfigurator(object):
 
