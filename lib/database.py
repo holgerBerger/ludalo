@@ -326,7 +326,8 @@ class Mongo_Conn(object):
                "start": start,
                "end": end,
                "nids": nids,
-               "cmd": cmd}
+               "cmd": cmd,
+               "calc": -1}
 
         self.db["jobs"].insert(obj)
 
