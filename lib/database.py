@@ -15,6 +15,7 @@ partially support for:
 
 '''
 
+
 class DatabaseInserter(multiprocessing.Process):
 
     '''
