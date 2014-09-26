@@ -1,8 +1,6 @@
 '''
-
     this modul should handel all db extraktion and the posible prints.
     another task of this modul is to generate pngs of the fs and jobs.
-
 '''
 
 import numpy as np
@@ -95,9 +93,10 @@ class dbExtraktor(multiprocessing.Process):
             while self.queue.empty():
                 time.sleep(0.1)
             if not self.queue.empty():
-                # insertObject = self.queue.get()
-                # do stuff
-                pass
+                (collection, tstart, tend) = self.queue.get()
+                data = self.selectFromCollection(collection, tstart, tend)
+                raise NotImplementedError
+                data.saveJobStats()
 
     def selectFromCollection(self, collection, tstart, tend):
         dc = DataCollection(collection)
