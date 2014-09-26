@@ -96,7 +96,7 @@ class dbExtraktor(multiprocessing.Process):
                 (collection, tstart, tend) = self.queue.get()
                 data = self.selectFromCollection(collection, tstart, tend)
                 raise NotImplementedError
-                data.saveJobStats()
+                data.saveStats()
 
     def selectFromCollection(self, collection, tstart, tend):
         dc = DataCollection(collection)

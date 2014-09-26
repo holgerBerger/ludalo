@@ -328,8 +328,17 @@ class Mongo_Conn(object):
                "nids": nids,
                "cmd": cmd,
                "calc": -1}
+               # calc -1 job not calculatet
+               # calc 0 job in calculation
+               # calc 1 job compleet calculated
 
         self.db["jobs"].insert(obj)
+
+    def set_job_calcState(self, jobid, start, calc):
+        cyear = time.localtime(start).tm_year
+        jobid = jobid + "-" + str(cyear)
+
+        self.db["jobs"].update({"jobid": jobid}, {"$set": {"clac": calc}})
 
     def update_jobData(self, jobid, start, end):
         cyear = time.localtime(start).tm_year
