@@ -370,6 +370,9 @@ class Mongo_Conn(object):
     def commit(self):
         pass
 
+    def alive(self):
+        return self.db.alive()
+
 
 class DatabaseConfigurator(object):
 
