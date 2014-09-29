@@ -103,7 +103,8 @@ class DatabaseInserter(multiprocessing.Process):
         '''
             to close the connectionen properly if the db thread has problems
         '''
-        self.db.closeConn()
+        if self.db:
+          self.db.closeConn()
 
     def reconnect(self, nr_try=0):
         # try 9 reconnects if not exit
@@ -328,8 +329,8 @@ class Mongo_Conn(object):
         for fs in fslist.keys():
 
             # Prevent other threads form execute
-            # with self.lock:
-            self.db[fs].insert(fslist[fs])
+            with self.lock:
+            	self.db[fs].insert(fslist[fs])
 
             sum += len(fslist[fs])
         t2 = time.time()
@@ -371,7 +372,7 @@ class Mongo_Conn(object):
         pass
 
     def alive(self):
-        return self.db.alive()
+        return self.client.alive()
 
 
 class DatabaseConfigurator(object):
@@ -443,7 +444,10 @@ class DatabaseConfigurator(object):
                 port = self.cfg.getint(self.sectionMongo, 'port')
                 dbname = self.cfg.get(self.sectionMongo, 'dbname')
                 # do stuff
-                return Mongo_Conn(host, port, dbname)
+                try:
+                  return Mongo_Conn(host, port, dbname)
+                except:
+                  return None
         print 'No connection MongoDB configered!'
 
     def getNewDB_MySQL_Conn(self):
