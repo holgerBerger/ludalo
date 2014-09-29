@@ -28,7 +28,7 @@ class CollectorInserterPair(object):
 
     """docstring for CollectorInserterPair"""
 
-    def __init__(self, ssh, dbconn, numberOfInserterPerDatabase):
+    def __init__(self, ssh, cfg, numberOfInserterPerDatabase):
         super(CollectorInserterPair, self).__init__()
 
         # pipe to send signals to the collector
@@ -41,7 +41,7 @@ class CollectorInserterPair(object):
         self.ssh = ssh
 
         # the connection to the databese
-        self.dbconn = dbconn
+        self.cfg = cfg
         self.numberOfInserterPerDatabase = numberOfInserterPerDatabase
 
         # all inserter are in this list. more than one inserter per collctor
@@ -49,7 +49,7 @@ class CollectorInserterPair(object):
 
         # generate inserter's
         for x in xrange(0, self.numberOfInserterPerDatabase):
-            nIns = database.DatabaseInserter(self.comQueue, self.dbconn)
+            nIns = database.DatabaseInserter(self.comQueue, self.cfg)
             self.inserterList.append(nIns)
 
         # generate collector
@@ -64,18 +64,14 @@ class CollectorInserterPair(object):
     def collector_is_alive(self):
         return self.collector.is_alive()
 
-    def inserter_reconnect(self, dbconn):
-        # new dbconn
-        del self.dbconn
-        self.dbconn = dbconn
-
+    def inserter_reconnect(self):
         # find crashed
         for inserter in self.inserterList[:]:
             if not inserter.is_alive():
                 inserter.close()
                 self.inserterList.remove(inserter)
                 newInserter = database.DatabaseInserter(
-                    self.comQueue, self.dbconn)
+                    self.comQueue, self.cfg)
                 self.inserterList.append(newInserter)
 
     def collector_reconnect(self):
@@ -260,7 +256,7 @@ class Collector(multiprocessing.Process):
                 # Do Stuff!!!!
                 # @TODO
                 # multi inserter here!!!
-                self.queue.send((ts, line))
+                self.queue.put((ts, line))
                 print 'sent object'
 
             # Show what we received from standard error.

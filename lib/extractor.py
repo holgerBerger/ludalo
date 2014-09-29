@@ -88,7 +88,6 @@ class dbExtraktor(multiprocessing.Process):
         self.start()
 
     def run(self):
-
         while True:
             while self.queue.empty():
                 time.sleep(0.1)

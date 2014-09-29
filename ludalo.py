@@ -20,7 +20,6 @@ if __name__ == '__main__':
     # getting db configs
     conf = 'db.conf'
     cfg = database.DatabaseConfigurator(conf)
-    dbconn = cfg.getNewDB_Mongo_Conn()
 
     # TODO move in config!!!
     numberOfInserterPerDatabase = 3  # or more?
@@ -30,7 +29,7 @@ if __name__ == '__main__':
     # create collectoer and assert inserter
     for key in ips.keys():
         cip = collector.CollectorInserterPair(
-            ips[key], dbconn, numberOfInserterPerDatabase)
+            ips[key], cfg, numberOfInserterPerDatabase)
         CollectorInserter.append(cip)
 
     while True:
@@ -38,8 +37,7 @@ if __name__ == '__main__':
         for pair in CollectorInserter:
             if not pair.inserter_is_alive():
                 # try new connection
-                dbconn = conf.getNewDB_Mongo_Conn()
-                pair.inserter_reconnect(dbconn)
+                pair.inserter_reconnect()
 
             if not pair.collector_is_alive():
                 # try new connection

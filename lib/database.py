@@ -24,10 +24,11 @@ class DatabaseInserter(multiprocessing.Process):
     dependencys to the collector.
     '''
 
-    def __init__(self, comQueue, db):
+    def __init__(self, comQueue, cfg):
         super(DatabaseInserter, self).__init__()
         self.comQueue = comQueue
-        self.db = db
+        self.cfg = cfg
+        self.db = self.cfg.getNewDB_Mongo_Conn()
 
         # start the thread and begin to insert if entrys in the queue
         self.start()
@@ -91,6 +92,9 @@ class DatabaseInserter(multiprocessing.Process):
             while self.comQueue.empty():
                 time.sleep(0.1)
             if not self.comQueue.empty():
+                if not self.db.alive():
+                    self.reconnect()
+
                 insertObject = self.comQueue.get()
                 # Insert the object form pipe db
                 self.insert(insertObject)
@@ -100,6 +104,20 @@ class DatabaseInserter(multiprocessing.Process):
             to close the connectionen properly if the db thread has problems
         '''
         self.db.closeConn()
+
+    def reconnect(self, nr_try=0):
+        # try 9 reconnects if not exit
+        if not self.db.alive():
+            try:
+                self.db.close()
+            except Exception, e:
+                raise e
+            if nr_try > 9:
+                print 'Reconnection faild!'
+                exit()
+            del self.db
+            self.db = self.cfg.getNewDB_Mongo_Conn()
+            self.reconnect(nr_try + 1)
 
 
 class PerformanceData(object):
@@ -423,7 +441,7 @@ class DatabaseConfigurator(object):
                 dbname = self.cfg.get(self.sectionMongo, 'dbname')
                 # do stuff
                 return Mongo_Conn(host, port, dbname)
-        print 'No connection MySQL configered!'
+        print 'No connection MongoDB configered!'
 
     def getNewDB_MySQL_Conn(self):
         # configuration has mysql
