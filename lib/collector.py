@@ -68,7 +68,6 @@ class CollectorInserterPair(object):
         # find crashed
         for inserter in self.inserterList[:]:
             if not inserter.is_alive():
-                print inserter
                 inserter.close()
                 self.inserterList.remove(inserter)
                 newInserter = database.DatabaseInserter(
@@ -251,14 +250,10 @@ class Collector(multiprocessing.Process):
                 time.sleep(0.1)
 
             while not self.stdout_queue.empty():
-                print "QL", self.stdout_queue.qsize()
+                # print "QL", self.stdout_queue.qsize()
                 line = self.stdout_queue.get()
-
-                # Do Stuff!!!!
-                # @TODO
-                # multi inserter here!!!
+                # queue for inserter
                 self.queue.put((ts, line))
-                # print 'sent object'
 
             # Show what we received from standard error.
             while not self.stderr_queue.empty():
