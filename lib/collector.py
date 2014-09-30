@@ -254,6 +254,7 @@ class Collector(multiprocessing.Process):
                 line = self.stdout_queue.get()
                 # queue for inserter
                 self.queue.put((ts, line))
+            print self.name, 'inserter queue len:', len(self.queue)
 
             # Show what we received from standard error.
             while not self.stderr_queue.empty():

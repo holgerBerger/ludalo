@@ -123,6 +123,7 @@ class DatabaseInserter(multiprocessing.Process):
                 exit()
             del self.db
             self.db = self.cfg.getNewDB_Mongo_Conn()
+            time.sleep(.5)
             self.reconnect(nr_try + 1)
 
 
