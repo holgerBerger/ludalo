@@ -23,6 +23,7 @@ if __name__ == '__main__':
 
     # TODO move in config!!!
     numberOfInserterPerDatabase = 3  # or more?
+    sleepingTime = 10
 
     CollectorInserter = []
 
@@ -32,7 +33,10 @@ if __name__ == '__main__':
             ips[key], cfg, numberOfInserterPerDatabase)
         CollectorInserter.append(cip)
 
+    iteration = 0
+
     while True:
+        iteration = +1
         insertTimestamp = int(time.time())
         for pair in CollectorInserter:
             if not pair.inserter_is_alive():
@@ -45,6 +49,6 @@ if __name__ == '__main__':
 
             # send signal to collect data
             pair.collect(insertTimestamp)
-
+        print 'Main-Thread iteration:', iteration, 'sleep', sleepingTime, 'sec'
         # sleep 60 seconds
-        time.sleep(60)  # TODO grap form config!
+        time.sleep(sleepingTime)  # TODO grap form config!
