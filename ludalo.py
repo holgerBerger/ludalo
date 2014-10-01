@@ -2,6 +2,7 @@ import time
 import json
 import lib.database as database
 import lib.collector as collector
+import sys
 
 
 '''
@@ -10,21 +11,24 @@ this is the main function of the ludalo project.
 
 '''
 
-
 if __name__ == '__main__':
+
+    conf = 'db.conf'
+    if not sys.argv[1]:
+        'take standart config:', conf
+    else:
+        conf = sys.argv[1]
 
     # read names and ip-adress
     cfg = open('collector.cfg', 'r')
     ips = json.load(cfg)
 
     # getting db configs
-    conf = 'db.conf'
+
     cfg = database.DatabaseConfigurator(conf)
 
-    # TODO move in config!!!
-    numberOfInserterPerDatabase = 3  # or more?
-    sleepingTime = 10
-
+    numberOfInserterPerDatabase = cfg.numberOfInserterPerDatabase   # or more?
+    sleepingTime = cfg.sleepingTime
     CollectorInserter = []
 
     # create collectoer and assert inserter
@@ -50,5 +54,5 @@ if __name__ == '__main__':
             # send signal to collect data
             pair.collect(insertTimestamp)
         print 'Main-Thread iteration:', iteration, 'sleep', sleepingTime, 'sec'
-        # sleep 60 seconds
-        time.sleep(sleepingTime)  # TODO grap form config!
+        # Global sleep!!!
+        time.sleep(sleepingTime)

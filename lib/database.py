@@ -409,6 +409,17 @@ class DatabaseConfigurator(object):
         self.sectionMySQL = 'MySQL'
         self.sectionSQLight = 'SQLight'
 
+        if self.cfg.has_section('ludaloConfig'):
+            self.sleepTime = self.cfg.getint('ludaloConfig', 'sleepTime')
+            self.numberOfInserterPerDatabase = self.cfg.getint(
+                'ludaloConfig', 'numberOfInserterPerDatabase')
+        else:
+            output = ('[ludaloConfig]' + '\n' +
+                      'sleepTime = 60' + '\n' +
+                      'numberOfInserterPerDatabase = 3')
+            print 'missing config option. Pleas apend \n', output
+            exit(1)
+
     def writeDefaultConfig(self, defaultCfgFile):
         cfgString = ('[MongoDB]' + '\n' +
                      'aktiv = [1/yes/true/on | 0/no/false/off]' + '\n' +
@@ -434,6 +445,10 @@ class DatabaseConfigurator(object):
                      '[replacePattern]' + '\n' +
                      'pattern = (.*)(-ib)' + '\n' +
                      'replace = \1' + '\n' + '\n' +
+
+                     '[ludaloConfig]' + '\n' +
+                     'sleepTime = 60' + '\n' +
+                     'numberOfInserterPerDatabase = 3' + '\n' + '\n' +
 
                      '[batchsystem]' + '\n' +
                      'postfix = [.name]' + '\n' +
