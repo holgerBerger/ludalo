@@ -14,11 +14,43 @@ this is the main function of the ludalo project.
 '''
 
 
-def MainCollector():
-    pass
+def mainCollector(cfg):
+        # setup
+    collectInfo = open('collector.cfg', 'r')
+    ips = json.load(collectInfo)
+
+    numberOfInserterPerDatabase = cfg.numberOfInserterPerDatabase   # or more?
+    sleepingTime = cfg.sleepingTime
+    CollectorInserter = []
+
+    # create collectoer and assert inserter
+    for key in ips.keys():
+        cip = collector.CollectorInserterPair(
+            ips[key], cfg, numberOfInserterPerDatabase)
+        CollectorInserter.append(cip)
+
+    iteration = 0
+
+    while True:
+        iteration = +1
+        insertTimestamp = int(time.time())
+        for pair in CollectorInserter:
+            if not pair.inserter_is_alive():
+                # try new connection
+                pair.inserter_reconnect()
+
+            if not pair.collector_is_alive():
+                # try new connection
+                pair.collector_reconnect()
+
+            # send signal to collect data
+            pair.collect(insertTimestamp)
+        print 'Main-Thread iteration:', iteration, 'sleep', sleepingTime, 'sec'
+        # Global sleep!!!
+        time.sleep(sleepingTime)
 
 
-def MainExtractor(cfg):
+def mainExtractor(cfg):
     # get config
     extractorSleep = cfg.extractorSleep
     nooextract = cfg.numberOfExtractros
@@ -54,40 +86,9 @@ if __name__ == '__main__':
     else:
         conf = sys.argv[1]
 
-    # read names and ip-adress
-    cfg = open('collector.cfg', 'r')
-    ips = json.load(cfg)
-
-    # getting db configs
+    # getting configs
 
     cfg = database.DatabaseConfigurator(conf)
 
-    numberOfInserterPerDatabase = cfg.numberOfInserterPerDatabase   # or more?
-    sleepingTime = cfg.sleepingTime
-    CollectorInserter = []
-
-    # create collectoer and assert inserter
-    for key in ips.keys():
-        cip = collector.CollectorInserterPair(
-            ips[key], cfg, numberOfInserterPerDatabase)
-        CollectorInserter.append(cip)
-
-    iteration = 0
-
-    while True:
-        iteration = +1
-        insertTimestamp = int(time.time())
-        for pair in CollectorInserter:
-            if not pair.inserter_is_alive():
-                # try new connection
-                pair.inserter_reconnect()
-
-            if not pair.collector_is_alive():
-                # try new connection
-                pair.collector_reconnect()
-
-            # send signal to collect data
-            pair.collect(insertTimestamp)
-        print 'Main-Thread iteration:', iteration, 'sleep', sleepingTime, 'sec'
-        # Global sleep!!!
-        time.sleep(sleepingTime)
+    # if collector than this but think of extractor
+    mainCollector(cfg)
