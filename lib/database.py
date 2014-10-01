@@ -411,12 +411,18 @@ class DatabaseConfigurator(object):
 
         if self.cfg.has_section('ludaloConfig'):
             self.sleepTime = self.cfg.getint('ludaloConfig', 'sleepTime')
+            self.extractorSleep = self.cfg.getint(
+                'ludaloConfig', 'extractorSleep')
             self.numberOfInserterPerDatabase = self.cfg.getint(
                 'ludaloConfig', 'numberOfInserterPerDatabase')
+            self.numberOfExtractros = self.cfg.getint(
+                'ludaloConfig', 'numberOfExtractros')
         else:
             output = ('[ludaloConfig]' + '\n' +
                       'sleepTime = 60' + '\n' +
-                      'numberOfInserterPerDatabase = 3')
+                      'extractorSleep = 60' + '\n' +
+                      'numberOfInserterPerDatabase = 3'
+                      'numberOfExtractros = 3' + '\n' + '\n')
             print 'missing config option. Pleas apend \n', output
             exit(1)
 
@@ -448,7 +454,9 @@ class DatabaseConfigurator(object):
 
                      '[ludaloConfig]' + '\n' +
                      'sleepTime = 60' + '\n' +
+                     'extractorSleep = 60' + '\n' +
                      'numberOfInserterPerDatabase = 3' + '\n' + '\n' +
+                     'numberOfExtractros = 3' + '\n' + '\n' +
 
                      '[batchsystem]' + '\n' +
                      'postfix = [.name]' + '\n' +

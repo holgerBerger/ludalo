@@ -19,16 +19,31 @@ def MainCollector():
 
 
 def MainExtractor(cfg):
+    # get config
+    extractorSleep = cfg.extractorSleep
+    nooextract = cfg.numberOfExtractros
+
     # create extractors
     extractors = []
     queue = multiprocessing.Queue()
-    for x in xrange(0, 3):
+    for x in xrange(0, nooextract):
         extractors.append(extractor.dbExtraktor(cfg, queue))
 
     # main loop
     while True:
+        print 'extractor queue length:', len(queue)
+        joblist = []
+        # check jobs
+        # put jobs in queue
+        for job in joblist:
+            queue.put(job.name)
 
-        pass
+        fslist = []
+        # check fs
+        # put fs in queue
+        for fs in fslist:
+            queue.put(fs.name)
+        time.sleep(extractorSleep)
 
 
 if __name__ == '__main__':
