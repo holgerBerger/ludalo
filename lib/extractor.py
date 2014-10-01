@@ -104,18 +104,3 @@ class dbExtraktor(multiprocessing.Process):
         for dataSet in data:
             dc.append(dataSet['ts'], dataSet['val'])
         return dc
-
-
-if __name__ == '__main__':
-    # test funktion!
-    dc = DataCollection('blub')
-    for x in xrange(0, 4):
-        ts = int(time.time())
-        ap = str(x * ts * 1) + ' ' + str(x * ts * 2) + \
-            ' ' + str(x * ts * 3) + ' ' + str(x * ts * 4)
-        dc.append(ts, ap)
-        time.sleep(1)
-
-    # print dc.values
-    print dc.getAverage()
-    print dc.getMean()

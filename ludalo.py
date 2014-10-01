@@ -1,7 +1,9 @@
 import time
 import json
+import multiprocessing
 import lib.database as database
 import lib.collector as collector
+import lib.extractor as extractor
 import sys
 
 
@@ -10,6 +12,24 @@ import sys
 this is the main function of the ludalo project.
 
 '''
+
+
+def MainCollector():
+    pass
+
+
+def MainExtractor(cfg):
+    # create extractors
+    extractors = []
+    queue = multiprocessing.Queue()
+    for x in xrange(0, 3):
+        extractors.append(extractor.dbExtraktor(cfg, queue))
+
+    # main loop
+    while True:
+
+        pass
+
 
 if __name__ == '__main__':
 
