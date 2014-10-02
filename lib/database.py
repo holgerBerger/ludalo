@@ -1,9 +1,9 @@
 import multiprocessing
 import time
 '''
-This modul handls all thins assinged to the database.
-Database inserters, data structur casses and database connections.
-Here is also the place for the configparser witch collect the setup
+This module handles all things assigned to the database.
+Database inserters, data structur cases and database connections.
+Here is also the place for the configparser wich collects the setup
 from the config to connect to the different databases.
 
 support for:
@@ -19,9 +19,9 @@ partially support for:
 class DatabaseInserter(multiprocessing.Process):
 
     '''
-    This class handels the data form the collectors (inserterQueue)
-    implemented as Thread to insert async and with as less as posibel
-    dependencys to the collector.
+    This class handles the data from the collectors (inserterQueue)
+    implemented as Thread to insert async and with as less as possible
+    dependencies to the collector.
     '''
 
     def __init__(self, comQueue, cfg):
@@ -100,7 +100,7 @@ class DatabaseInserter(multiprocessing.Process):
                 try:
                     self.insert(insertObject)
                 except Exception, e:
-                    print 'could not insert object to db, put it back to queue. Queue length:', len(self.comQueue)
+                    print 'could not insert object to db, put it back to queue. Queue length:', self.comQueue.qsize()
                     print 'exeption:', e
                     self.comQueue.put(insertObject)
 
@@ -421,9 +421,9 @@ class DatabaseConfigurator(object):
             output = ('[ludaloConfig]' + '\n' +
                       'sleepTime = 60' + '\n' +
                       'extractorSleep = 60' + '\n' +
-                      'numberOfInserterPerDatabase = 3'
+                      'numberOfInserterPerDatabase = 3' + '\n' +
                       'numberOfExtractros = 3' + '\n' + '\n')
-            print 'missing config option. Pleas apend \n', output
+            print 'missing config option. Please append \n', output
             exit(1)
 
     def writeDefaultConfig(self, defaultCfgFile):

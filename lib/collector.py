@@ -162,7 +162,7 @@ class DummyCollector(multiprocessing.Process):
         nidNames = []
         ostValues = [81680085, 81680085, 81680085, 81680085]
 
-        # Pleas append mds to map !!!
+        # Please append mds to map !!!
 
         # mdsValues = 81680085
 
@@ -254,7 +254,7 @@ class Collector(multiprocessing.Process):
                 line = self.stdout_queue.get()
                 # queue for inserter
                 self.queue.put((ts, line))
-            print self.name, 'inserter queue len:', len(self.queue)
+            print self.name, 'inserter queue len:', self.queue.qsize()
 
             # Show what we received from standard error.
             while not self.stderr_queue.empty():
