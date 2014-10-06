@@ -37,10 +37,12 @@ def mainCollector(cfg):
         for pair in CollectorInserter:
             if not pair.inserter_is_alive():
                 # try new connection
+                print 'Main-Thread: try recover inserter'
                 pair.inserter_reconnect()
 
             if not pair.collector_is_alive():
                 # try new connection
+                print 'Main-Thread: try recover inserter'
                 pair.collector_reconnect()
 
             # send signal to collect data

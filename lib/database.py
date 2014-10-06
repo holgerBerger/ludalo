@@ -102,11 +102,12 @@ class DatabaseInserter(multiprocessing.Process):
                 insertObject = self.comQueue.get()
                 # Insert the object form pipe db
                 try:
+                    print self.name, 'insert'
                     self.insert(insertObject)
-                except Exception, e:
+                except Exception:
                     self.comQueue.put(insertObject)
                     print 'could not insert object to db, put it back to queue. Queue length:', self.comQueue.qsize()
-                    print 'exeption:', e
+                    #print 'exeption:', e
         print 'exit inserter', self.name
 
     def _close(self):
@@ -214,7 +215,7 @@ class MySQL_Conn(object):
             fslist[obj.fs].append(obj.getSQL_Obj())
 
         sum = 0
-        t1 = time.time()
+        # t1 = time.time()
         for fs in fslist.keys():
             query = ''' INSERT INTO  ''' + str(fs) + ''' (
                                             c_timestamp,
@@ -230,8 +231,8 @@ class MySQL_Conn(object):
                 self.c.executemany(query, fslist[fs])
 
             sum += len(fslist[fs])
-        t2 = time.time()
-        print "inserted %d documents into MySQL (%d inserts/sec)" % (sum, sum / (t2 - t1))
+        # t2 = time.time()
+        # print "inserted %d documents into MySQL (%d inserts/sec)" % (sum, sum / (t2 - t1))
 
     def generateDatabaseTable(self, fs):
         performanceTable = ''' CREATE TABLE IF NOT EXISTS ''' + str(fs) + '''(
