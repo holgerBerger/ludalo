@@ -20,7 +20,7 @@ def mainCollector(cfg):
     ips = json.load(collectInfo)
 
     numberOfInserterPerDatabase = cfg.numberOfInserterPerDatabase   # or more?
-    sleepingTime = cfg.sleepingTime
+    sleepingTime = cfg.sleepTime
     CollectorInserter = []
 
     # create collectoer and assert inserter
@@ -81,8 +81,8 @@ def mainExtractor(cfg):
 if __name__ == '__main__':
 
     conf = 'db.conf'
-    if not sys.argv[1]:
-        'take standart config:', conf
+    if len(sys.argv)<=1:
+        'take standard config:', conf
     else:
         conf = sys.argv[1]
 
