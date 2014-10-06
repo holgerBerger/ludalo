@@ -57,6 +57,7 @@ class CollectorInserterPair(object):
 
     def inserter_is_alive(self):
         for inserter in self.inserterList:
+            print inserter
             if not inserter.is_alive():
                 return False
         return True

@@ -28,10 +28,13 @@ class DatabaseInserter(multiprocessing.Process):
         super(DatabaseInserter, self).__init__()
         self.comQueue = comQueue
         self.cfg = cfg
-        self.db = self.cfg.getNewDB_Mongo_Conn()
-
-        # start the thread and begin to insert if entrys in the queue
-        self.start()
+        self.db = None
+        try:
+            self.db = self.cfg.getNewDB_Mongo_Conn()
+	    # start the thread and begin to insert if entrys in the queue
+	    self.start()
+        except:
+            pass
 
     def insert(self, jsonDict):
         '''
@@ -92,7 +95,7 @@ class DatabaseInserter(multiprocessing.Process):
             while self.comQueue.empty():
                 time.sleep(0.1)
             if not self.comQueue.empty():
-                if not self.db.alive():
+                if self.db==None or not self.db.alive():
                     self.reconnect()
 
                 insertObject = self.comQueue.get()
@@ -100,9 +103,9 @@ class DatabaseInserter(multiprocessing.Process):
                 try:
                     self.insert(insertObject)
                 except Exception, e:
+                    self.comQueue.put(insertObject)
                     print 'could not insert object to db, put it back to queue. Queue length:', self.comQueue.qsize()
                     print 'exeption:', e
-                    self.comQueue.put(insertObject)
 
     def close(self):
         '''
@@ -113,16 +116,19 @@ class DatabaseInserter(multiprocessing.Process):
 
     def reconnect(self, nr_try=0):
         # try 9 reconnects if not exit
-        if not self.db.alive():
+        if self.db==None or not self.db.alive():
             try:
                 self.db.close()
             except Exception, e:
-                raise e
+                pass
             if nr_try > 9:
                 print 'Reconnection faild!'
                 exit()
-            del self.db
-            self.db = self.cfg.getNewDB_Mongo_Conn()
+            self.db = None
+            try:
+                self.db = self.cfg.getNewDB_Mongo_Conn()
+            except:
+                pass
             time.sleep(.5)
             self.reconnect(nr_try + 1)
 
@@ -473,11 +479,9 @@ class DatabaseConfigurator(object):
                 port = self.cfg.getint(self.sectionMongo, 'port')
                 dbname = self.cfg.get(self.sectionMongo, 'dbname')
                 # do stuff
-                try:
-                    return Mongo_Conn(host, port, dbname)
-                except Exception, e:
-                    raise e
-        print 'No connection MongoDB configered!'
+                return Mongo_Conn(host, port, dbname)
+        else:
+            print 'No connection MongoDB configered!'
 
     def getNewDB_MySQL_Conn(self):
         # configuration has mysql
