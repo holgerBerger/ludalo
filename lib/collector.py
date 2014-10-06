@@ -255,6 +255,7 @@ class Collector(multiprocessing.Process):
 
             # wait for signal to send request
             ts = self.sOut.recv()  # this blocks until a send from main
+            print self.name, 'getting send from main start collect'
             self.sendRequest()
 
             while self.stdout_queue.empty():
