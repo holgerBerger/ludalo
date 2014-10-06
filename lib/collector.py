@@ -71,14 +71,14 @@ class CollectorInserterPair(object):
             if not inserter.is_alive():
                 inserter.shutdown()
                 self.inserterList.remove(inserter)
-                print self.name, 'generating new inserter'
+                print 'generating new inserter'
                 newInserter = database.DatabaseInserter(
                     self.comQueue, self.cfg)
                 self.inserterList.append(newInserter)
 
     def collector_reconnect(self):
         if not self.collector.is_alive():
-            print 'new collector... old is not alive.',self.collector.name
+            print 'new collector... old is not alive.', self.collector.name
             self.collector.shutdown()
             del self.collector
             self.collector = Collector(self.ssh, self.pipeOut, self.comQueue)
@@ -237,7 +237,7 @@ class Collector(multiprocessing.Process):
         self.stderr_reader.start()
 
         try:
-            self.name = self.stdout_queue.get(True, 10)
+            self.name = self.stdout_queue.get(True, 10).rstrip()
         except Exception, e:
             print 'got no correct name from ssh', e, self.name
 
@@ -267,7 +267,7 @@ class Collector(multiprocessing.Process):
                 line = self.stdout_queue.get()
                 # queue for inserter
                 self.queue.put((ts, line))
-            print self.name, 'inserter queue len:', self.queue.qsize()
+            print self.name + 'inserter queue len:', self.queue.qsize()
 
             # Show what we received from standard error.
             while not self.stderr_queue.empty():
