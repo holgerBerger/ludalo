@@ -29,10 +29,12 @@ class DatabaseInserter(multiprocessing.Process):
         self.comQueue = comQueue
         self.cfg = cfg
         self.db = None
+        # use this to end job from outside!
+        self.exit = multiprocessing.Event()
         try:
             self.db = self.cfg.getNewDB_Mongo_Conn()
-	    # start the thread and begin to insert if entrys in the queue
-	    self.start()
+            # start the thread and begin to insert if entrys in the queue
+            self.start()
         except:
             pass
 
@@ -90,12 +92,11 @@ class DatabaseInserter(multiprocessing.Process):
         self.db.insert_performance(insert_me)
 
     def run(self):
-
-        while True:
+        while not self.exit.is_set():
             while self.comQueue.empty():
                 time.sleep(0.1)
             if not self.comQueue.empty():
-                if self.db==None or not self.db.alive():
+                if not self.db or not self.db.alive():
                     self.reconnect()
 
                 insertObject = self.comQueue.get()
@@ -106,20 +107,24 @@ class DatabaseInserter(multiprocessing.Process):
                     self.comQueue.put(insertObject)
                     print 'could not insert object to db, put it back to queue. Queue length:', self.comQueue.qsize()
                     print 'exeption:', e
+        print 'exit inserter', self.name
 
-    def close(self):
+    def _close(self):
         '''
             to close the connectionen properly if the db thread has problems
         '''
         if self.db:
             self.db.closeConn()
 
+    def shutdown(self):
+            self.exit.set()
+
     def reconnect(self, nr_try=0):
         # try 9 reconnects if not exit
-        if self.db==None or not self.db.alive():
+        if not self.db or not self.db.alive():
             try:
                 self.db.close()
-            except Exception, e:
+            except Exception:
                 pass
             if nr_try > 9:
                 print 'Reconnection faild!'

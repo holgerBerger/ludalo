@@ -69,14 +69,16 @@ class CollectorInserterPair(object):
         # find crashed
         for inserter in self.inserterList[:]:
             if not inserter.is_alive():
-                inserter.close()
+                inserter.shutdown()
                 self.inserterList.remove(inserter)
+                print self.name, 'generating new inserter'
                 newInserter = database.DatabaseInserter(
                     self.comQueue, self.cfg)
                 self.inserterList.append(newInserter)
 
     def collector_reconnect(self):
         if not self.collector.is_alive():
+            self.collector.shutdown()
             del self.collector
             self.collector = Collector(self.ssh, self.pipeOut, self.comQueue)
 
@@ -114,7 +116,6 @@ class AsynchronousFileReader(threading.Thread):
                 # print "inserted into queue:" ,line
                 self._queue.put(line)
                 print e
-                # print 'in:', line
 
     def eof(self):
         '''Check whether there is no more content to expect.'''
@@ -203,6 +204,9 @@ class Collector(multiprocessing.Process):
         self.sOut = sOut
         self.queue = queue
 
+        # use this to end job from outside!
+        self.exit = multiprocessing.Event()
+
         # Copy collector
         subprocess.call(['scp', 'collector', ip + ':/tmp/'])
         # Launch Tread
@@ -241,6 +245,12 @@ class Collector(multiprocessing.Process):
         # Check the queues if we received some output (until there is nothing more
         # to get).
         while not self.stdout_reader.eof() or not self.stderr_reader.eof():
+
+            # exit if demanded
+            if self.exit.is_set():
+                print 'exiting collector', self.name
+                break
+
             # Show what we received from standard output.
 
             # wait for signal to send request
@@ -269,6 +279,9 @@ class Collector(multiprocessing.Process):
         # Close subprocess' file descriptors.
         self.process.stdout.close()
         self.process.stderr.close()
+
+    def shutdown(self):
+            self.exit.set()
 
     def sendRequest(self):
         # getting data form collector

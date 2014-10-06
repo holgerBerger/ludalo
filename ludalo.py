@@ -15,7 +15,7 @@ this is the main function of the ludalo project.
 
 
 def mainCollector(cfg):
-        # setup
+    # setup
     collectInfo = open('collector.cfg', 'r')
     ips = json.load(collectInfo)
 
@@ -32,7 +32,7 @@ def mainCollector(cfg):
     iteration = 0
 
     while True:
-        iteration = +1
+        iteration = iteration + 1
         insertTimestamp = int(time.time())
         for pair in CollectorInserter:
             if not pair.inserter_is_alive():
@@ -81,7 +81,7 @@ def mainExtractor(cfg):
 if __name__ == '__main__':
 
     conf = 'db.conf'
-    if len(sys.argv)<=1:
+    if len(sys.argv) <= 1:
         'take standard config:', conf
     else:
         conf = sys.argv[1]
