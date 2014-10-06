@@ -42,7 +42,7 @@ def mainCollector(cfg):
 
             if not pair.collector_is_alive():
                 # try new connection
-                print 'Main-Thread: try recover inserter'
+                print 'Main-Thread: try recover collectror', pair.collector
                 pair.collector_reconnect()
 
             # send signal to collect data
