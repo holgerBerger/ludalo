@@ -78,6 +78,7 @@ class CollectorInserterPair(object):
 
     def collector_reconnect(self):
         if not self.collector.is_alive():
+            print 'new collector... old is not alive.',self.collector.name
             self.collector.shutdown()
             del self.collector
             self.collector = Collector(self.ssh, self.pipeOut, self.comQueue)
