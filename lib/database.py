@@ -128,14 +128,15 @@ class DatabaseInserter(multiprocessing.Process):
             except Exception:
                 pass
             if nr_try > 9:
-                print 'Reconnection faild!'
-                exit()
+                print 'Reconnection faild! after 9 trys'
+                time.sleep(10)
+                nr_try = 0
             self.db = None
             try:
                 self.db = self.cfg.getNewDB_Mongo_Conn()
             except:
                 pass
-            time.sleep(.5)
+            time.sleep(1)
             self.reconnect(nr_try + 1)
 
 
