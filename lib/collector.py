@@ -57,7 +57,6 @@ class CollectorInserterPair(object):
 
     def inserter_is_alive(self):
         for inserter in self.inserterList:
-            print inserter
             if not inserter.is_alive():
                 return False
         return True
@@ -212,7 +211,7 @@ class Collector(multiprocessing.Process):
         subprocess.call(['scp', 'collector', ip + ':/tmp/'])
         # Launch Tread
         self.start()
-        print 'created', self.name
+        # print 'created', self.name
 
     def run(self):
         '''
@@ -222,7 +221,8 @@ class Collector(multiprocessing.Process):
 
         # Launch the command as subprocess.
         self.process = subprocess.Popen(
-            self.command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.command, stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         # Launch the asynchronous readers of the process' stdout and stderr.
         self.stdout_queue = Queue.Queue()
@@ -241,11 +241,13 @@ class Collector(multiprocessing.Process):
         except Exception, e:
             print 'got no correct name from ssh', e, self.name
 
-        print 'started:', self.name
+        # print 'started:', self.name
 
         # Check the queues if we received some output (until there is nothing more
         # to get).
         while not self.stdout_reader.eof() or not self.stderr_reader.eof():
+
+            print '  ', self.name, 'inserter queue len:', self.queue.qsize()
 
             # exit if demanded
             if self.exit.is_set():
@@ -256,7 +258,7 @@ class Collector(multiprocessing.Process):
 
             # wait for signal to send request
             ts = self.sOut.recv()  # this blocks until a send from main
-            print self.name, 'getting send from main start collect'
+            # print self.name, 'getting send from main start collect'
             self.sendRequest()
 
             while self.stdout_queue.empty():
@@ -267,12 +269,11 @@ class Collector(multiprocessing.Process):
                 line = self.stdout_queue.get()
                 # queue for inserter
                 self.queue.put((ts, line))
-            print self.name + 'inserter queue len:', self.queue.qsize()
 
             # Show what we received from standard error.
             while not self.stderr_queue.empty():
                 line = self.stderr_queue.get()
-                print self.name + 'Received line on standard error: ' + repr(line)
+                print self.name, ' Received line on standard error:', repr(line)
 
         # Let's be tidy and join the threads we've started.
         self.stdout_reader.join()
@@ -283,7 +284,7 @@ class Collector(multiprocessing.Process):
         self.process.stderr.close()
 
     def shutdown(self):
-            self.exit.set()
+        self.exit.set()
 
     def sendRequest(self):
         # getting data form collector

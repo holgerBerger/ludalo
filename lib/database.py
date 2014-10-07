@@ -85,7 +85,8 @@ class DatabaseInserter(multiprocessing.Process):
                 resourceIP = sk[0]
 
                 ins = PerformanceData(
-                    insertTimestamp, name, resourceIP, resource_values, fs_name, s_type)
+                    insertTimestamp, name, resourceIP,
+                    resource_values, fs_name, s_type)
                 insert_me.append(ins)
 
         # Insert data Obj
@@ -102,7 +103,6 @@ class DatabaseInserter(multiprocessing.Process):
                 insertObject = self.comQueue.get()
                 # Insert the object form pipe db
                 try:
-                    print self.name, 'insert'
                     self.insert(insertObject)
                 except Exception:
                     self.comQueue.put(insertObject)
@@ -118,7 +118,7 @@ class DatabaseInserter(multiprocessing.Process):
             self.db.closeConn()
 
     def shutdown(self):
-            self.exit.set()
+        self.exit.set()
 
     def reconnect(self, nr_try=0):
         # try 9 reconnects if not exit
@@ -128,8 +128,8 @@ class DatabaseInserter(multiprocessing.Process):
             except Exception:
                 pass
             if nr_try > 9:
-                print 'Reconnection faild! after 9 trys'
-                time.sleep(10)
+                print 'Reconnection faild! after 9 trys wait 30 sec and retry'
+                time.sleep(30)
                 nr_try = 0
             self.db = None
             try:
@@ -369,9 +369,9 @@ class Mongo_Conn(object):
                "nids": nids,
                "cmd": cmd,
                "calc": -1}
-               # calc -1 job not calculatet
-               # calc 0 job in calculation
-               # calc 1 job compleet calculated
+        # calc -1 job not calculatet
+        # calc 0 job in calculation
+        # calc 1 job compleet calculated
 
         self.db["jobs"].insert(obj)
 
@@ -499,7 +499,7 @@ class DatabaseConfigurator(object):
             # mysql set to aktiv
             if self.cfg.getboolean(self.sectionMySQL, 'aktiv'):
                 if not (self.sectionMySQL in self.databases):
-                # host, port, user, password, dbname
+                    # host, port, user, password, dbname
                     host = self.cfg.get(self.sectionMySQL, 'host')
                     port = self.cfg.get(self.sectionMySQL, 'port')
                     user = self.cfg.get(self.sectionMySQL, 'user')
@@ -509,7 +509,8 @@ class DatabaseConfigurator(object):
                     self.databases[self.sectionMySQL] = MySQL_Conn(
                         host, port, user, password, dbname)
                 return self.databases[self.sectionMySQL]
-        print 'No connection MySQL configered!'
+        else:
+            print 'No connection MySQL configered!'
 
     def getNewDB_SQLight_Conn(self):
         # configuration has sqligth
@@ -523,4 +524,5 @@ class DatabaseConfigurator(object):
                     # do stuff
                     self.databases[self.sectionSQLight] = SQLight_Conn(path)
                 return self.databases[self.sectionSQLight]
-        print 'No connection SQLight configered!'
+        else:
+            print 'No connection SQLight configered!'
