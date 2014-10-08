@@ -1,5 +1,6 @@
 import multiprocessing
 import time
+import re
 '''
 This module handles all things assigned to the database.
 Database inserters, data structur cases and database connections.
@@ -31,12 +32,34 @@ class DatabaseInserter(multiprocessing.Process):
         self.db = None
         # use this to end job from outside!
         self.exit = multiprocessing.Event()
+        self.nidMap = self.readhostfile()
         try:
             self.db = self.cfg.getNewDB_Mongo_Conn()
             # start the thread and begin to insert if entrys in the queue
             self.start()
         except:
             pass
+
+    def readhostfile(self):
+        hosts = self.cfg.hosts
+        pattern = self.cfg.pattern
+        replace = self.cfg.replace
+        nidMap = {}
+        try:
+            f = open(hosts, "r")
+        except:
+            print 'etc/hosts read error. pleas check'
+        for l in f:
+            if not l.startswith('#'):
+                sp = l[:-1].split()
+                if len(sp) == 0:
+                    continue
+                ip = sp[0]
+                name = sp[1]
+                nidMap[ip] = re.sub(pattern, replace, name)
+        f.close()
+        nidMap['aggr'] = 'aggr'
+        return nidMap
 
     def insert(self, jsonDict):
         '''
@@ -83,9 +106,10 @@ class DatabaseInserter(multiprocessing.Process):
                 resource_values = ost_map[key]
                 sk = key.split('@')
                 resourceIP = sk[0]
+                resourceName = self.nidMap[resourceIP]
 
                 ins = PerformanceData(
-                    insertTimestamp, name, resourceIP,
+                    insertTimestamp, name, resourceName,
                     resource_values, fs_name, s_type)
                 insert_me.append(ins)
 
@@ -106,7 +130,9 @@ class DatabaseInserter(multiprocessing.Process):
                     self.insert(insertObject)
                 except Exception:
                     self.comQueue.put(insertObject)
-                    print 'could not insert object to db, put it back to queue. Queue length:', self.comQueue.qsize()
+                    printString = ('could not insert object to db, put it' +
+                                   ' back to queue. Queue length:')
+                    print printString, self.comQueue.qsize()
                     # print 'exeption:', e
         print 'exit inserter', self.name
 
@@ -441,6 +467,13 @@ class DatabaseConfigurator(object):
                       'numberOfExtractros = 3' + '\n' + '\n')
             print 'missing config option. Please append \n', output
             exit(1)
+
+        if self.cfg.has_section('hostfile'):
+            self.hosts = self.cfg.get('hostfile', 'hosts')
+
+        if self.cfg.has_section('replacePattern'):
+            self.pattern = self.cfg.get('replacePattern', 'pattern')
+            self.replace = self.cfg.get('replacePattern', 'replace')
 
     def writeDefaultConfig(self, defaultCfgFile):
         cfgString = ('[MongoDB]' + '\n' +
