@@ -130,10 +130,10 @@ class DatabaseInserter(multiprocessing.Process):
                 # Insert the object form pipe db
                 try:
                     self.insert(insertObject)
-                except Exception:
+                except Exception, e:
                     self.comQueue.put(insertObject)
                     print 'could not insert object to db, put it back to queue. Queue length:', self.comQueue.qsize()
-                    # print 'exeption:', e
+                    print 'exeption:', e
         print 'exit inserter', self.name
 
     def _close(self):
