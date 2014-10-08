@@ -46,19 +46,18 @@ class DatabaseInserter(multiprocessing.Process):
         replace = self.cfg.replace
         nidMap = {}
         try:
-            f = open(hosts, "r")
+            with open(hosts, "r") as f:
+                for l in f:
+                    if not l.startswith('#'):
+                        sp = l[:-1].split()
+                        if len(sp) == 0:
+                            continue
+                        ip = sp[0]
+                        name = sp[1]
+                        nidMap[ip] = re.sub(pattern, replace, name)
+                nidMap['aggr'] = 'aggr'
         except:
-            print 'etc/hosts read error. pleas check'
-        for l in f:
-            if not l.startswith('#'):
-                sp = l[:-1].split()
-                if len(sp) == 0:
-                    continue
-                ip = sp[0]
-                name = sp[1]
-                nidMap[ip] = re.sub(pattern, replace, name)
-        f.close()
-        nidMap['aggr'] = 'aggr'
+            print 'etc/hosts read error. please check'
         return nidMap
 
     def insert(self, jsonDict):
@@ -133,9 +132,7 @@ class DatabaseInserter(multiprocessing.Process):
                     self.insert(insertObject)
                 except Exception:
                     self.comQueue.put(insertObject)
-                    printString = ('could not insert object to db, put it' +
-                                   ' back to queue. Queue length:')
-                    print printString, self.comQueue.qsize()
+                    print 'could not insert object to db, put it back to queue. Queue length:', self.comQueue.qsize()
                     # print 'exeption:', e
         print 'exit inserter', self.name
 
