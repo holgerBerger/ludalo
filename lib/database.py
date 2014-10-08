@@ -108,6 +108,9 @@ class DatabaseInserter(multiprocessing.Process):
                 resourceIP = sk[0]
                 resourceName = self.nidMap[resourceIP]
 
+                # nid fs map append
+                self.db.insert_nidFS(resourceName, fs_name)
+
                 ins = PerformanceData(
                     insertTimestamp, name, resourceName,
                     resource_values, fs_name, s_type)
@@ -383,6 +386,17 @@ class Mongo_Conn(object):
         #t2 = time.time()
         # print "inserted %d documents into MongoDB (%d inserts/sec)" % (sum,
         # sum / (t2 - t1))
+
+    def insert_nidFS(self, nid, fs):
+        nidFS = self.db['nidFS']
+        result = nidFS.find_one({'nid': nid})
+        if result:
+            allfs = result['fs']
+            allfs.append(fs)
+            nidFS.update({'nid': nid}, {'nid': nid, 'fs': allfs})
+        else:
+            obj = {'nid': nid, 'fs': [fs]}
+            nidFS.insert(obj)
 
     def insert_jobData(self, jobid, start, end, owner, nids, cmd):
         cyear = time.localtime(start).tm_year
