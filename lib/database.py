@@ -108,6 +108,7 @@ class DatabaseInserter(multiprocessing.Process):
                 resourceName = self.nidMap[resourceIP]
 
                 # nid fs map append
+                print self.name, 'try to find fs to nid', resourceName, fs_name
                 self.db.insert_nidFS(resourceName, fs_name)
 
                 ins = PerformanceData(
@@ -134,6 +135,7 @@ class DatabaseInserter(multiprocessing.Process):
                     self.comQueue.put(insertObject)
                     print 'could not insert object to db, put it back to queue. Queue length:', self.comQueue.qsize()
                     print 'exeption:', e
+                    raise e
         print 'exit inserter', self.name
 
     def _close(self):
