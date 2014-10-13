@@ -110,7 +110,8 @@ class DatabaseInserter(multiprocessing.Process):
                     resourceName = self.nidMap[resourceIP]
 
                 except KeyError:
-                    print 'no resourceName to ip', resourceIP
+                    print 'no resourceName to ip', resourceIP, resource_values, fs_name, name
+
                     resourceName = resourceIP
 
                 except Exception, e:
