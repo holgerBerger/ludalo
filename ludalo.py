@@ -47,7 +47,7 @@ def mainCollector(cfg):
 
             # send signal to collect data
             pair.collect(insertTimestamp)
-        print 'Main-Thread iteration:', iteration, 'sleep', sleepingTime, 'sec'
+        print '\nMain-Thread iteration:', iteration, 'sleep', sleepingTime, 'sec'
         # Global sleep!!!
         time.sleep(sleepingTime)
 

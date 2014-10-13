@@ -387,6 +387,7 @@ class Mongo_Conn(object):
     def insert_nidFS(self, nid, fs):
         nidFS = self.db['nidFS']
         result = nidFS.find_one({'nid': nid})
+        print self.name, 'find fs to nid:', nid, fs, 'result set:', result
         if result:
             allfs = result['fs']
             allfs.append(fs)
