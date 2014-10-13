@@ -381,7 +381,10 @@ class Mongo_Conn(object):
     def getFSmap(self):
         dbNidFS = self.db['nidFS']
         result = dbNidFS.find()
-        return result
+        returnDict = {}
+        for item in result:
+            returnDict[item['nid']] = item['fs']
+        return returnDict
 
     def insert_performance(self, objlist):
         fslist = {}
