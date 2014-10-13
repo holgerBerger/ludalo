@@ -132,7 +132,7 @@ class DatabaseInserter(multiprocessing.Process):
         # build hostmap
         self.nidMap = self.readhostfile()
 
-        while not self.exit.is_set() and not self.comQueue.empty():
+        while not self.exit.is_set() and self.comQueue.empty():
             while self.comQueue.empty():
                 time.sleep(0.1)
 

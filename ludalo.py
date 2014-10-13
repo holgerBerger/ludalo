@@ -56,6 +56,7 @@ def mainCollector(cfg):
         print '^C received, shutting down the system'
         for cip in CollectorInserter:
             cip.shutdown()
+            cip.collect(insertTimestamp)
         print 'Bye'
 
 
