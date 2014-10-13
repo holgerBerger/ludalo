@@ -132,20 +132,20 @@ class DatabaseInserter(multiprocessing.Process):
         # build hostmap
         self.nidMap = self.readhostfile()
 
-        while not self.exit.is_set():
+        while not self.exit.is_set() and not self.comQueue.empty():
             while self.comQueue.empty():
                 time.sleep(0.1)
-            if not self.comQueue.empty():
-                if not self.db or not self.db.alive():
-                    self.reconnect()
 
-                insertObject = self.comQueue.get()
-                # Insert the object form pipe db
-                try:
-                    self.insert(insertObject)
-                except Exception:
-                    self.comQueue.put(insertObject)
-                    print 'could not insert object to db, put it back to queue. Queue length:', self.comQueue.qsize()
+            if not self.db or not self.db.alive():
+                self.reconnect()
+
+            insertObject = self.comQueue.get()
+            # Insert the object form pipe db
+            try:
+                self.insert(insertObject)
+            except Exception:
+                self.comQueue.put(insertObject)
+                print 'could not insert object to db, put it back to queue. Queue length:', self.comQueue.qsize()
 
         print 'exit inserter', self.name
 
