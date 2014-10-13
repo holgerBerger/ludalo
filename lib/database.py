@@ -105,10 +105,19 @@ class DatabaseInserter(multiprocessing.Process):
                 resource_values = ost_map[key]
                 sk = key.split('@')
                 resourceIP = sk[0]
-                resourceName = self.nidMap[resourceIP]
+
+                # take name from nidMap if no name take ip
+                try:
+                    resourceName = self.nidMap[resourceIP]
+
+                except KeyError:
+                    print 'no resourceName to ip', resourceIP
+                    resourceName = resourceIP
+
+                except Exception, e:
+                    print repr(e)
 
                 # nid fs map append
-                print self.name, 'try to find resourceName:', resourceName, '<- here? ip:', resourceIP
                 self.db.insert_nidFS(resourceName, fs_name)
 
                 ins = PerformanceData(
@@ -120,7 +129,9 @@ class DatabaseInserter(multiprocessing.Process):
         self.db.insert_performance(insert_me)
 
     def run(self):
+        # build hostmap
         self.nidMap = self.readhostfile()
+
         while not self.exit.is_set():
             while self.comQueue.empty():
                 time.sleep(0.1)
@@ -366,6 +377,12 @@ class Mongo_Conn(object):
         # getting collection
         self.collection = self.db['performanceData']
         self.collectionJobs = self.db['jobs']
+        self.FSmap = self.getFSmap()
+
+    def getFSmap(self):
+        dbNidFS = self.db['nidFS']
+        result = dbNidFS.find()
+        return result
 
     def insert_performance(self, objlist):
         fslist = {}
@@ -389,16 +406,21 @@ class Mongo_Conn(object):
 
     def insert_nidFS(self, nid, fs):
         nidFS = self.db['nidFS']
-        result = nidFS.find_one({'nid': nid})
-        print self.name, 'find fs to nid:', nid, fs, 'result set:', result
-        if result:
-            allfs = result['fs']
-            if fs not in allfs:
-                allfs.append(fs)
-                nidFS.update({'nid': nid}, {'nid': nid, 'fs': allfs})
-        else:
+        try:
+            fsList = self.FSmap[nid]
+            if fs not in fsList:
+                fs.append(fs)
+                self.FSmap[nid].append(fs)
+                nidFS.update({'nid': nid}, {'nid': nid, 'fs': fsList})
+
+        except KeyError:
+            print 'insert new fs (', fs, ') to nid (', nid, ')'
+            self.FSmap[nid] = [fs]
             obj = {'nid': nid, 'fs': [fs]}
             nidFS.insert(obj)
+
+        except Exception, e:
+            print repr(e)
 
     def insert_jobData(self, jobid, start, end, owner, nids, cmd):
         cyear = time.localtime(start).tm_year
