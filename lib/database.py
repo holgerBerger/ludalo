@@ -32,7 +32,6 @@ class DatabaseInserter(multiprocessing.Process):
         self.db = None
         # use this to end job from outside!
         self.exit = multiprocessing.Event()
-        self.nidMap = self.readhostfile()
         try:
             self.db = self.cfg.getNewDB_Mongo_Conn()
             # start the thread and begin to insert if entrys in the queue
@@ -58,6 +57,7 @@ class DatabaseInserter(multiprocessing.Process):
                 nidMap['aggr'] = 'aggr'
         except:
             print 'etc/hosts read error. please check'
+        print nidMap
         return nidMap
 
     def insert(self, jsonDict):
@@ -108,7 +108,7 @@ class DatabaseInserter(multiprocessing.Process):
                 resourceName = self.nidMap[resourceIP]
 
                 # nid fs map append
-                print self.name, 'try to find fs to nid', resourceName, fs_name
+                print self.name, 'try to find resourceName:', resourceName, '<- here? ip:', resourceIP
                 self.db.insert_nidFS(resourceName, fs_name)
 
                 ins = PerformanceData(
@@ -120,6 +120,7 @@ class DatabaseInserter(multiprocessing.Process):
         self.db.insert_performance(insert_me)
 
     def run(self):
+        self.nidMap = self.readhostfile()
         while not self.exit.is_set():
             while self.comQueue.empty():
                 time.sleep(0.1)
@@ -131,11 +132,10 @@ class DatabaseInserter(multiprocessing.Process):
                 # Insert the object form pipe db
                 try:
                     self.insert(insertObject)
-                except Exception, e:
+                except Exception:
                     self.comQueue.put(insertObject)
                     print 'could not insert object to db, put it back to queue. Queue length:', self.comQueue.qsize()
-                    print 'exeption:', e
-                    raise e
+
         print 'exit inserter', self.name
 
     def _close(self):
@@ -393,8 +393,9 @@ class Mongo_Conn(object):
         print self.name, 'find fs to nid:', nid, fs, 'result set:', result
         if result:
             allfs = result['fs']
-            allfs.append(fs)
-            nidFS.update({'nid': nid}, {'nid': nid, 'fs': allfs})
+            if fs not in allfs:
+                allfs.append(fs)
+                nidFS.update({'nid': nid}, {'nid': nid, 'fs': allfs})
         else:
             obj = {'nid': nid, 'fs': [fs]}
             nidFS.insert(obj)
