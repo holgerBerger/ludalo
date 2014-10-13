@@ -85,6 +85,13 @@ class CollectorInserterPair(object):
     def collect(self, insertTimestamp):
         self.pipeIn.send(insertTimestamp)
 
+    def shutdown(self):
+        print self.name, 'sending shutdown'
+        self.collector.shutdown()
+
+        for ins in self.inserterList:
+            ins.shutdown()
+
 
 class AsynchronousFileReader(threading.Thread):
 

@@ -31,25 +31,31 @@ def mainCollector(cfg):
 
     iteration = 0
 
-    while True:
-        iteration = iteration + 1
-        insertTimestamp = int(time.time())
-        for pair in CollectorInserter:
-            if not pair.inserter_is_alive():
-                # try new connection
-                print 'Main-Thread: try recover inserter'
-                pair.inserter_reconnect()
+    try:
+        while True:
+            iteration = iteration + 1
+            insertTimestamp = int(time.time())
+            for pair in CollectorInserter:
+                if not pair.inserter_is_alive():
+                    # try new connection
+                    print 'Main-Thread: try recover inserter'
+                    pair.inserter_reconnect()
 
-            if not pair.collector_is_alive():
-                # try new connection
-                print 'Main-Thread: try recover collectror', pair.collector
-                pair.collector_reconnect()
+                if not pair.collector_is_alive():
+                    # try new connection
+                    print 'Main-Thread: try recover collectror', pair.collector
+                    pair.collector_reconnect()
 
-            # send signal to collect data
-            pair.collect(insertTimestamp)
-        print '\nMain-Thread iteration:', iteration, 'sleep', sleepingTime, 'sec'
-        # Global sleep!!!
-        time.sleep(sleepingTime)
+                # send signal to collect data
+                pair.collect(insertTimestamp)
+            print 'Main-Thread iteration:', iteration, 'sleep', sleepingTime, 'sec\n'
+            # Global sleep!!!
+            time.sleep(sleepingTime)
+
+    except KeyboardInterrupt:
+        print '^C received, shutting down the system'
+        for cip in CollectorInserter:
+            cip.shutdown()
 
 
 def mainExtractor(cfg):
