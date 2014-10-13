@@ -355,6 +355,7 @@ class Mongo_Conn(object):
         super(Mongo_Conn, self).__init__()
         from pymongo import MongoClient
 
+        self.name = 'Mongo_Conn'
         self.lock = multiprocessing.Lock()
         # geting client and connect
         self.client = MongoClient(host, port)
