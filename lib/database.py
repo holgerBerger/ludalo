@@ -57,7 +57,6 @@ class DatabaseInserter(multiprocessing.Process):
                 nidMap['aggr'] = 'aggr'
         except:
             print 'etc/hosts read error. please check'
-        print nidMap
         return nidMap
 
     def insert(self, jsonDict):
