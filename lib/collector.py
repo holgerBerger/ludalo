@@ -247,8 +247,6 @@ class Collector(multiprocessing.Process):
         # to get).
         while not self.stdout_reader.eof() or not self.stderr_reader.eof():
 
-            print '  ', self.name, 'inserter queue len:', self.queue.qsize()
-
             # exit if demanded
             if self.exit.is_set():
                 print 'exiting collector', self.name
@@ -258,6 +256,7 @@ class Collector(multiprocessing.Process):
 
             # wait for signal to send request
             ts = self.sOut.recv()  # this blocks until a send from main
+            print '  ', self.name, 'inserter queue len:', self.queue.qsize()
             # print self.name, 'getting send from main start collect'
             self.sendRequest()
 
