@@ -76,26 +76,29 @@ class DataCollection(object):
         d = np.sum(self.values[:, 4])
         return [a, b, c, d]
 
+    def get_png(self):
+        raise NotImplementedError
 
-class dbExtraktor(multiprocessing.Process):
+
+class dbFsExtraktor(multiprocessing.Process):
 
     """docstring for dbExtraktor"""
 
     def __init__(self, dbcomm, queue):
-        super(dbExtraktor, self).__init__()
+        super(dbFsExtraktor, self).__init__()
         self.db = dbcomm
         self.queue = queue
+        self.pool = multiprocessing.Pool(processes=4)
         self.start()
 
-    def run(self):
-        while True:
-            while self.queue.empty():
-                time.sleep(0.1)
-            if not self.queue.empty():
-                (collection, tstart, tend) = self.queue.get()
-                data = self.selectFromCollection(collection, tstart, tend)
-                raise NotImplementedError
-                data.saveStats()
+    def extract(self, input):
+        (collection, tstart, tend) = input
+        raise NotImplementedError
+        # collect informations and build objects
+
+        # calculate stats
+        # generate png
+        # save data to db
 
     def selectFromCollection(self, collection, tstart, tend):
         dc = DataCollection(collection)
@@ -104,3 +107,24 @@ class dbExtraktor(multiprocessing.Process):
         for dataSet in data:
             dc.append(dataSet['ts'], dataSet['val'])
         return dc
+
+    def run(self):
+        # asing funktion to local var for use in process pool
+        extract = self.extract
+
+        # main loop fs-extractor
+        while True:
+            calcLilst = []  # list for pocess pool
+
+            # wait for request
+            while self.queue.empty():
+                time.sleep(0.1)
+
+            # double check for work
+            if not self.queue.empty():
+                # do stuff here
+
+                # self.queue.get() = (collection, tstart, tend)
+                calcLilst.append(self.queue.get())
+                resultObjects = self.pool.map(extract, calcLilst)
+                print resultObjects
