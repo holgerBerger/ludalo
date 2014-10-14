@@ -34,7 +34,7 @@ class DatabaseInserter(multiprocessing.Process):
         self.exit = multiprocessing.Event()
         try:
             self.db = self.cfg.getNewDB_Mongo_Conn()
-            # start the thread and begin to insert if entrys in the queue
+            # start the thread and begin to insert if entries in the queue
             self.start()
         except:
             pass
@@ -168,7 +168,7 @@ class DatabaseInserter(multiprocessing.Process):
             except Exception:
                 pass
             if nr_try > 9:
-                print 'Reconnection faild! after 9 trys wait 30 sec and retry'
+                print 'Reconnection failed! After 9 tries wait 30 sec and retry'
                 time.sleep(30)
                 nr_try = 0
             self.db = None
@@ -441,19 +441,23 @@ class Mongo_Conn(object):
         # calc 0 job in calculation
         # calc 1 job compleet calculated
 
+	#TODO  erst schauen ob schon drinne, weil jobid ist nicht primary key in mongo
         self.db["jobs"].insert(obj)
 
     def set_job_calcState(self, jobid, start, calc):
         cyear = time.localtime(start).tm_year
         jobid = jobid + "-" + str(cyear)
 
-        self.db["jobs"].update({"jobid": jobid}, {"$set": {"clac": calc}})
+        self.db["jobs"].update({"jobid": jobid}, {"$set": {"calc": calc}})
 
-    def update_jobData(self, jobid, start, end):
-        cyear = time.localtime(start).tm_year
-        jobid = jobid + "-" + str(cyear)
+    def update_jobData(self, jobid, start, end, owner, nids, cmd):
+        cyear = time.localtime(end).tm_year
+	# to handle year change, do it twice, will update only once
+        dbjobid = jobid + "-" + str(cyear-1)
+        self.db["jobs"].update({"jobid": dbjobid}, {"$set": {"end": end}})
 
-        self.db["jobs"].update({"jobid": jobid}, {"$set": {"end": end}})
+        dbjobid = jobid + "-" + str(cyear)
+        self.db["jobs"].update({"jobid": dbjobid}, {"$set": {"end": end}})
 
     def closeConn(self):
         self.client.close()

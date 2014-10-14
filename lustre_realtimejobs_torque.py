@@ -58,6 +58,7 @@ class Logfile:
                     owner = ""
                     hosts = ""
                     jobends[jobid] = (jobid, start, end, owner, hosts, "")
+                    print "jobend:", jobid
 
         inserts = []
         updates = []
