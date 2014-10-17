@@ -110,7 +110,8 @@ class DatabaseInserter(multiprocessing.Process):
                     resourceName = self.nidMap[resourceIP]
 
                 except KeyError:
-                    print 'no resourceName to ip', resourceIP, resource_values, fs_name, name
+                    print ('no resourceName to ip' + ' ' + resourceIP
+                           + ' ' + resource_values + ' ' + fs_name, name)
                     self.nidMap[resourceIP] = resourceIP
                     resourceName = resourceIP
 
@@ -146,7 +147,9 @@ class DatabaseInserter(multiprocessing.Process):
                 self.insert(insertObject)
             except Exception:
                 self.comQueue.put(insertObject)
-                print 'could not insert object to db, put it back to queue. Queue length:', self.comQueue.qsize()
+                printstring = ('could not insert object to db,' +
+                               ' put it back to queue. Queue length:')
+                print printstring, self.comQueue.qsize()
 
         print 'exit inserter', self.name
 
@@ -168,7 +171,7 @@ class DatabaseInserter(multiprocessing.Process):
             except Exception:
                 pass
             if nr_try > 9:
-                print 'Reconnection failed! After 9 tries wait 30 sec and retry'
+                print 'Reconnection failed! After 9 tries wait 30sec and retry'
                 time.sleep(30)
                 nr_try = 0
             self.db = None
@@ -441,8 +444,10 @@ class Mongo_Conn(object):
         # calc 0 job in calculation
         # calc 1 job compleet calculated
 
-	#TODO  erst schauen ob schon drinne, weil jobid ist nicht primary key in mongo
-        self.db["jobs"].insert(obj)
+        # TODO  erst schauen ob schon drinne, weil jobid ist nicht primary key
+        # in mongo
+        if not self.db["jobs"].find_one({"jobid": jobid}):
+            self.db["jobs"].insert(obj)
 
     def set_job_calcState(self, jobid, start, calc):
         cyear = time.localtime(start).tm_year
@@ -452,8 +457,8 @@ class Mongo_Conn(object):
 
     def update_jobData(self, jobid, start, end, owner, nids, cmd):
         cyear = time.localtime(end).tm_year
-	# to handle year change, do it twice, will update only once
-        dbjobid = jobid + "-" + str(cyear-1)
+        # to handle year change, do it twice, will update only once
+        dbjobid = jobid + "-" + str(cyear - 1)
         self.db["jobs"].update({"jobid": dbjobid}, {"$set": {"end": end}})
 
         dbjobid = jobid + "-" + str(cyear)
