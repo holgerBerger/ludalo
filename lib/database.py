@@ -427,7 +427,9 @@ class Mongo_Conn(object):
             nidFS.insert(obj)
 
         except Exception, e:
+            # todo test this
             print repr(e)
+            raise e
 
     def insert_jobData(self, jobid, start, end, owner, nids, cmd):
         cyear = time.localtime(start).tm_year
@@ -448,6 +450,24 @@ class Mongo_Conn(object):
         # in mongo
         if not self.db["jobs"].find_one({"jobid": jobid}):
             self.db["jobs"].insert(obj)
+        else:
+            print 'duplicated job', jobid
+
+    def getFsData(self, collection, tstart, tend):
+        ''' this returns a dic witch includ all document form tstart to tend in
+            the collection 'collection'. '''
+
+        result = self.db[collection].find(
+            {"ts": {"$gte": tstart, "$lt": tend}})
+        returnDict = {}
+
+        for item in result:
+            returnDict[item['ts']] = {'fs': collection,
+                                      "st": item['st'],
+                                      "tgt": item['tgt'],
+                                      "nid": item['nid'],
+                                      "val": item['val']}
+        return returnDict
 
     def set_job_calcState(self, jobid, start, calc):
         cyear = time.localtime(start).tm_year
