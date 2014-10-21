@@ -115,8 +115,8 @@ class DatabaseInserter(multiprocessing.Process):
                     self.nidMap[resourceIP] = resourceIP
                     resourceName = resourceIP
 
-                except Exception, e:
-                    print repr(e)
+                #except Exception, e:
+                    #print repr(e)
 
                 # nid fs map append
                 self.db.insert_nidFS(resourceName, fs_name)
@@ -124,6 +124,7 @@ class DatabaseInserter(multiprocessing.Process):
                 ins = PerformanceData(
                     insertTimestamp, name, resourceName,
                     resource_values, fs_name, s_type)
+
                 insert_me.append(ins)
 
         # Insert data Obj
@@ -145,7 +146,7 @@ class DatabaseInserter(multiprocessing.Process):
             # Insert the object form pipe db
             try:
                 self.insert(insertObject)
-            except Exception:
+            except Exception,e:
                 self.comQueue.put(insertObject)
                 printstring = ('could not insert object to db,' +
                                ' put it back to queue. Queue length:')
@@ -424,7 +425,7 @@ class Mongo_Conn(object):
             print 'insert new fs (', fs, ') to nid (', nid, ')'
             self.FSmap[nid] = [fs]
             obj = {'nid': nid, 'fs': [fs]}
-            nidFS.insert(obj)
+            nidFS.update({'nid': nid}, obj, upsert=True )
 
         except Exception, e:
             # todo test this

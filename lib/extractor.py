@@ -103,9 +103,9 @@ class dbFsExtraktor(multiprocessing.Process):
     def selectFromCollection(self, collection, tstart, tend):
         dc = DataCollection(collection)
         raise NotImplementedError
-        data = self.db.getStuff(collection, tstart, tend)
-        for dataSet in data:
-            dc.append(dataSet['ts'], dataSet['val'])
+        data = self.db.getFsData(collection, tstart, tend)
+        for key in sorted(data.keys()):
+            dc.append(data[key], data[key]['val'])
         return dc
 
     def run(self):
