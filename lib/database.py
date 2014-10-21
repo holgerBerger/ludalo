@@ -110,13 +110,12 @@ class DatabaseInserter(multiprocessing.Process):
                     resourceName = self.nidMap[resourceIP]
 
                 except KeyError:
-                    print ('no resourceName to ip' + ' ' + resourceIP
-                           + ' ' + resource_values + ' ' + fs_name, name)
+                    print 'no resourceName to ip' + ' ' + resourceIP + ' ' + str(resource_values) + ' ' + fs_name, name
                     self.nidMap[resourceIP] = resourceIP
                     resourceName = resourceIP
 
-                except Exception, e:
-                    print repr(e)
+                #except Exception, e:
+                    #print repr(e)
 
                 # nid fs map append
                 self.db.insert_nidFS(resourceName, fs_name)
@@ -124,6 +123,7 @@ class DatabaseInserter(multiprocessing.Process):
                 ins = PerformanceData(
                     insertTimestamp, name, resourceName,
                     resource_values, fs_name, s_type)
+
                 insert_me.append(ins)
 
         # Insert data Obj
@@ -145,7 +145,7 @@ class DatabaseInserter(multiprocessing.Process):
             # Insert the object form pipe db
             try:
                 self.insert(insertObject)
-            except Exception:
+            except Exception,e:
                 self.comQueue.put(insertObject)
                 printstring = ('could not insert object to db,' +
                                ' put it back to queue. Queue length:')
@@ -416,18 +416,18 @@ class Mongo_Conn(object):
         try:
             fsList = self.FSmap[nid]
             if fs not in fsList:
-                fs.append(fs)
-                self.FSmap[nid].append(fs)
+                fsList.append(fs)
+                # self.FSmap[nid].append(fs)
                 nidFS.update({'nid': nid}, {'nid': nid, 'fs': fsList})
 
         except KeyError:
             print 'insert new fs (', fs, ') to nid (', nid, ')'
             self.FSmap[nid] = [fs]
             obj = {'nid': nid, 'fs': [fs]}
-            nidFS.insert(obj)
+            nidFS.update({'nid': nid}, obj, upsert=True )
 
         except Exception, e:
-            print repr(e)
+            print "!!!!!!!",repr(e)
 
     def insert_jobData(self, jobid, start, end, owner, nids, cmd):
         cyear = time.localtime(start).tm_year
