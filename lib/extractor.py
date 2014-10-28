@@ -103,9 +103,9 @@ class dbFsExtraktor(multiprocessing.Process):
 
     """docstring for dbExtraktor"""
 
-    def __init__(self, dbcomm, queue):
+    def __init__(self, cfg, queue):
         super(dbFsExtraktor, self).__init__()
-        self.db = dbcomm
+        self.db = cfg.getNewDB_Mongo_Conn()
         self.queue = queue
         #self.pool = multiprocessing.Pool(processes=4)
         self.start()
