@@ -25,8 +25,10 @@ class DataCollection(object):
 
     def append(self, ts, valueString):
         ''' ts as int values as sting eg 1, 2, 3, 4 or 1 2 3 4 '''
+        print ts
         ts = str(ts) + ','
         nString = [ts].append(valueString)
+        print nString
         a = np.matrix(nString)
         print 'a', a
         print 'self.values', self.values
@@ -132,7 +134,6 @@ class dbFsExtraktor(multiprocessing.Process):
         print 'extract done'
         for key in sorted(data.keys()):
             print key
-            print data[key]
             print data[key]['val']
             dc.append(key, data[key]['val'])
         return dc
