@@ -149,7 +149,9 @@ class dbFsExtraktor(multiprocessing.Process):
                 # do stuff here
                 print 'get queue stuff'
                 # self.queue.get() = (collection, tstart, tend)
-                calcLilst.append(self.queue.get())
+                obj = self.queue.get()
+                print obj
+                calcLilst.append(obj)
                 print 'send to pool'
                 resultObjects = self.pool.map(extract, calcLilst)
                 print resultObjects
