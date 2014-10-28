@@ -26,7 +26,7 @@ class DataCollection(object):
     def append(self, ts, valueString):
         ''' ts as int values as sting eg 1, 2, 3, 4 or 1 2 3 4 '''
         ts = str(ts) + ','
-        nString = ts + valueString
+        nString = [ts].append(valueString)
         a = np.matrix(nString)
         a = np.concatenate((self.values, a))
         self.values = a
