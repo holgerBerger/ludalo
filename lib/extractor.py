@@ -134,6 +134,7 @@ class dbFsExtraktor(multiprocessing.Process):
         extract = self.extract
 
         # main loop fs-extractor
+        loopcounter = 0
         while True:
             calcLilst = []  # list for pocess pool
 
@@ -149,3 +150,5 @@ class dbFsExtraktor(multiprocessing.Process):
                 calcLilst.append(self.queue.get())
                 resultObjects = self.pool.map(extract, calcLilst)
                 print resultObjects
+            loopcounter = loopcounter + 1
+            print 'loop:', loopcounter
