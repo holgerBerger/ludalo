@@ -28,6 +28,8 @@ class DataCollection(object):
         ts = str(ts) + ','
         nString = [ts].append(valueString)
         a = np.matrix(nString)
+        print 'a', a
+        print 'self.values', self.values
         a = np.concatenate((self.values, a))
         self.values = a
 
