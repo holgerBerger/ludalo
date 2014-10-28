@@ -93,15 +93,12 @@ if __name__ == '__main__':
     conf = 'db.conf'
     if len(sys.argv) <= 1:
         'take standard config:', conf
-    elif sys.argv[1] is not 'test':
+    else:
         conf = sys.argv[1]
-    elif sys.argv[1] is 'test':
-        cfg = database.DatabaseConfigurator(conf)
-        mainExtractor(cfg)
 
     # getting configs
 
     cfg = database.DatabaseConfigurator(conf)
 
     # if collector than this but think of extractor
-    mainCollector(cfg)
+    mainExtractor(cfg)
