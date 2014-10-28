@@ -85,7 +85,7 @@ def mainExtractor(cfg):
         # put fs in queue
         t = int(time.time())
         for fs in fslist:
-            queue.put((fs.name, t - 6000, t))
+            queue.put((fs, t - 6000, t))
         time.sleep(extractorSleep)
 
 
