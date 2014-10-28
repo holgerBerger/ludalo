@@ -96,7 +96,7 @@ class DataCollection(object):
         graph.plotJob(timestamps, rbs, rio, wbs, wio, title, verbose=False)
 
     def save(self):
-        raise NotImplementedError
+        pass
 
 
 class dbFsExtraktor(multiprocessing.Process):
@@ -112,7 +112,6 @@ class dbFsExtraktor(multiprocessing.Process):
 
     def extract(self, input):
         (collection, tstart, tend) = input
-        raise NotImplementedError
         # collect informations and build objects
         dc = self.selectFromCollection(collection, tstart, tend)
 
@@ -125,7 +124,6 @@ class dbFsExtraktor(multiprocessing.Process):
 
     def selectFromCollection(self, collection, tstart, tend):
         dc = DataCollection(collection)
-        raise NotImplementedError
         data = self.db.getFsData(collection, tstart, tend)
         for key in sorted(data.keys()):
             dc.append(data[key], data[key]['val'])
