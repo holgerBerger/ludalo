@@ -69,7 +69,7 @@ def mainExtractor(cfg):
     extractors = []
     queue = multiprocessing.Queue()
     for x in xrange(0, nooextract):
-        extractors.append(extractor.dbFSExtraktor(cfg, queue))
+        extractors.append(extractor.dbFsExtraktor(cfg, queue))
 
     # main loop
     while True:
