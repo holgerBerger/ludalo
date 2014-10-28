@@ -99,27 +99,6 @@ class DataCollection(object):
         pass
 
 
-def extract(input):
-    (collection, tstart, tend, db) = input
-    # collect informations and build objects
-    print 'before select'
-    dc = selectFromCollection(collection, tstart, tend)
-
-    # calculate stats
-    dc.calcAll()
-    # generate png
-    dc.get_png()
-    print 'extract done'
-
-
-def selectFromCollection(self, collection, tstart, tend):
-    dc = DataCollection(collection)
-    data = self.db.getFsData(collection, tstart, tend)
-    for key in sorted(data.keys()):
-        dc.append(data[key], data[key]['val'])
-    return dc
-
-
 class dbFsExtraktor(multiprocessing.Process):
 
     """docstring for dbExtraktor"""
@@ -128,17 +107,35 @@ class dbFsExtraktor(multiprocessing.Process):
         super(dbFsExtraktor, self).__init__()
         self.db = dbcomm
         self.queue = queue
-        self.pool = multiprocessing.Pool(processes=4)
+        #self.pool = multiprocessing.Pool(processes=4)
         self.start()
 
+    def extract(self, input):
+        (collection, tstart, tend) = input
+        # collect informations and build objects
+        print 'before select'
+        dc = self.selectFromCollection(collection, tstart, tend)
+
+        # calculate stats
+        dc.calcAll()
+        # generate png
+        dc.get_png()
+        # save data to db
+        dc.save(self.db)
+        print 'extract done'
+
+    def selectFromCollection(self, collection, tstart, tend):
+        dc = DataCollection(collection)
+        data = self.db.getFsData(collection, tstart, tend)
+        for key in sorted(data.keys()):
+            dc.append(data[key], data[key]['val'])
+        return dc
+
     def run(self):
-        # asing funktion to local var for use in process pool
-        extract = self.extract
 
         # main loop fs-extractor
         loopcounter = 0
         while True:
-            calcLilst = []  # list for pocess pool
 
             # wait for request
             while self.queue.empty():
@@ -148,12 +145,11 @@ class dbFsExtraktor(multiprocessing.Process):
             if not self.queue.empty():
                 # do stuff here
                 print 'get queue stuff'
-                (collection, tstart, tend) = self.queue.get()
-                obj = (collection, tstart, tend, self.db)
+                # self.queue.get() = (collection, tstart, tend)
+                obj = self.queue.get()
                 print obj
-                calcLilst.append(obj)
-                print 'send to pool'
-                resultObjects = self.pool.map(extract, calcLilst)
-                print resultObjects
+                #calcLilst.append(obj)
+                #resultObjects = self.pool.map(extract, calcLilst)
+                self.extract(obj)
             loopcounter = loopcounter + 1
             print 'loop:', loopcounter
