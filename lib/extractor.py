@@ -128,6 +128,7 @@ class dbFsExtraktor(multiprocessing.Process):
         dc = DataCollection(collection)
         data = self.db.getFsData(collection, tstart, tend)
         for key in sorted(data.keys()):
+            print key
             dc.append(data[key], data[key]['val'])
         return dc
 
