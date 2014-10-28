@@ -113,6 +113,7 @@ class dbFsExtraktor(multiprocessing.Process):
     def extract(self, input):
         (collection, tstart, tend) = input
         # collect informations and build objects
+        print 'before select'
         dc = self.selectFromCollection(collection, tstart, tend)
 
         # calculate stats
@@ -121,6 +122,7 @@ class dbFsExtraktor(multiprocessing.Process):
         dc.get_png()
         # save data to db
         dc.save(self.db)
+        print 'extract done'
 
     def selectFromCollection(self, collection, tstart, tend):
         dc = DataCollection(collection)
@@ -145,9 +147,10 @@ class dbFsExtraktor(multiprocessing.Process):
             # double check for work
             if not self.queue.empty():
                 # do stuff here
-
+                print 'get queue stuff'
                 # self.queue.get() = (collection, tstart, tend)
                 calcLilst.append(self.queue.get())
+                print 'send to pool'
                 resultObjects = self.pool.map(extract, calcLilst)
                 print resultObjects
             loopcounter = loopcounter + 1
