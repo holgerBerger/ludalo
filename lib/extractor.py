@@ -129,8 +129,11 @@ class dbFsExtraktor(multiprocessing.Process):
     def selectFromCollection(self, collection, tstart, tend):
         dc = DataCollection(collection)
         data = self.db.getFsData(collection, tstart, tend)
+        print 'extract done'
         for key in sorted(data.keys()):
             print key
+            print data[key]
+            print data[key]['val']
             dc.append(data[key], data[key]['val'])
         return dc
 
