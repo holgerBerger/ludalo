@@ -460,7 +460,7 @@ class Mongo_Conn(object):
 
         print {"ts": {"$gte": tstart, "$lt": tend}}
         result = self.db[collection].find(
-            {"ts": {"$gte": tstart, "$lt": tend}})
+            {"ts": {"$gte": tstart, "$lt": tend}, "nid": "aggr"})
         returnDict = {}
 
         for item in result:
