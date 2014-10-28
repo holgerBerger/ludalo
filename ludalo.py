@@ -73,18 +73,19 @@ def mainExtractor(cfg):
 
     # main loop
     while True:
-        print 'extractor queue length:', len(queue)
-        joblist = []
+        print 'extractor queue length:', queue.qsize()
+        #joblist = []
         # check jobs
         # put jobs in queue
-        for job in joblist:
-            queue.put(job.name)
+        # for job in joblist:
+        #    queue.put(job.name)
 
-        fslist = []
+        fslist = ['lnec']
         # check fs
         # put fs in queue
+        t = int(time.time())
         for fs in fslist:
-            queue.put(fs.name)
+            queue.put((fs.name, t - 6000, t))
         time.sleep(extractorSleep)
 
 
