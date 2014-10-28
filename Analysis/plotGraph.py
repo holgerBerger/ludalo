@@ -18,6 +18,7 @@ from MovingAverage import MovingAverage
 
 
 class ArgMismatch(Exception):
+
     def __init__(self, value):
         self.value = value
 
@@ -29,7 +30,7 @@ def to_percent(y, position):
     s = str(100 * y)
 
     # The percent symbol needs escaping in latex
-    if matplotlib.rcParams['text.usetex'] == True:
+    if matplotlib.rcParams['text.usetex'] is True:
         return s + r'$\%$'
     else:
         return s + '%'
@@ -40,22 +41,23 @@ def plotGraph(list_of_list, diagramName='', mvaLength=21):
         This Plots all given values and his filtered line.
     '''
     if not len(list_of_list) % 2 == 0:
-        raise ArgMismatch('Please provide [[xValues],[yValues], ...] as arguments')
+        raise ArgMismatch(
+            'Please provide [[xValues],[yValues], ...] as arguments')
 
-    time_start = time.time()
+    #time_start = time.time()
 #------------------------------------------------------------------------------
 
-    oneHouer = 60 * 60
-    quater_day = oneHouer * 6
-    half_a_day = oneHouer * 12
-    oneDay = oneHouer * 24
-    oneWeek = oneDay * 7
-    oneMonth = oneWeek * 4
-    half_a_Year = oneMonth * 6
-    one_Year = half_a_Year * 2
-    tmin = 0
+    #oneHouer = 60 * 60
+    #quater_day = oneHouer * 6
+    #half_a_day = oneHouer * 12
+    #oneDay = oneHouer * 24
+    #oneWeek = oneDay * 7
+    #oneMonth = oneWeek * 4
+    #half_a_Year = oneMonth * 6
+    #one_Year = half_a_Year * 2
+    #tmin = 0
 
-    now = time.mktime(time.localtime())
+    #now = time.mktime(time.localtime())
 
     for i in range(0, len(list_of_list), 2):
         # ---- Calc filtered values ------
@@ -64,8 +66,8 @@ def plotGraph(list_of_list, diagramName='', mvaLength=21):
             mva = MovingAverage(list_length)
         else:
             mva = MovingAverage(mvaLength)
-        for j in  range(0, len(list_of_list[i])):
-            mva.addValue(list_of_list[i][j], list_of_list[i+1][j])
+        for j in range(0, len(list_of_list[i])):
+            mva.addValue(list_of_list[i][j], list_of_list[i + 1][j])
 
         filterd_values = mva.getAverage()
         fvTimes = []
@@ -85,7 +87,7 @@ def plotGraph(list_of_list, diagramName='', mvaLength=21):
         # ---- Append filtered values ------
         dates = [dt.datetime.fromtimestamp(ts) for ts in fvTimes]
         datenums = md.date2num(dates)
-        tmin = min(datenums)
+        #tmin = min(datenums)
         ax = plt.gca()
         xfmt = md.DateFormatter('%Y-%m-%d %H:%M')
         ax.xaxis.set_major_formatter(xfmt)
@@ -102,12 +104,12 @@ def plotGraph(list_of_list, diagramName='', mvaLength=21):
     plt.savefig('plt/' + str(diagramName) + '.png')
     plt.close('all')
 #------------------------------------------------------------------------------
-    time_end = time.time()
-    #print "end with no errors in: " + str(time_end - time_start)
-    #plt.show()
+    #time_end = time.time()
+    # print "end with no errors in: " + str(time_end - time_start)
+    # plt.show()
 
 
-def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose):
+def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose=False):
 
     # convert timestamps
     dates1 = [dt.datetime.fromtimestamp(ts) for ts in timestamps]
@@ -145,7 +147,7 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose):
     ax2 = fig.add_subplot(2, 3, 2)
     plt.xlabel('IO Size [KB]')
     plt.ylabel('IOs')
-    #plt.gca().yaxis.set_major_formatter(formatter)
+    # plt.gca().yaxis.set_major_formatter(formatter)
 
     ax3 = fig.add_subplot(2, 3, 3)
     plt.ylabel('Speed [MB/s]')
@@ -160,7 +162,7 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose):
     ax5 = fig.add_subplot(2, 3, 5)
     plt.xlabel('IO Size [KB]')
     plt.ylabel('IOs')
-    #plt.gca().yaxis.set_major_formatter(formatter)
+    # plt.gca().yaxis.set_major_formatter(formatter)
 
     ax6 = fig.add_subplot(2, 3, 6)
     plt.ylabel('Speed [MB/s]')
@@ -206,7 +208,7 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose):
 
     # show data plot
     plt.tight_layout()
-    plt.savefig(str(title) + '.png', dpi=120)
+    plt.savefig('test/' + str(title) + '.png', dpi=120)
     print 'plot to', str(title) + '.png'
-    #plt.show()
+    # plt.show()
     plt.close('all')

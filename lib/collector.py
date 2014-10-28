@@ -6,7 +6,6 @@ import sys
 import time
 import subprocess
 import database
-
 '''
 
 this modul handles the collection of performance data

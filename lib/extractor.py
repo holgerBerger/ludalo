@@ -6,6 +6,7 @@
 import numpy as np
 import time
 import multiprocessing
+import Analysis.plotGraph as graph
 
 
 class DataCollection(object):
@@ -76,7 +77,25 @@ class DataCollection(object):
         d = np.sum(self.values[:, 4])
         return [a, b, c, d]
 
+    def calcAll(self):
+        self.getTotal = self.getTotal()
+        self.getMedian = self.getMedian()
+        self.getMean = self.getMean()
+        self.getVar = self.getVar()
+        self.getStd = self.getStd()
+        self.getAverage = self.getAverage()
+        self.getDuration = self.getDuration()
+
     def get_png(self):
+        timestamps = self.values[:, 0]
+        rbs = self.values[:, 1]
+        rio = self.values[:, 2]
+        wbs = self.values[:, 3]
+        wio = self.values[:, 4]
+        title = self.name
+        graph.plotJob(timestamps, rbs, rio, wbs, wio, title, verbose=False)
+
+    def save(self):
         raise NotImplementedError
 
 
@@ -95,10 +114,14 @@ class dbFsExtraktor(multiprocessing.Process):
         (collection, tstart, tend) = input
         raise NotImplementedError
         # collect informations and build objects
+        dc = self.selectFromCollection(collection, tstart, tend)
 
         # calculate stats
+        dc.calcAll()
         # generate png
+        dc.get_png()
         # save data to db
+        dc.save(self.db)
 
     def selectFromCollection(self, collection, tstart, tend):
         dc = DataCollection(collection)
