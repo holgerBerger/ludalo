@@ -134,7 +134,7 @@ class dbFsExtraktor(multiprocessing.Process):
             print key
             print data[key]
             print data[key]['val']
-            dc.append(data[key], data[key]['val'])
+            dc.append(key, data[key]['val'])
         return dc
 
     def run(self):
