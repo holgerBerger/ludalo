@@ -75,6 +75,7 @@ class DataCollection(object):
         return [a, b, c, d]
 
     def getMedian(self):
+        print self.values[:, 1]
         a = np.median(self.values[:, 1])
         b = np.median(self.values[:, 2])
         c = np.median(self.values[:, 3])
@@ -156,7 +157,6 @@ class dbFsExtraktor(multiprocessing.Process):
                 print 'get queue stuff'
                 # self.queue.get() = (collection, tstart, tend)
                 obj = self.queue.get()
-                print obj
                 # calcLilst.append(obj)
                 #resultObjects = self.pool.map(extract, calcLilst)
                 self.extract(obj)

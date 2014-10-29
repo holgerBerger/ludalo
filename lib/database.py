@@ -464,7 +464,6 @@ class Mongo_Conn(object):
         returnDict = {}
 
         for item in result:
-            print item
             returnDict[item['ts']] = {'fs': collection,
                                       "st": item['st'],
                                       "tgt": item['tgt'],
