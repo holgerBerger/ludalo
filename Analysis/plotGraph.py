@@ -170,6 +170,7 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose=False):
 
     # Speed
     ax1.plot(dates1, wbs, label='Exact Data', lw=1, color='gray')
+    print 'WB_Values', WB_Values
     ax1.plot(dates1, WB_Values, label='Filterd Data', lw=2, color='green')
     ax1.set_title('Write MB')
     ax1.legend(loc='best')
