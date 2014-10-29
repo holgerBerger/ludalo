@@ -91,7 +91,9 @@ class DataCollection(object):
 
     def calcAll(self):
         self.getTotal = self.getTotal()
-        self.getMedian = self.getMedian()
+        # median of np.matrix is broken #4301 29.10.2014
+        # self.getMedian = self.getMedian()
+        # >>> np.version.version '1.8.1'
         self.getMean = self.getMean()
         self.getVar = self.getVar()
         self.getStd = self.getStd()
