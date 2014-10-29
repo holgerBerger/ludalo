@@ -25,14 +25,21 @@ class DataCollection(object):
 
     def append(self, ts, valueString):
         ''' ts as int values as sting eg 1, 2, 3, 4 or 1 2 3 4 '''
-        print ts
-        ts = str(ts) + ','
-        nString = [ts].append(valueString)
-        print nString
+        # build a array from the timestamp
+        nString = [ts]
+
+        # append the values to the timestamp to get [ts, v1, v2, v3, v4]
+        for item in valueString:
+            nString.append(item)
+
+        # build a numpy matrix to get [[ts, v1, v2, v3, v4]]
         a = np.matrix(nString)
-        print 'a', a
-        print 'self.values', self.values
+
+        # append the new matrix to the original matrix.
+        # [[ts, v1, v2, v3, v4], [ts, v1, v2, v3, v4], ...]
         a = np.concatenate((self.values, a))
+
+        # overwrite the old matrix
         self.values = a
 
     def getDuration(self):
@@ -155,7 +162,7 @@ class dbFsExtraktor(multiprocessing.Process):
                 # self.queue.get() = (collection, tstart, tend)
                 obj = self.queue.get()
                 print obj
-                #calcLilst.append(obj)
+                # calcLilst.append(obj)
                 #resultObjects = self.pool.map(extract, calcLilst)
                 self.extract(obj)
             loopcounter = loopcounter + 1
