@@ -119,7 +119,6 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose=False):
     if fsize < 3:
         fsize = 3
 
-    print wbs
     # claculate filterd values
     mvaRB = MovingAverage(fsize)
     mvaWB = MovingAverage(fsize)
@@ -129,6 +128,8 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose=False):
 
     filterd_WB = mvaWB.getAverage()
     filterd_RB = mvaRB.getAverage()
+
+    print 'filterd_WB', filterd_WB
 
     WB_Values = []
     for item in filterd_WB:
@@ -171,7 +172,7 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose=False):
 
     # Speed
     ax1.plot(dates1, wbs, label='Exact Data', lw=1, color='gray')
-    print 'WB_Values', WB_Values
+    #print 'WB_Values', WB_Values
     ax1.plot(dates1, WB_Values, label='Filterd Data', lw=2, color='green')
     ax1.set_title('Write MB')
     ax1.legend(loc='best')
