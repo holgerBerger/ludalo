@@ -119,6 +119,7 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose=False):
     if fsize < 3:
         fsize = 3
 
+    print wbs
     # claculate filterd values
     mvaRB = MovingAverage(fsize)
     mvaWB = MovingAverage(fsize)
