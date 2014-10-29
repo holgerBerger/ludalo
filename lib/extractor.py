@@ -102,10 +102,11 @@ class DataCollection(object):
 
     def get_png(self):
         timestamps = self.values[:, 0]
-        rbs = self.values[:, 1]
-        rio = self.values[:, 2]
-        wbs = self.values[:, 3]
-        wio = self.values[:, 4]
+        # matrix to array [:,1] -> first axis .A1 as array
+        rbs = self.values[:, 1].A1
+        rio = self.values[:, 2].A1
+        wbs = self.values[:, 3].A1
+        wio = self.values[:, 4].A1
         title = self.name
         graph.plotJob(timestamps, rbs, rio, wbs, wio, title, verbose=False)
 
