@@ -199,7 +199,7 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose=False):
 
     # ------ scatter plots --------
 
-    print 'len, wio, wbs, rio, rbs', len(plot_wio), len(plot_wbs), len(plot_rio), len(plot_rbs)
+    print 'len, wio, wbs, rio, rbs', len(rio), len(rbs)
     if len(plot_wio) > 1 and len(plot_wbs) > 1:
         ax3.hexbin(plot_wio, plot_wbs, bins='log', mincnt=1)
         # ax3.scatter(wio, wbs, color='green', s=1)
