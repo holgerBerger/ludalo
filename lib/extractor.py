@@ -109,7 +109,7 @@ class DataCollection(object):
         title = self.name
         graph.plotJob(timestamps, rbs, rio, wbs, wio, title, verbose=False)
 
-    def save(self):
+    def save(self, db):
         pass
 
 
