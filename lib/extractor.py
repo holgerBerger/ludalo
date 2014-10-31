@@ -100,14 +100,28 @@ class DataCollection(object):
         self.getDuration = self.getDuration()
 
     def get_png(self):
+
         timestamps = self.values[:, 0].A1
         # matrix to array [:,1] -> first axis .A1 as array
         rbs = self.values[:, 1].A1
         rio = self.values[:, 2].A1
         wbs = self.values[:, 3].A1
         wio = self.values[:, 4].A1
+
+        # some calculation to
+        wbs_per_second = wbs / 60
+        wbs_kb_per_s = wbs_per_second / 1024
+        wbs_mb_per_s = wbs_kb_per_s / 1024
+        wio_volume_in_kb = np.nan_to_num((wbs / wio) / 1024)
+
+        rbs_per_second = rbs / 60
+        rbs_kb_per_s = rbs_per_second / 1024
+        rbs_mb_per_s = rbs_kb_per_s / 1024
+        rio_volume_in_kb = np.nan_to_num((rbs / rio) / 1024)
+
         title = self.name
-        graph.plotJob(timestamps, rbs, rio, wbs, wio, title, verbose=False)
+        graph.plotJob(timestamps, rbs_mb_per_s, rio_volume_in_kb,
+                      wbs_mb_per_s, wio_volume_in_kb, title, verbose=False)
 
     def save(self, db):
         pass
