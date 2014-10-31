@@ -1,6 +1,7 @@
 import time
 import json
 import multiprocessing
+import datetime
 import lib.database as database
 import lib.collector as collector
 import lib.extractor as extractor
@@ -48,7 +49,11 @@ def mainCollector(cfg):
 
                 # send signal to collect data
                 pair.collect(insertTimestamp)
-            print 'Main-Thread iteration:', iteration, 'sleep', sleepingTime, 'sec\n'
+
+            dateString = datetime.datetime.fromtimestamp(insertTimestamp)
+            dateString = dateString.strftime('%Y-%m-%d %H:%M:%S')
+
+            print 'Main-Thread iteration:', iteration, 'sleep', sleepingTime, 'sec\n', dateString
             # Global sleep!!!
             time.sleep(sleepingTime)
 
