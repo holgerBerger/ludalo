@@ -68,10 +68,11 @@ class DataCollection(object):
         return [a, b, c, d]
 
     def getMean(self):
-        a = np.mean(self.values[:, 1].A1)
-        b = np.mean(self.values[:, 2].A1)
-        c = np.mean(self.values[:, 3].A1)
-        d = np.mean(self.values[:, 4].A1)
+        print self.values[:, 1]
+        a = np.mean(self.values[:, 1])
+        b = np.mean(self.values[:, 2])
+        c = np.mean(self.values[:, 3])
+        d = np.mean(self.values[:, 4])
         return [a, b, c, d]
 
     def getMedian(self):
