@@ -199,14 +199,13 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose=False):
 
     # ------ scatter plots --------
 
-    print 'len, wio, wbs, rio, rbs', len(rio), len(rbs)
-    if len(plot_wio) > 1 and len(plot_wbs) > 1:
-        ax3.hexbin(plot_wio, plot_wbs, bins='log', mincnt=1)
+    if len(wio) > 1 and len(wbs) > 1:
+        ax3.hexbin(wio, wbs, bins='log', mincnt=1)
         # ax3.scatter(wio, wbs, color='green', s=1)
         ax3.set_title('Scatter Plots Write')
 
-    if len(plot_rio) > 1 and len(plot_rbs) > 1:
-        ax6.hexbin(plot_rio, plot_rbs, bins='log', mincnt=1)
+    if len(rio) > 1 and len(rbs) > 1:
+        ax6.hexbin(rio, rbs, bins='log', mincnt=1)
         #ax6.scatter(rio[rio > 0], rbs[rbs > 0], color='blue', s=1)
         ax6.set_title('Scatter Plots Read')
 
