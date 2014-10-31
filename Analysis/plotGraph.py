@@ -191,10 +191,10 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose=False):
     #plot_rio = np.append(rio[rio > 0], 1)
     #plot_rbs = np.append(rbs[rbs > 0], 1)
 
-    ax2.hist(plot_wio, bins=bins1, color='green')
+    ax2.hist(wio, bins=bins1, color='green')
     ax2.set_title('Histogram of Write IO Size')
 
-    ax5.hist(plot_rio, bins=bins1, color='blue')
+    ax5.hist(rio, bins=bins1, color='blue')
     ax5.set_title('Histogram of Read IO Size')
 
     # ------ scatter plots --------
