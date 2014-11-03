@@ -128,12 +128,10 @@ class DataCollection(object):
         n = len(workingSet)
         index = n * p
         if int(index) == index:
-            print 'ganz', index
             a = workingSet[int(index) - 1]
             b = workingSet[int(index)]
             retValue = (a + b) / 2
         else:
-            print 'nicht ganz', index
             retValue = workingSet[int(math.ceil(index)) - 1]
         return retValue
 
@@ -220,7 +218,7 @@ class dbFsExtraktor(multiprocessing.Process):
             # double check for work
             if not self.queue.empty():
                 # do stuff here
-                print 'get queue stuff'
+                #print 'get queue stuff'
                 # self.queue.get() = (collection, tstart, tend)
                 obj = self.queue.get()
                 # calcLilst.append(obj)

@@ -129,8 +129,6 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose=False):
     filterd_WB = mvaWB.getAverage()
     filterd_RB = mvaRB.getAverage()
 
-    print 'filterd_WB', filterd_WB
-
     WB_Values = []
     for item in filterd_WB:
         WB_Values.append(item[1])
