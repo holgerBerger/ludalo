@@ -26,6 +26,12 @@ class DataCollection(object):
 
     def append(self, ts, valueString):
         ''' ts as int values as sting eg 1, 2, 3, 4 or 1 2 3 4 '''
+        '''
+            v1 = rio
+            v2 = rb
+            v3 = wio
+            v4 = wb
+        '''
         # build a array from the timestamp
         nString = [ts]
 
@@ -151,10 +157,10 @@ class DataCollection(object):
 
         timestamps = self.values[:, 0].A1
         # matrix to array [:,1] -> first axis .A1 as array
-        rbs = self.values[:, 1].A1
-        rio = self.values[:, 2].A1
-        wbs = self.values[:, 3].A1
-        wio = self.values[:, 4].A1
+        rio = self.values[:, 1].A1
+        rbs = self.values[:, 2].A1
+        wio = self.values[:, 3].A1
+        wbs = self.values[:, 4].A1
 
         # some calculation to
         wbs_per_second = wbs / 10  # toDo grap from config
@@ -218,7 +224,7 @@ class dbFsExtraktor(multiprocessing.Process):
             # double check for work
             if not self.queue.empty():
                 # do stuff here
-                #print 'get queue stuff'
+                # print 'get queue stuff'
                 # self.queue.get() = (collection, tstart, tend)
                 obj = self.queue.get()
                 # calcLilst.append(obj)
