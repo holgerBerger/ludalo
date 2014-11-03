@@ -5,6 +5,7 @@
 
 import numpy as np
 import time
+import math
 import multiprocessing
 import Analysis.plotGraph as graph
 
@@ -88,11 +89,60 @@ class DataCollection(object):
         d = np.sum(self.values[:, 4].A1)
         return [a, b, c, d]
 
+    def getQuartil(self):
+        a = self.values[:, 1].A1
+        b = self.values[:, 2].A1
+        c = self.values[:, 3].A1
+        d = self.values[:, 4].A1
+
+        a25 = self.quantil25(a)
+        a5 = self.median(a)
+        a75 = self.quantil75(a)
+
+        b25 = self.quantil25(b)
+        b5 = self.median(b)
+        b75 = self.quantil75(b)
+
+        c25 = self.quantil25(c)
+        c5 = self.median(c)
+        c75 = self.quantil75(c)
+
+        d25 = self.quantil25(d)
+        d5 = self.median(d)
+        d75 = self.quantil75(d)
+
+        return [(a25, a5, a75), (b25, b5, b75), (c25, c5, c75), (d25, d5, d75)]
+
+    def quantil25(self, npArray):
+        return self.quantil(0.25, npArray)
+
+    def median(self, npArray):
+        return self.quantil(0.5, npArray)
+
+    def quantil75(self, npArray):
+        return self.quantil(0.75, npArray)
+
+    def quantil(self, p, InArray):
+        workingSet = InArray[:]
+        workingSet = sorted(workingSet)
+        n = len(workingSet)
+        index = n * p
+        if int(index) == index:
+            print 'ganz', index
+            a = workingSet[int(index) - 1]
+            b = workingSet[int(index)]
+            retValue = (a + b) / 2
+        else:
+            print 'nicht ganz', index
+            retValue = workingSet[int(math.ceil(index)) - 1]
+        return retValue
+
     def calcAll(self):
         self.getTotal = self.getTotal()
         # median of np.matrix is broken #4301 29.10.2014
         # self.getMedian = self.getMedian()
         # >>> np.version.version '1.8.1'
+        self.quartil = self.getQuartil()
         self.getMean = self.getMean()
         self.getVar = self.getVar()
         self.getStd = self.getStd()
@@ -109,12 +159,12 @@ class DataCollection(object):
         wio = self.values[:, 4].A1
 
         # some calculation to
-        wbs_per_second = wbs / 60
+        wbs_per_second = wbs / 10  # toDo grap from config
         wbs_kb_per_s = wbs_per_second / 1024
         wbs_mb_per_s = wbs_kb_per_s / 1024
         wio_volume_in_kb = np.nan_to_num((wbs / wio) / 1024)
 
-        rbs_per_second = rbs / 60
+        rbs_per_second = rbs / 10  # toDo grap from config
         rbs_kb_per_s = rbs_per_second / 1024
         rbs_mb_per_s = rbs_kb_per_s / 1024
         rio_volume_in_kb = np.nan_to_num((rbs / rio) / 1024)
