@@ -458,7 +458,6 @@ class Mongo_Conn(object):
         ''' this returns a dic witch includ all document form tstart to tend in
             the collection 'collection'. '''
 
-        print {"ts": {"$gte": tstart, "$lt": tend}}
         result = self.db[collection].find(
             {"ts": {"$gte": tstart, "$lt": tend}, "nid": "aggr"})
         returnDict = {}

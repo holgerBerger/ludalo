@@ -85,7 +85,7 @@ def mainExtractor(cfg):
         # for job in joblist:
         #    queue.put(job.name)
 
-        fslist = ['lnec']
+        fslist = ['lnec', 'nobnec']
         # check fs
         # put fs in queue
         t = int(time.time())
