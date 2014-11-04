@@ -23,31 +23,38 @@ class DataCollection(object):
         # 2 rio
         # 3 wb
         # 4 wio
+        self.timeStampSet = set()
 
     def append(self, ts, valueString):
         ''' ts as int values as sting eg 1, 2, 3, 4 or 1 2 3 4 '''
-        '''
-            v1 = rio
-            v2 = rb
-            v3 = wio
-            v4 = wb
-        '''
         # build a array from the timestamp
         nString = [ts]
+        nStringWithNoTime = np.array([0])
 
         # append the values to the timestamp to get [ts, v1, v2, v3, v4]
         for item in valueString:
-            nString.append(item)
+            nString = np.append(nString, item)
+            nStringWithNoTime = np.append(nStringWithNoTime, item)
+            # nStringWithNoTime.append(item)
 
-        # build a numpy matrix to get [[ts, v1, v2, v3, v4]]
-        a = np.matrix(nString)
+        if ts not in self.timeStampSet:
+            # build a numpy matrix to get [[ts, v1, v2, v3, v4]]
+            a = np.array([nString])
+            # append the new matrix to the original matrix.
+            # [[ts, v1, v2, v3, v4], [ts, v1, v2, v3, v4], ...]
+            a = np.concatenate((self.values, a))
+            self.values = a
 
-        # append the new matrix to the original matrix.
-        # [[ts, v1, v2, v3, v4], [ts, v1, v2, v3, v4], ...]
-        a = np.concatenate((self.values, a))
+        else:
+            # get timestamps
+            npts = np.array(self.values[:, 0])
+            # get array with timestamp ts and add the values to it.
+            foo = self.values[npts == ts] + nStringWithNoTime
+            # overwrite the array at the timestamp pos with the new values.
+            self.values[npts == ts] = foo
 
-        # overwrite the old matrix
-        self.values = a
+        # add timestamp dosen't mater, it is a set.
+        self.timeStampSet.add(ts)
 
     def getDuration(self):
         d = max(self.values[:, 0]) - min(self.values[:, 0])
