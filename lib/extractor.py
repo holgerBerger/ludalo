@@ -96,6 +96,7 @@ class DataCollection(object):
         return [a, b, c, d]
 
     def getTotal(self):
+        print self.values[:, 1]
         a = np.sum(self.values[:, 1].A1)
         b = np.sum(self.values[:, 2].A1)
         c = np.sum(self.values[:, 3].A1)
