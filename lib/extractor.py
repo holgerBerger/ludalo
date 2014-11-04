@@ -163,7 +163,7 @@ class DataCollection(object):
     def get_png(self):
 
         print 'test:', len(self.values) == len(self.timeStampSet)
-
+        print self.values
         timestamps = self.values[:, 0]
         rio = self.values[:, 1]
         rbs = self.values[:, 2]
