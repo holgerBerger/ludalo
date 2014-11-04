@@ -162,8 +162,9 @@ class DataCollection(object):
 
     def get_png(self):
 
+        print 'test:', len(self.values) == len(self.timeStampSet)
+
         timestamps = self.values[:, 0]
-        # matrix to array [:,1] -> first axis .A1 as array
         rio = self.values[:, 1]
         rbs = self.values[:, 2]
         wio = self.values[:, 3]
