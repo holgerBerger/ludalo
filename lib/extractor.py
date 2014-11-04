@@ -61,53 +61,52 @@ class DataCollection(object):
         return d.item(0)
 
     def getAverage(self):
-        a = np.average(self.values[:, 1].A1)
-        b = np.average(self.values[:, 2].A1)
-        c = np.average(self.values[:, 3].A1)
-        d = np.average(self.values[:, 4].A1)
+        a = np.average(self.values[:, 1])
+        b = np.average(self.values[:, 2])
+        c = np.average(self.values[:, 3])
+        d = np.average(self.values[:, 4])
         return [a, b, c, d]
 
     def getStd(self):
-        a = np.std(self.values[:, 1].A1)
-        b = np.std(self.values[:, 2].A1)
-        c = np.std(self.values[:, 3].A1)
-        d = np.std(self.values[:, 4].A1)
+        a = np.std(self.values[:, 1])
+        b = np.std(self.values[:, 2])
+        c = np.std(self.values[:, 3])
+        d = np.std(self.values[:, 4])
         return [a, b, c, d]
 
     def getVar(self):
-        a = np.var(self.values[:, 1].A1)
-        b = np.var(self.values[:, 2].A1)
-        c = np.var(self.values[:, 3].A1)
-        d = np.var(self.values[:, 4].A1)
+        a = np.var(self.values[:, 1])
+        b = np.var(self.values[:, 2])
+        c = np.var(self.values[:, 3])
+        d = np.var(self.values[:, 4])
         return [a, b, c, d]
 
     def getMean(self):
-        a = np.mean(self.values[:, 1].A1)
-        b = np.mean(self.values[:, 2].A1)
-        c = np.mean(self.values[:, 3].A1)
-        d = np.mean(self.values[:, 4].A1)
+        a = np.mean(self.values[:, 1])
+        b = np.mean(self.values[:, 2])
+        c = np.mean(self.values[:, 3])
+        d = np.mean(self.values[:, 4])
         return [a, b, c, d]
 
     def getMedian(self):
-        a = np.median(self.values[:, 1].A1)
-        b = np.median(self.values[:, 2].A1)
-        c = np.median(self.values[:, 3].A1)
-        d = np.median(self.values[:, 4].A1)
+        a = np.median(self.values[:, 1])
+        b = np.median(self.values[:, 2])
+        c = np.median(self.values[:, 3])
+        d = np.median(self.values[:, 4])
         return [a, b, c, d]
 
     def getTotal(self):
-        print self.values[:, 1]
-        a = np.sum(self.values[:, 1].A1)
-        b = np.sum(self.values[:, 2].A1)
-        c = np.sum(self.values[:, 3].A1)
-        d = np.sum(self.values[:, 4].A1)
+        a = np.sum(self.values[:, 1])
+        b = np.sum(self.values[:, 2])
+        c = np.sum(self.values[:, 3])
+        d = np.sum(self.values[:, 4])
         return [a, b, c, d]
 
     def getQuartil(self):
-        a = self.values[:, 1].A1
-        b = self.values[:, 2].A1
-        c = self.values[:, 3].A1
-        d = self.values[:, 4].A1
+        a = self.values[:, 1]
+        b = self.values[:, 2]
+        c = self.values[:, 3]
+        d = self.values[:, 4]
 
         a25 = self.quantil25(a)
         a5 = self.median(a)
@@ -163,12 +162,12 @@ class DataCollection(object):
 
     def get_png(self):
 
-        timestamps = self.values[:, 0].A1
+        timestamps = self.values[:, 0]
         # matrix to array [:,1] -> first axis .A1 as array
-        rio = self.values[:, 1].A1
-        rbs = self.values[:, 2].A1
-        wio = self.values[:, 3].A1
-        wbs = self.values[:, 4].A1
+        rio = self.values[:, 1]
+        rbs = self.values[:, 2]
+        wio = self.values[:, 3]
+        wbs = self.values[:, 4]
 
         # some calculation to
         wbs_per_second = wbs / 10  # toDo grap from config
