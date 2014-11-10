@@ -181,7 +181,7 @@ class DataCollection(object):
 
         title = self.name
         graph.plotJob(timestamps, rbs_mb_per_s, rio_volume_in_kb,
-                      wbs_mb_per_s, wio_volume_in_kb, title, verbose=False)
+                      wbs_mb_per_s, wio_volume_in_kb, wio, rio, title, verbose=False)
 
     def save(self, db):
         pass
