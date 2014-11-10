@@ -170,18 +170,20 @@ class DataCollection(object):
 
         # some calculation to
         wbs_per_second = wbs / 10  # toDo grap from config
-        wbs_kb_per_s = wbs_per_second / 1024
-        wbs_mb_per_s = wbs_kb_per_s / 1024
-        wio_volume_in_kb = np.nan_to_num((wbs / wio) / 1024)
+        wio_per_second = wio / 10
+        #wbs_kb_per_s = wbs_per_second / 1024
+        #wbs_mb_per_s = wbs_kb_per_s / 1024
+        #wio_volume_in_kb = np.nan_to_num((wbs / wio) / 1024)
 
         rbs_per_second = rbs / 10  # toDo grap from config
-        rbs_kb_per_s = rbs_per_second / 1024
-        rbs_mb_per_s = rbs_kb_per_s / 1024
-        rio_volume_in_kb = np.nan_to_num((rbs / rio) / 1024)
+        rio_per_second = rio / 10
+        #rbs_kb_per_s = rbs_per_second / 1024
+        #rbs_mb_per_s = rbs_kb_per_s / 1024
+        #rio_volume_in_kb = np.nan_to_num((rbs / rio) / 1024)
 
         title = self.name
-        graph.plotJob(timestamps, rbs_mb_per_s, rio_volume_in_kb,
-                      wbs_mb_per_s, wio_volume_in_kb, wio, rio, title, verbose=False)
+        graph.plotJob(timestamps, wbs_per_second, wio_per_second,
+                      rbs_per_second, rio_per_second, title, verbose=False)
 
     def save(self, db):
         pass

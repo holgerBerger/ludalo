@@ -109,8 +109,7 @@ def plotGraph(list_of_list, diagramName='', mvaLength=21):
     # plt.show()
 
 
-def plotJob(timestamps, rbs, rio, rio_volume_in_kb, wio_volume_in_kb, wbs, wio, title, verbose=False):
-
+def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_second, title, verbose=False):
     # convert timestamps
     dates1 = [dt.datetime.fromtimestamp(ts) for ts in timestamps]
 
@@ -123,8 +122,8 @@ def plotJob(timestamps, rbs, rio, rio_volume_in_kb, wio_volume_in_kb, wbs, wio, 
     mvaRB = MovingAverage(fsize)
     mvaWB = MovingAverage(fsize)
     for i in range(len(timestamps)):
-        mvaWB.addValue(timestamps[i], wbs[i])
-        mvaRB.addValue(timestamps[i], rbs[i])
+        mvaWB.addValue(timestamps[i], wbs_per_second[i])
+        mvaRB.addValue(timestamps[i], rbs_per_second[i])
 
     filterd_WB = mvaWB.getAverage()
     filterd_RB = mvaRB.getAverage()
@@ -143,6 +142,10 @@ def plotJob(timestamps, rbs, rio, rio_volume_in_kb, wio_volume_in_kb, wbs, wio, 
     plt.xticks(rotation=45)
     plt.xlabel('Time')
     plt.ylabel('Speed [MB/s]')
+    # second axis
+    ax11 = twinx()
+    ax11.yaxis.tick_right()
+    plt.ylabel('IO (test)')
 
     ax2 = fig.add_subplot(2, 3, 2)
     plt.xlabel('IO Size [KB]')
@@ -169,16 +172,16 @@ def plotJob(timestamps, rbs, rio, rio_volume_in_kb, wio_volume_in_kb, wbs, wio, 
     plt.xlabel('IO Size [KB]')
 
     # Speed
-    ax1.plot(dates1, wbs, label='Exact Data', lw=1, color='gray')
-    ax1.plot(dates1, wio_volume_in_kb, label='Exact Data', lw=1, color='gray')
-    #print 'WB_Values', WB_Values
-
+    ax1.plot(dates1, wbs_per_second, label='Exact Data', lw=1, color='gray')
     ax1.plot(dates1, WB_Values, label='Filterd Data', lw=2, color='green')
-    
+
+    ax11.plot(dates1, wio_per_second, label='Exact Data', lw=1, color='red')
+    # print 'WB_Values', WB_Values
+
     ax1.set_title('Write MB')
     ax1.legend(loc='best')
 
-    ax4.plot(dates1, rbs, label='Exact Data', lw=1, color='gray')
+    ax4.plot(dates1, wbs_per_second, label='Exact Data', lw=1, color='gray')
     ax4.plot(dates1, RB_Values, label='Filterd Data', lw=2, color='blue')
     ax4.set_title('Read MB')
     ax4.legend(loc='best')
@@ -200,13 +203,13 @@ def plotJob(timestamps, rbs, rio, rio_volume_in_kb, wio_volume_in_kb, wbs, wio, 
 
     # ------ scatter plots --------
 
-    if len(wio) > 1 and len(wbs) > 1:
-        ax3.hexbin(wio, wbs, bins='log', mincnt=1)
+    if len(wio_per_second) > 1 and len(wbs_per_second) > 1:
+        ax3.hexbin(wio_per_second, wbs_per_second, bins='log', mincnt=1)
         # ax3.scatter(wio, wbs, color='green', s=1)
         ax3.set_title('Scatter Plots Write')
 
-    if len(rio) > 1 and len(rbs) > 1:
-        ax6.hexbin(rio, rbs, bins='log', mincnt=1)
+    if len(rio_per_second) > 1 and len(rbs_per_second) > 1:
+        ax6.hexbin(rio_per_second, rbs_per_second, bins='log', mincnt=1)
         #ax6.scatter(rio[rio > 0], rbs[rbs > 0], color='blue', s=1)
         ax6.set_title('Scatter Plots Read')
 
