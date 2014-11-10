@@ -111,7 +111,10 @@ def plotGraph(list_of_list, diagramName='', mvaLength=21):
 
 def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_second, title, verbose=False):
     # convert timestamps
-    dates1 = [dt.datetime.fromtimestamp(ts) for ts in timestamps]
+    dates1 = [dt.datetime.fromtimestamp(int(ts)) for ts in timestamps]
+
+    Wmbs = wbs_per_second / (1024 * 1024)
+    Rmbs = rbs_per_second / (1024 * 1024)
 
     # calculate filter size
     fsize = int(math.sqrt(len(dates1)))
@@ -122,8 +125,8 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     mvaRB = MovingAverage(fsize)
     mvaWB = MovingAverage(fsize)
     for i in range(len(timestamps)):
-        mvaWB.addValue(timestamps[i], wbs_per_second[i])
-        mvaRB.addValue(timestamps[i], rbs_per_second[i])
+        mvaWB.addValue(timestamps[i], Wmbs[i])
+        mvaRB.addValue(timestamps[i], Rmbs[i])
 
     filterd_WB = mvaWB.getAverage()
     filterd_RB = mvaRB.getAverage()
@@ -145,7 +148,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     # second axis
     ax11 = twinx()
     ax11.yaxis.tick_right()
-    plt.ylabel('IO (test)')
+    plt.ylabel('IO/s')
 
     ax2 = fig.add_subplot(2, 3, 2)
     plt.xlabel('IO Size [KB]')
@@ -161,6 +164,10 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     plt.xticks(rotation=45)
     plt.xlabel('Time')
     plt.ylabel('Speed [MB/s]')
+    # second axis
+    ax41 = twinx()
+    ax41.yaxis.tick_right()
+    plt.ylabel('IO/s')
 
     ax5 = fig.add_subplot(2, 3, 5)
     plt.xlabel('IO Size [KB]')
@@ -172,16 +179,15 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     plt.xlabel('IO Size [KB]')
 
     # Speed
-    ax1.plot(dates1, wbs_per_second, label='Exact Data', lw=1, color='gray')
-    ax1.plot(dates1, WB_Values, label='Filterd Data', lw=2, color='green')
 
     ax11.plot(dates1, wio_per_second, label='Exact Data', lw=1, color='red')
-    # print 'WB_Values', WB_Values
-
+    ax1.plot(dates1, Wmbs, label='Exact Data', lw=1, color='gray')
+    ax1.plot(dates1, WB_Values, label='Filterd Data', lw=2, color='green')
     ax1.set_title('Write MB')
     ax1.legend(loc='best')
 
-    ax4.plot(dates1, wbs_per_second, label='Exact Data', lw=1, color='gray')
+    ax41.plot(dates1, rio_per_second, label='Exact Data', lw=1, color='red')
+    ax4.plot(dates1, Rmbs, label='Exact Data', lw=1, color='gray')
     ax4.plot(dates1, RB_Values, label='Filterd Data', lw=2, color='blue')
     ax4.set_title('Read MB')
     ax4.legend(loc='best')
