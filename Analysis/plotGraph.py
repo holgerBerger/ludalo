@@ -109,7 +109,7 @@ def plotGraph(list_of_list, diagramName='', mvaLength=21):
     # plt.show()
 
 
-def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose=False):
+def plotJob(timestamps, rbs, rio, rio_volume_in_kb, wio_volume_in_kb, wbs, wio, title, verbose=False):
 
     # convert timestamps
     dates1 = [dt.datetime.fromtimestamp(ts) for ts in timestamps]
@@ -170,8 +170,11 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose=False):
 
     # Speed
     ax1.plot(dates1, wbs, label='Exact Data', lw=1, color='gray')
+    ax1.plot(dates1, wio_volume_in_kb, label='Exact Data', lw=1, color='gray')
     #print 'WB_Values', WB_Values
+
     ax1.plot(dates1, WB_Values, label='Filterd Data', lw=2, color='green')
+    
     ax1.set_title('Write MB')
     ax1.legend(loc='best')
 
@@ -189,10 +192,10 @@ def plotJob(timestamps, rbs, rio, wbs, wio, title, verbose=False):
     #plot_rio = np.append(rio[rio > 0], 1)
     #plot_rbs = np.append(rbs[rbs > 0], 1)
 
-    ax2.hist(wio, bins=bins1, color='green')
+    ax2.hist(wio_volume_in_kb, bins=bins1, color='green')
     ax2.set_title('Histogram of Write IO Size')
 
-    ax5.hist(rio, bins=bins1, color='blue')
+    ax5.hist(rio_volume_in_kb, bins=bins1, color='blue')
     ax5.set_title('Histogram of Read IO Size')
 
     # ------ scatter plots --------
