@@ -162,8 +162,6 @@ class DataCollection(object):
 
     def get_png(self):
 
-        print 'test:', len(self.values) == len(self.timeStampSet)
-        print self.values
         timestamps = self.values[:, 0]
         rio = self.values[:, 1]
         rbs = self.values[:, 2]
@@ -216,7 +214,9 @@ class dbFsExtraktor(multiprocessing.Process):
         dc = DataCollection(collection)
         data = self.db.getFsData(collection, tstart, tend)
         for key in sorted(data.keys()):
-            dc.append(key, data[key]['val'])
+            # print key, data[key]['val']
+            for item in data[key]:
+                dc.append(key, item['val'])
         return dc
 
     def run(self):

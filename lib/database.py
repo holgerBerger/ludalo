@@ -1,6 +1,8 @@
 import multiprocessing
 import time
 import re
+from collections import defaultdict
+
 '''
 This module handles all things assigned to the database.
 Database inserters, data structur cases and database connections.
@@ -460,14 +462,19 @@ class Mongo_Conn(object):
 
         result = self.db[collection].find(
             {"ts": {"$gte": tstart, "$lt": tend}, "nid": "aggr"})
-        returnDict = {}
+
+        # enpty dict of lists
+        returnDict = defaultdict(list)
 
         for item in result:
-            returnDict[item['ts']] = {'fs': collection,
-                                      "st": item['st'],
-                                      "tgt": item['tgt'],
-                                      "nid": item['nid'],
-                                      "val": item['val']}
+            nidDict = {'fs': collection,
+                                    "st": item['st'],
+                                    "tgt": item['tgt'],
+                                    "nid": item['nid'],
+                                    "val": item['val']}
+
+            returnDict[item['ts']].append(nidDict)
+        print returnDict
         return returnDict
 
     def set_job_calcState(self, jobid, start, calc):
