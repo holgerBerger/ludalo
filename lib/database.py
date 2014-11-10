@@ -468,13 +468,13 @@ class Mongo_Conn(object):
 
         for item in result:
             nidDict = {'fs': collection,
-                                    "st": item['st'],
-                                    "tgt": item['tgt'],
-                                    "nid": item['nid'],
-                                    "val": item['val']}
-
+                       "st": item['st'],
+                       "tgt": item['tgt'],
+                       "nid": item['nid'],
+                       "val": item['val']}
             returnDict[item['ts']].append(nidDict)
-        print returnDict
+
+        # print returnDict
         return returnDict
 
     def set_job_calcState(self, jobid, start, calc):

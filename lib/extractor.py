@@ -216,7 +216,7 @@ class dbFsExtraktor(multiprocessing.Process):
         for key in sorted(data.keys()):
             # print key, data[key]['val']
             for item in data[key]:
-                if item['st'] is not 'MDT':
+                if len(item['val']) >= 4:
                     dc.append(key, item['val'])
         return dc
 
