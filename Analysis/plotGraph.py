@@ -111,12 +111,12 @@ def plotGraph(list_of_list, diagramName='', mvaLength=21):
 
 
 def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_second, title, verbose=False):
-    nc_limegreen = '#8BC34A'  # googlecolores green 500
+    # nc_limegreen = '#8BC34A'  # googlecolores green 500
     nc_lightgreen = '#4CAF50'  # googlecolores light green 200
     nc_green = '#2E7D32'
 
-    nc_blue = '#2196F3'  # googlecolores blue 500
-    nc_lightblue = '#9FA8DA'  # googlecolores indigo 200
+    nc_blue = '#1565C0'  # googlecolores blue 500
+    nc_lightblue = '#42A5F5'  # googlecolores indigo 200
 
     formatter = FuncFormatter(to_percent)
 
