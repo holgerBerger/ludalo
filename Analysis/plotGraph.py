@@ -111,8 +111,9 @@ def plotGraph(list_of_list, diagramName='', mvaLength=21):
 
 
 def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_second, title, verbose=False):
-    nc_limegreen = '#2E7D32'  # googlecolores green 500
-    nc_ligthtgreen = '#4CAF50'  # googlecolores light green 200
+    nc_limegreen = '#8BC34A'  # googlecolores green 500
+    nc_lightgreen = '#4CAF50'  # googlecolores light green 200
+    nc_green = '#2E7D32'
 
     nc_blue = '#2196F3'  # googlecolores blue 500
     nc_lightblue = '#9FA8DA'  # googlecolores indigo 200
@@ -212,14 +213,14 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     # Speed
 
     ax11.plot(dates1, wio_per_second, label='IOs',
-              lw=1, color=nc_ligthtgreen, alpha=0.7)  # IO
+              lw=1, color=nc_limegreen, alpha=0.7)  # IO
     ax11.plot(dates1, WIO_Values, label='IOs filterd',
-              lw=2, color=nc_ligthtgreen, alpha=0.7)
+              lw=2, color=nc_lightgreen, alpha=0.7)
     ax1.plot(dates1, Wmbs, label='Exact Data',
              lw=1, color='gray', alpha=0.7)  # speed
     # filterd speed
     ax1.plot(dates1, WB_Values, label='Filtered Data',
-             lw=2, color=nc_limegreen)
+             lw=2, color=nc_green)
     ax1.set_title('Write MB and IO')
     ax1.legend(loc='upper left')
     ax11.legend(loc='upper right')
