@@ -112,7 +112,7 @@ def plotGraph(list_of_list, diagramName='', mvaLength=21):
 
 def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_second, title, verbose=False):
     # nc_limegreen = '#8BC34A'  # googlecolores green 500
-    nc_lightgreen = '#4CAF50'  # googlecolores light green 200
+    nc_lightgreen = '#8BC34A'  # googlecolores light green 200
     nc_green = '#2E7D32'
 
     nc_blue = '#1565C0'  # googlecolores blue 500
@@ -170,7 +170,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     # Write
     fig = plt.figure(figsize=(16, 10))
     ax1 = fig.add_subplot(2, 3, 1)
-    # ax1.xaxis.set_major_formatter(xfmt)
+    ax1.xaxis.set_major_formatter(xfmt)
     plt.xticks(rotation=90)
     plt.xlabel('Time')
     plt.ylabel('Speed [MB/s]')
