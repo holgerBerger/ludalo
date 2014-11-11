@@ -154,7 +154,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     fig = plt.figure(figsize=(16, 10))
     ax1 = fig.add_subplot(2, 3, 1)
     ax1.xaxis.set_major_formatter(xfmt)
-    plt.xticks(rotation=45)
+    plt.xticks(rotation=90)
     plt.xlabel('Time')
     plt.ylabel('Speed [MB/s]')
     # second axis
@@ -175,7 +175,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     # Read
     ax4 = fig.add_subplot(2, 3, 4)
     ax4.xaxis.set_major_formatter(xfmt)
-    plt.xticks(rotation=45)
+    plt.xticks(rotation=90)
     plt.xlabel('Time')
     plt.ylabel('Speed [MB/s]')
     # second axis
