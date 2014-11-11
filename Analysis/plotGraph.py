@@ -182,7 +182,6 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     ax2 = fig.add_subplot(2, 3, 2)
     ax2.yaxis.set_major_formatter(formatter)
     plt.xlabel('IO Size [KB]')
-    plt.ylabel('IOs')
     # plt.gca().yaxis.set_major_formatter(formatter)
 
     ax3 = fig.add_subplot(2, 3, 3)
@@ -203,7 +202,6 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     ax5 = fig.add_subplot(2, 3, 5)
     ax5.yaxis.set_major_formatter(formatter)
     plt.xlabel('IO Size [KB]')
-    plt.ylabel('IOs')
     # plt.gca().yaxis.set_major_formatter(formatter)
 
     ax6 = fig.add_subplot(2, 3, 6)
