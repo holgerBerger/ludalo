@@ -241,7 +241,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
 
     # show data plot
     plt.tight_layout()
-    plt.savefig('test/' + str(title) + '.png', dpi=60)
+    plt.savefig('test/' + str(title) + '.png', dpi=80)  # 120
     print 'plot to', str(title) + '.png'
     # plt.show()
     plt.close('all')
