@@ -111,8 +111,8 @@ def plotGraph(list_of_list, diagramName='', mvaLength=21):
 
 
 def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_second, title, verbose=False):
-    nc_limegreen = '#4CAF50'  # googlecolores green 500
-    nc_ligthtgreen = '#A5D6A7'  # googlecolores light green 200
+    nc_limegreen = '#2E7D32'  # googlecolores green 500
+    nc_ligthtgreen = '#4CAF50'  # googlecolores light green 200
 
     nc_blue = '#2196F3'  # googlecolores blue 500
     nc_lightblue = '#9FA8DA'  # googlecolores indigo 200
