@@ -28,7 +28,7 @@ class ArgMismatch(Exception):
 
 
 def to_percent(y, position):
-    s = str(1000 * y)
+    s = str(100 * y)
 
     # The percent symbol needs escaping in latex
     if matplotlib.rcParams['text.usetex'] is True:
@@ -259,10 +259,14 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     #plot_rio = np.append(rio[rio > 0], 1)
     #plot_rbs = np.append(rbs[rbs > 0], 1)
 
-    ax2.hist(kb_per_wio, bins=bins1, normed=True, color=nc_green)
+    weights = np.ones_like(kb_per_wio) / len(kb_per_wio)
+    ax2.hist(kb_per_wio, bins=bins1, weights=weights,
+             normed=True, color=nc_green)
     ax2.set_title('Histogram of Write IO Size')
 
-    ax5.hist(kb_per_rio, bins=bins1, normed=True, color=nc_blue)
+    weights = np.ones_like(kb_per_rio) / len(kb_per_rio)
+    ax5.hist(kb_per_rio, bins=bins1, weights=weights,
+             normed=True, color=nc_blue)
     ax5.set_title('Histogram of Read IO Size')
 
     # show data plot
