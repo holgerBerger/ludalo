@@ -111,8 +111,8 @@ def plotGraph(list_of_list, diagramName='', mvaLength=21):
 
 
 def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_second, title, verbose=False):
-    nc_limegreen = '#CDDC39'  # googlecolores lime green 500
-    nc_ligthtgreen = '#C5E1A5'  # googlecolores light green 200
+    nc_limegreen = '#4CAF50'  # googlecolores green 500
+    nc_ligthtgreen = '#A5D6A7'  # googlecolores light green 200
 
     nc_blue = '#2196F3'  # googlecolores blue 500
     nc_lightblue = '#9FA8DA'  # googlecolores indigo 200
@@ -193,21 +193,21 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     # Speed
 
     ax11.plot(dates1, wio_per_second, label='IOs',
-              lw=1, color=nc_ligthtgreen)  # IO
-    ax1.plot(dates1, Wmbs, label='Exact Data', lw=1, color='gray')  # speed
+              lw=1, color=nc_ligthtgreen, alpha=0.7)  # IO
+    ax1.plot(dates1, Wmbs, label='Exact Data', lw=1, color='gray', alpha=0.7)  # speed
     # filterd speed
     ax1.plot(dates1, WB_Values, label='Filtered Data',
              lw=2, color=nc_limegreen)
     ax1.set_title('Write MB and IO')
-    ax1.legend(loc='best')
-    ax11.legend()
+    ax1.legend(loc='left')
+    ax11.legend(loc='right')
 
-    ax41.plot(dates1, rio_per_second, label='IOs', lw=1, color=nc_lightblue)
-    ax4.plot(dates1, Rmbs, label='Exact Data', lw=1, color='gray')
+    ax41.plot(dates1, rio_per_second, label='IOs', lw=1, color=nc_lightblue, alpha=0.7)
+    ax4.plot(dates1, Rmbs, label='Exact Data', lw=1, color='gray', alpha=0.7)
     ax4.plot(dates1, RB_Values, label='Filtered Data', lw=2, color=nc_blue)
     ax4.set_title('Read MB and IO')
-    ax4.legend(loc='best')
-    ax41.legend()
+    ax4.legend(loc='left')
+    ax41.legend(loc='right')
 
     # ------ scatter plots --------
 
@@ -215,12 +215,12 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     kb_per_rio = np.nan_to_num((rbs_per_second / rio_per_second) / 1024)
 
     if len(wio_per_second) > 1 and len(kb_per_wio) > 1:
-        ax3.hexbin(wio_per_second, kb_per_wio, bins='log', mincnt=1)
+        ax3.hexbin(kb_per_wio, wio_per_second, bins='log', mincnt=1)
         # ax3.scatter(wio, wbs, color='green', s=1)
         ax3.set_title('Scatter Plots Write')
 
     if len(rio_per_second) > 1 and len(kb_per_rio) > 1:
-        ax6.hexbin(rio_per_second, kb_per_rio, bins='log', mincnt=1)
+        ax6.hexbin(kb_per_rio, rio_per_second, bins='log', mincnt=1)
         #ax6.scatter(rio[rio > 0], rbs[rbs > 0], color='blue', s=1)
         ax6.set_title('Scatter Plots Read')
 
