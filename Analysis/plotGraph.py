@@ -122,7 +122,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     # convert timestamps
     # timestamps = timestamps.astype(int)
     dates1 = [dt.datetime.fromtimestamp(ts) for ts in timestamps]
-    xfmt = md.DateFormatter('%Y-%m-%d %H:%M')
+    xfmt = md.DateFormatter('%H:%M')
 
     Wmbs = wbs_per_second / (1024 * 1024)
     Rmbs = rbs_per_second / (1024 * 1024)
