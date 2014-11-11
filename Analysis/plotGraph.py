@@ -10,7 +10,7 @@ matplotlib.use('AGG')
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
-from matplotlib.ticker import FuncFormatter
+#from matplotlib.ticker import FuncFormatter
 from pylab import *
 import datetime as dt
 import numpy as np
@@ -118,7 +118,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     nc_blue = '#1565C0'  # googlecolores blue 500
     nc_lightblue = '#42A5F5'  # googlecolores indigo 200
 
-    formatter = FuncFormatter(to_percent)
+    #formatter = FuncFormatter(to_percent)
 
     # convert timestamps
     # timestamps = timestamps.astype(int)
@@ -170,7 +170,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     # Write
     fig = plt.figure(figsize=(16, 10))
     ax1 = fig.add_subplot(2, 3, 1)
-    ax1.xaxis.set_major_formatter(xfmt)
+    #ax1.xaxis.set_major_formatter(xfmt)
     plt.xticks(rotation=90)
     plt.xlabel('Time')
     plt.ylabel('Speed [MB/s]')
@@ -180,7 +180,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     plt.ylabel('IO/s')
 
     ax2 = fig.add_subplot(2, 3, 2)
-    ax2.yaxis.set_major_formatter(formatter)
+    #ax2.yaxis.set_major_formatter(formatter)
     plt.xlabel('IO Size [KB]')
     plt.ylabel('IOs')
     # plt.gca().yaxis.set_major_formatter(formatter)
