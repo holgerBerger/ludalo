@@ -14,7 +14,7 @@ from matplotlib.ticker import FuncFormatter
 from pylab import *
 import datetime as dt
 import numpy as np
-import time
+#import time
 from MovingAverage import MovingAverage
 
 
@@ -117,7 +117,10 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     nc_blue = '#2196F3'  # googlecolores blue 500
     nc_lightblue = '#9FA8DA'  # googlecolores indigo 200
 
+    formatter = FuncFormatter(to_percent)
+
     # convert timestamps
+    timestamps = timestamps.astype(int)
     dates1 = [dt.datetime.fromtimestamp(int(ts)) for ts in timestamps]
 
     Wmbs = wbs_per_second / (1024 * 1024)
@@ -158,6 +161,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     plt.ylabel('IO/s')
 
     ax2 = fig.add_subplot(2, 3, 2)
+    ax2.yaxis.set_major_formatter(formatter)
     plt.xlabel('IO Size [KB]')
     plt.ylabel('IOs')
     # plt.gca().yaxis.set_major_formatter(formatter)
@@ -177,6 +181,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     plt.ylabel('IO/s')
 
     ax5 = fig.add_subplot(2, 3, 5)
+    ax5.yaxis.set_major_formatter(formatter)
     plt.xlabel('IO Size [KB]')
     plt.ylabel('IOs')
     # plt.gca().yaxis.set_major_formatter(formatter)
@@ -188,19 +193,21 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     # Speed
 
     ax11.plot(dates1, wio_per_second, label='IOs',
-              lw=0.5, color=nc_ligthtgreen)  # IO
+              lw=1, color=nc_ligthtgreen)  # IO
     ax1.plot(dates1, Wmbs, label='Exact Data', lw=1, color='gray')  # speed
     # filterd speed
     ax1.plot(dates1, WB_Values, label='Filtered Data',
              lw=2, color=nc_limegreen)
     ax1.set_title('Write MB and IO')
     ax1.legend(loc='best')
+    ax11.legend(loc='best')
 
     ax41.plot(dates1, rio_per_second, label='IOs', lw=1, color=nc_lightblue)
     ax4.plot(dates1, Rmbs, label='Exact Data', lw=1, color='gray')
     ax4.plot(dates1, RB_Values, label='Filtered Data', lw=2, color=nc_blue)
     ax4.set_title('Read MB and IO')
     ax4.legend(loc='best')
+    ax41.legend(loc='best')
 
     # ------ scatter plots --------
 
@@ -231,10 +238,6 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
 
     ax5.hist(rio_per_second, bins=bins1, normed=True, color=nc_blue)
     ax5.set_title('Histogram of Read IO Size')
-
-    formatter = FuncFormatter(to_percent)
-
-    plt.gca().yaxis.set_major_formatter(formatter)
 
     # show data plot
     plt.tight_layout()
