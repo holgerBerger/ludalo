@@ -170,7 +170,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     # Write
     fig = plt.figure(figsize=(16, 10))
     ax1 = fig.add_subplot(2, 3, 1)
-    #ax1.xaxis.set_major_formatter(xfmt)
+    # ax1.xaxis.set_major_formatter(xfmt)
     plt.xticks(rotation=90)
     plt.xlabel('Time')
     plt.ylabel('Speed [MB/s]')
@@ -180,7 +180,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     plt.ylabel('IO/s')
 
     ax2 = fig.add_subplot(2, 3, 2)
-    #ax2.yaxis.set_major_formatter(formatter)
+    # ax2.yaxis.set_major_formatter(formatter)
     plt.xlabel('IO Size [KB]')
     plt.ylabel('IOs')
     # plt.gca().yaxis.set_major_formatter(formatter)
@@ -201,7 +201,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     plt.ylabel('IO/s')
 
     ax5 = fig.add_subplot(2, 3, 5)
-    #ax5.yaxis.set_major_formatter(formatter)
+    # ax5.yaxis.set_major_formatter(formatter)
     plt.xlabel('IO Size [KB]')
     plt.ylabel('IOs')
     # plt.gca().yaxis.set_major_formatter(formatter)
@@ -265,8 +265,9 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     ax2.set_title('Histogram of Write IO Size')
 
     weights = np.ones_like(kb_per_rio) / len(kb_per_rio)
-    ax5.hist(kb_per_rio, bins=bins1, weights=weights,
-             normed=False, color=nc_blue)
+    n, bins, rectangles = ax5.hist(kb_per_rio, bins=bins1, weights=weights,
+                                   normed=False, color=nc_blue)
+    print 'sum of hist:', sum(n)
     ax5.set_title('Histogram of Read IO Size')
 
     # show data plot
