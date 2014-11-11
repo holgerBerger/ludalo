@@ -141,7 +141,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     for i in range(len(timestamps)):
         mvaWB.addValue(timestamps[i], Wmbs[i])
         mvaRB.addValue(timestamps[i], Rmbs[i])
-        mvaRIO.addValue(timestamps[i], rbs_per_second[i])
+        mvaRIO.addValue(timestamps[i], rio_per_second[i])
         mvaWIO.addValue(timestamps[i], wio_per_second[i])
 
     filterd_WB = mvaWB.getAverage()
@@ -157,6 +157,14 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     RB_Values = []
     for item in filterd_RB:
         RB_Values.append(item[1])
+
+    RIO_Values = []
+    for item in filterd_IR:
+        RIO_Values.append(item[1])
+
+    WIO_Values = []
+    for item in filterd_IW:
+        WIO_Values.append(item[1])
 
     # Write
     fig = plt.figure(figsize=(16, 10))
@@ -205,7 +213,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
 
     ax11.plot(dates1, wio_per_second, label='IOs',
               lw=1, color=nc_ligthtgreen, alpha=0.7)  # IO
-    ax11.plot(dates1, filterd_IW, label='IOs filterd',
+    ax11.plot(dates1, WIO_Values, label='IOs filterd',
               lw=2, color=nc_ligthtgreen, alpha=0.7)
     ax1.plot(dates1, Wmbs, label='Exact Data',
              lw=1, color='gray', alpha=0.7)  # speed
@@ -218,7 +226,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
 
     ax41.plot(dates1, rio_per_second, label='IOs',
               lw=1, color=nc_lightblue, alpha=0.7)
-    ax41.plot(dates1, filterd_IR, label='IOs filterd',
+    ax41.plot(dates1, RIO_Values, label='IOs filterd',
               lw=2, color=nc_lightblue, alpha=0.7)
     ax4.plot(dates1, Rmbs, label='Exact Data', lw=1, color='gray', alpha=0.7)
     ax4.plot(dates1, RB_Values, label='Filtered Data', lw=2, color=nc_blue)
