@@ -205,7 +205,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
 
     ax11.plot(dates1, wio_per_second, label='IOs',
               lw=1, color=nc_ligthtgreen, alpha=0.7)  # IO
-    ax11.plot(dates1, filterd_IW, label='IOs',
+    ax11.plot(dates1, filterd_IW, label='IOs filterd',
               lw=2, color=nc_ligthtgreen, alpha=0.7)
     ax1.plot(dates1, Wmbs, label='Exact Data',
              lw=1, color='gray', alpha=0.7)  # speed
@@ -218,7 +218,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
 
     ax41.plot(dates1, rio_per_second, label='IOs',
               lw=1, color=nc_lightblue, alpha=0.7)
-    ax41.plot(dates1, filterd_IR, label='IOs',
+    ax41.plot(dates1, filterd_IR, label='IOs filterd',
               lw=2, color=nc_lightblue, alpha=0.7)
     ax4.plot(dates1, Rmbs, label='Exact Data', lw=1, color='gray', alpha=0.7)
     ax4.plot(dates1, RB_Values, label='Filtered Data', lw=2, color=nc_blue)
