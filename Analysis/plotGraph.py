@@ -213,7 +213,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     # Speed
 
     ax11.plot(dates1, wio_per_second, label='IOs',
-              lw=1, color=nc_limegreen, alpha=0.7)  # IO
+              lw=1, color='gray', alpha=0.7)  # IO
     ax11.plot(dates1, WIO_Values, label='IOs filterd',
               lw=2, color=nc_lightgreen, alpha=0.7)
     ax1.plot(dates1, Wmbs, label='Exact Data',
@@ -226,7 +226,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     ax11.legend(loc='upper right')
 
     ax41.plot(dates1, rio_per_second, label='IOs',
-              lw=1, color=nc_lightblue, alpha=0.7)
+              lw=1, color='gray', alpha=0.7)
     ax41.plot(dates1, RIO_Values, label='IOs filterd',
               lw=2, color=nc_lightblue, alpha=0.7)
     ax4.plot(dates1, Rmbs, label='Exact Data', lw=1, color='gray', alpha=0.7)
@@ -259,7 +259,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     #plot_rio = np.append(rio[rio > 0], 1)
     #plot_rbs = np.append(rbs[rbs > 0], 1)
 
-    ax2.hist(kb_per_wio, bins=bins1, normed=True, color=nc_limegreen)
+    ax2.hist(kb_per_wio, bins=bins1, normed=True, color=nc_green)
     ax2.set_title('Histogram of Write IO Size')
 
     ax5.hist(kb_per_rio, bins=bins1, normed=True, color=nc_blue)
