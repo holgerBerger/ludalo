@@ -200,14 +200,14 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
              lw=2, color=nc_limegreen)
     ax1.set_title('Write MB and IO')
     ax1.legend(loc='best')
-    ax11.legend(loc='best')
+    ax11.legend()
 
     ax41.plot(dates1, rio_per_second, label='IOs', lw=1, color=nc_lightblue)
     ax4.plot(dates1, Rmbs, label='Exact Data', lw=1, color='gray')
     ax4.plot(dates1, RB_Values, label='Filtered Data', lw=2, color=nc_blue)
     ax4.set_title('Read MB and IO')
     ax4.legend(loc='best')
-    ax41.legend(loc='best')
+    ax41.legend()
 
     # ------ scatter plots --------
 
