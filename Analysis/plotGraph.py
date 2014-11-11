@@ -10,6 +10,7 @@ matplotlib.use('AGG')
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
+from matplotlib.ticker import FuncFormatter
 from pylab import *
 import datetime as dt
 import numpy as np
@@ -110,6 +111,12 @@ def plotGraph(list_of_list, diagramName='', mvaLength=21):
 
 
 def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_second, title, verbose=False):
+    nc_limegreen = '#CDDC39'  # googlecolores lime green 500
+    nc_ligthtgreen = '#C5E1A5'  # googlecolores light green 200
+
+    nc_blue = '#2196F3'  # googlecolores blue 500
+    nc_lightblue = '#9FA8DA'  # googlecolores indigo 200
+
     # convert timestamps
     dates1 = [dt.datetime.fromtimestamp(int(ts)) for ts in timestamps]
 
@@ -180,19 +187,37 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
 
     # Speed
 
-    ax11.plot(dates1, wio_per_second, label='Exact Data', lw=1, color='red')
-    ax1.plot(dates1, Wmbs, label='Exact Data', lw=1, color='gray')
-    ax1.plot(dates1, WB_Values, label='Filterd Data', lw=2, color='green')
-    ax1.set_title('Write MB')
+    ax11.plot(dates1, wio_per_second, label='IOs',
+              lw=0.5, color=nc_ligthtgreen)  # IO
+    ax1.plot(dates1, Wmbs, label='Exact Data', lw=1, color='gray')  # speed
+    # filterd speed
+    ax1.plot(dates1, WB_Values, label='Filtered Data',
+             lw=2, color=nc_limegreen)
+    ax1.set_title('Write MB and IO')
     ax1.legend(loc='best')
 
-    ax41.plot(dates1, rio_per_second, label='Exact Data', lw=1, color='red')
+    ax41.plot(dates1, rio_per_second, label='IOs', lw=1, color=nc_lightblue)
     ax4.plot(dates1, Rmbs, label='Exact Data', lw=1, color='gray')
-    ax4.plot(dates1, RB_Values, label='Filterd Data', lw=2, color='blue')
-    ax4.set_title('Read MB')
+    ax4.plot(dates1, RB_Values, label='Filtered Data', lw=2, color=nc_blue)
+    ax4.set_title('Read MB and IO')
     ax4.legend(loc='best')
 
-    # Histograms
+    # ------ scatter plots --------
+
+    kb_per_wio = np.nan_to_num((wbs_per_second / wio_per_second) / 1024)
+    kb_per_rio = np.nan_to_num((rbs_per_second / rio_per_second) / 1024)
+
+    if len(wio_per_second) > 1 and len(kb_per_wio) > 1:
+        ax3.hexbin(wio_per_second, kb_per_wio, bins='log', mincnt=1)
+        # ax3.scatter(wio, wbs, color='green', s=1)
+        ax3.set_title('Scatter Plots Write')
+
+    if len(rio_per_second) > 1 and len(kb_per_rio) > 1:
+        ax6.hexbin(rio_per_second, kb_per_rio, bins='log', mincnt=1)
+        #ax6.scatter(rio[rio > 0], rbs[rbs > 0], color='blue', s=1)
+        ax6.set_title('Scatter Plots Read')
+
+    # ------ Histograms --------
     bins1 = 30
     # avoid arrays with only one elemet. important!
     #plot_wio = np.append(wio[wio > 0], 1)
@@ -201,23 +226,16 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     #plot_rio = np.append(rio[rio > 0], 1)
     #plot_rbs = np.append(rbs[rbs > 0], 1)
 
-    ax2.hist(wio_per_second, bins=bins1, color='green')
+    ax2.hist(wio_per_second, bins=bins1, normed=True, color=nc_limegreen)
     ax2.set_title('Histogram of Write IO Size')
 
-    ax5.hist(rio_per_second, bins=bins1, color='blue')
+    ax5.hist(rio_per_second, bins=bins1, normed=True, color=nc_blue)
     ax5.set_title('Histogram of Read IO Size')
 
-    # ------ scatter plots --------
+    formatter = FuncFormatter(to_percent)
 
-    if len(wio_per_second) > 1 and len(wbs_per_second) > 1:
-        ax3.hexbin(wio_per_second, wbs_per_second, bins='log', mincnt=1)
-        # ax3.scatter(wio, wbs, color='green', s=1)
-        ax3.set_title('Scatter Plots Write')
-
-    if len(rio_per_second) > 1 and len(rbs_per_second) > 1:
-        ax6.hexbin(rio_per_second, rbs_per_second, bins='log', mincnt=1)
-        #ax6.scatter(rio[rio > 0], rbs[rbs > 0], color='blue', s=1)
-        ax6.set_title('Scatter Plots Read')
+    ax2.gca().yaxis.set_major_formatter(formatter)
+    ax5.gca().yaxis.set_major_formatter(formatter)
 
     # show data plot
     plt.tight_layout()
