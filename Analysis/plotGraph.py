@@ -234,8 +234,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
 
     formatter = FuncFormatter(to_percent)
 
-    plt.gca().ax2.yaxis.set_major_formatter(formatter)
-    plt.gca().ax2.yaxis.set_major_formatter(formatter)
+    plt.gca().yaxis.set_major_formatter(formatter)
 
     # show data plot
     plt.tight_layout()
