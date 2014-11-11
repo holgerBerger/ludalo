@@ -135,12 +135,20 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     # claculate filterd values
     mvaRB = MovingAverage(fsize)
     mvaWB = MovingAverage(fsize)
+    mvaRIO = MovingAverage(fsize)
+    mvaWIO = MovingAverage(fsize)
+
     for i in range(len(timestamps)):
         mvaWB.addValue(timestamps[i], Wmbs[i])
         mvaRB.addValue(timestamps[i], Rmbs[i])
+        mvaRIO.addValue(timestamps[i], rbs_per_second[i])
+        mvaWIO.addValue(timestamps[i], wio_per_second[i])
 
     filterd_WB = mvaWB.getAverage()
     filterd_RB = mvaRB.getAverage()
+
+    filterd_IW = mvaWIO.getAverage()
+    filterd_IR = mvaRIO.getAverage()
 
     WB_Values = []
     for item in filterd_WB:
@@ -197,7 +205,10 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
 
     ax11.plot(dates1, wio_per_second, label='IOs',
               lw=1, color=nc_ligthtgreen, alpha=0.7)  # IO
-    ax1.plot(dates1, Wmbs, label='Exact Data', lw=1, color='gray', alpha=0.7)  # speed
+    ax11.plot(dates1, filterd_IW, label='IOs',
+              lw=2, color=nc_ligthtgreen, alpha=0.7)
+    ax1.plot(dates1, Wmbs, label='Exact Data',
+             lw=1, color='gray', alpha=0.7)  # speed
     # filterd speed
     ax1.plot(dates1, WB_Values, label='Filtered Data',
              lw=2, color=nc_limegreen)
@@ -205,7 +216,10 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     ax1.legend(loc='upper left')
     ax11.legend(loc='upper right')
 
-    ax41.plot(dates1, rio_per_second, label='IOs', lw=1, color=nc_lightblue, alpha=0.7)
+    ax41.plot(dates1, rio_per_second, label='IOs',
+              lw=1, color=nc_lightblue, alpha=0.7)
+    ax41.plot(dates1, filterd_IR, label='IOs',
+              lw=2, color=nc_lightblue, alpha=0.7)
     ax4.plot(dates1, Rmbs, label='Exact Data', lw=1, color='gray', alpha=0.7)
     ax4.plot(dates1, RB_Values, label='Filtered Data', lw=2, color=nc_blue)
     ax4.set_title('Read MB and IO')
