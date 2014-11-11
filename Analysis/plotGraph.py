@@ -233,10 +233,10 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     #plot_rio = np.append(rio[rio > 0], 1)
     #plot_rbs = np.append(rbs[rbs > 0], 1)
 
-    ax2.hist(wio_per_second, bins=bins1, normed=True, color=nc_limegreen)
+    ax2.hist(kb_per_wio, bins=bins1, normed=True, color=nc_limegreen)
     ax2.set_title('Histogram of Write IO Size')
 
-    ax5.hist(rio_per_second, bins=bins1, normed=True, color=nc_blue)
+    ax5.hist(kb_per_rio, bins=bins1, normed=True, color=nc_blue)
     ax5.set_title('Histogram of Read IO Size')
 
     # show data plot
