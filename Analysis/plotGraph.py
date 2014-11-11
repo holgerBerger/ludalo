@@ -199,15 +199,15 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     ax1.plot(dates1, WB_Values, label='Filtered Data',
              lw=2, color=nc_limegreen)
     ax1.set_title('Write MB and IO')
-    ax1.legend(loc='left')
-    ax11.legend(loc='right')
+    ax1.legend(loc='upper left')
+    ax11.legend(loc='upper right')
 
     ax41.plot(dates1, rio_per_second, label='IOs', lw=1, color=nc_lightblue, alpha=0.7)
     ax4.plot(dates1, Rmbs, label='Exact Data', lw=1, color='gray', alpha=0.7)
     ax4.plot(dates1, RB_Values, label='Filtered Data', lw=2, color=nc_blue)
     ax4.set_title('Read MB and IO')
-    ax4.legend(loc='left')
-    ax41.legend(loc='right')
+    ax4.legend(loc='upper left')
+    ax41.legend(loc='upper right')
 
     # ------ scatter plots --------
 
