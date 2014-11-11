@@ -120,8 +120,9 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     formatter = FuncFormatter(to_percent)
 
     # convert timestamps
-    timestamps = timestamps.astype(int)
-    dates1 = [dt.datetime.fromtimestamp(int(ts)) for ts in timestamps]
+    # timestamps = timestamps.astype(int)
+    dates1 = [dt.datetime.fromtimestamp(ts) for ts in timestamps]
+    xfmt = md.DateFormatter('%Y-%m-%d %H:%M')
 
     Wmbs = wbs_per_second / (1024 * 1024)
     Rmbs = rbs_per_second / (1024 * 1024)
@@ -152,6 +153,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     # Write
     fig = plt.figure(figsize=(16, 10))
     ax1 = fig.add_subplot(2, 3, 1)
+    ax1.xaxis.set_major_formatter(xfmt)
     plt.xticks(rotation=45)
     plt.xlabel('Time')
     plt.ylabel('Speed [MB/s]')
@@ -172,6 +174,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
 
     # Read
     ax4 = fig.add_subplot(2, 3, 4)
+    ax4.xaxis.set_major_formatter(xfmt)
     plt.xticks(rotation=45)
     plt.xlabel('Time')
     plt.ylabel('Speed [MB/s]')
