@@ -251,12 +251,12 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     kb_per_rio = np.nan_to_num((rbs_per_second / rio_per_second) / 1024)
 
     if len(wio_per_second) > 1 and len(kb_per_wio) > 1:
-        ax3.hexbin(kb_per_wio, wio_per_second, bins='log', mincnt=1)
+        ax3.hexbin(kb_per_wio, Wmbs, bins='log', mincnt=1)
         # ax3.scatter(wio, wbs, color='green', s=1)
         ax3.set_title('Scatter Plots Write')
 
     if len(rio_per_second) > 1 and len(kb_per_rio) > 1:
-        ax6.hexbin(kb_per_rio, rio_per_second, bins='log', mincnt=1)
+        ax6.hexbin(kb_per_rio, Rmbs, bins='log', mincnt=1)
         #ax6.scatter(rio[rio > 0], rbs[rbs > 0], color='blue', s=1)
         ax6.set_title('Scatter Plots Read')
 
