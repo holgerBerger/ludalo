@@ -261,7 +261,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
         ax6.set_title('Scatter Plots Read')
 
     # ------ Histograms --------
-    bins1 = 30
+    bins1 = 20
     # avoid arrays with only one elemet. important!
     #plot_wio = np.append(wio[wio > 0], 1)
     #plot_wbs = np.append(wbs[wbs > 0], 1)
