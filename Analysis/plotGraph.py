@@ -212,23 +212,23 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
 
     # Speed
 
-    ax11.plot(dates1, wio_per_second, label='IOs',
-              lw=1, color='gray', alpha=0.7)  # IO
+    p1, = ax11.plot(dates1, wio_per_second, label='IOs',
+                    lw=1, color='gray', alpha=0.7)  # IO
 
-    ax11.plot(dates1, WIO_Values, label='IOs filterd',
-              lw=2, color=nc_lightgreen, alpha=0.7)
+    p2, = ax11.plot(dates1, WIO_Values, label='IOs filterd',
+                    lw=2, color=nc_lightgreen, alpha=0.7)
 
-    ax11.plot(dates1, mdt, label='MDT IO',
-              lw=2, color=nc_orange, alpha=0.3)
+    p3, = ax11.plot(dates1, mdt, label='MDT IO',
+                    lw=2, color=nc_orange, alpha=0.3)
 
-    ax1.plot(dates1, Wmbs, label='Exact Data',
-             lw=1, color='gray', alpha=0.7)  # speed
+    p4, = ax1.plot(dates1, Wmbs, label='Exact Data',
+                   lw=1, color='gray', alpha=0.7)  # speed
     # filterd speed
-    ax1.plot(dates1, WB_Values, label='Filtered Data',
-             lw=2, color=nc_green)
+    p5, = ax1.plot(dates1, WB_Values, label='Filtered Data',
+                   lw=2, color=nc_green)
     ax1.set_title('Write MB and IO')
-    ax1.legend(loc='upper left', prop={'size': 8})
-    ax11.legend(loc='upper right', prop={'size': 8})
+    ax1.legend([p1, p2, p3, p4, p5], loc='upper left', prop={'size': 8})
+    #ax11.legend(loc='upper right', prop={'size': 8})
 
     ax41.plot(dates1, rio_per_second, label='IOs',
               lw=1, color='gray', alpha=0.7)
