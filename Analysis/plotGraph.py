@@ -110,7 +110,7 @@ def plotGraph(list_of_list, diagramName='', mvaLength=21):
     # plt.show()
 
 
-def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_second, title, verbose=False):
+def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_second, mdt, title, verbose=False):
     # nc_limegreen = '#8BC34A'  # googlecolores green 500
     nc_lightgreen = '#558B2F'  # googlecolores light green 200
     nc_green = '#2E7D32'
@@ -212,8 +212,13 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
 
     ax11.plot(dates1, wio_per_second, label='IOs',
               lw=1, color='gray', alpha=0.7)  # IO
+
     ax11.plot(dates1, WIO_Values, label='IOs filterd',
               lw=2, color=nc_lightgreen, alpha=0.7)
+
+    ax11.plot(dates1, mdt, label='MDT IO',
+              lw=2, color='orange', alpha=0.3)
+
     ax1.plot(dates1, Wmbs, label='Exact Data',
              lw=1, color='gray', alpha=0.7)  # speed
     # filterd speed
@@ -225,8 +230,13 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
 
     ax41.plot(dates1, rio_per_second, label='IOs',
               lw=1, color='gray', alpha=0.7)
+
     ax41.plot(dates1, RIO_Values, label='IOs filterd',
               lw=2, color=nc_lightblue, alpha=0.7)
+
+    ax41.plot(dates1, mdt, label='MDT IO',
+              lw=2, color='orange', alpha=0.3)
+
     ax4.plot(dates1, Rmbs, label='Exact Data', lw=1, color='gray', alpha=0.7)
     ax4.plot(dates1, RB_Values, label='Filtered Data', lw=2, color=nc_blue)
     ax4.set_title('Read MB and IO')
