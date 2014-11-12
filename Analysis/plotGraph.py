@@ -213,7 +213,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     # Speed
 
     ax11.plot(dates1, wio_per_second, label='IOs',
-              lw=1, color='gray', alpha=0.7)  # IO
+              lw=1, color=nc_lightgreen, alpha=0.3)  # IO
 
     ax11.plot(dates1, WIO_Values, label='IOs filterd',
               lw=2, color=nc_lightgreen, alpha=0.7)
@@ -242,7 +242,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     ax4.plot(dates1, Rmbs, label='Exact Data', lw=1, color='gray', alpha=0.7)
     ax4.plot(dates1, RB_Values, label='Filtered Data', lw=2, color=nc_blue)
     ax4.set_title('Read MB and IO')
-    ax4.legend(loc='upper left', prop={'size': 8})
+    ax4.legend(loc='upper left', prop={'size': 8})  # prop change the fond size
     ax41.legend(loc='upper right', prop={'size': 8})
 
     # ------ scatter plots --------
