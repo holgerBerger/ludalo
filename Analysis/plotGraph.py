@@ -118,6 +118,8 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     nc_blue = '#1565C0'  # googlecolores blue 500
     nc_lightblue = '#42A5F5'  # googlecolores indigo 200
 
+    nc_orange = '#EF6C00'
+
     formatter = FuncFormatter(to_percent)
 
     # convert timestamps
@@ -217,7 +219,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
               lw=2, color=nc_lightgreen, alpha=0.7)
 
     ax11.plot(dates1, mdt, label='MDT IO',
-              lw=2, color='orange', alpha=0.3)
+              lw=2, color=nc_orange, alpha=0.3)
 
     ax1.plot(dates1, Wmbs, label='Exact Data',
              lw=1, color='gray', alpha=0.7)  # speed
@@ -235,7 +237,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
               lw=2, color=nc_lightblue, alpha=0.7)
 
     ax41.plot(dates1, mdt, label='MDT IO',
-              lw=2, color='orange', alpha=0.3)
+              lw=2, color=nc_orange, alpha=0.3)
 
     ax4.plot(dates1, Rmbs, label='Exact Data', lw=1, color='gray', alpha=0.7)
     ax4.plot(dates1, RB_Values, label='Filtered Data', lw=2, color=nc_blue)
