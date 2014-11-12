@@ -17,7 +17,7 @@ class DataCollection(object):
     def __init__(self, name):
         super(DataCollection, self).__init__()
         self.name = name
-        self.values = np.zeros((0, 5))
+        self.values = np.zeros((0, 6))
         # 0 ts
         # 1 rb
         # 2 rio
@@ -194,6 +194,7 @@ class DataCollection(object):
         rbs = self.values[:, 2]
         wio = self.values[:, 3]
         wbs = self.values[:, 4]
+        mdt = self.values[:, 5]
 
         # some calculation to
         wbs_per_second = wbs / 10  # toDo grap from config
@@ -208,9 +209,11 @@ class DataCollection(object):
         #rbs_mb_per_s = rbs_kb_per_s / 1024
         #rio_volume_in_kb = np.nan_to_num((rbs / rio) / 1024)
 
+        mdt_per_second = mdt / 10
+
         title = self.name
         self.realMax = graph.plotJob(timestamps, wbs_per_second, wio_per_second,
-                                     rbs_per_second, rio_per_second, title, verbose=False)
+                                     rbs_per_second, rio_per_second, mdt_per_second, title, verbose=False)
 
     def save(self, db):
         pass
