@@ -213,7 +213,7 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     # Speed
 
     ax11.plot(dates1, wio_per_second, label='IOs',
-              lw=1, color=nc_lightgreen, alpha=0.3)  # IO
+              lw=1, color='gray', alpha=0.7)  # IO
 
     ax11.plot(dates1, WIO_Values, label='IOs filterd',
               lw=2, color=nc_lightgreen, alpha=0.7)
