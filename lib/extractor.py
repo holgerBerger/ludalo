@@ -215,7 +215,8 @@ class DataCollection(object):
         self.realMax = graph.plotJob(timestamps, wbs_per_second, wio_per_second,
                                      rbs_per_second, rio_per_second, mdt_per_second, title, verbose=False)
 
-        print 'quantil:', self.quartil, 'mean:', self.getMean, 'Var:', self.getVar, '\nStd:', self.getStd, 'aver:', self.getAverage, 'druation:', self.getDuration
+        # print 'quantil:', self.quartil, 'mean:', self.getMean, 'Var:', self.getVar, 
+        # '\nStd:', self.getStd, 'aver:', self.getAverage, 'druation:', self.getDuration
 
     def save(self, db):
         pass
