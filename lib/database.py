@@ -459,7 +459,7 @@ class Mongo_Conn(object):
     def getFsData(self, collection, tstart, tend):
         ''' this returns a dic witch includ all document form tstart to tend in
             the collection 'collection'. '''
-
+        t = time.time()
         result = self.db[collection].find(
             {"ts": {"$gte": tstart, "$lt": tend}, "nid": "aggr"})
 
@@ -473,7 +473,7 @@ class Mongo_Conn(object):
                        "nid": item['nid'],
                        "val": item['val']}
             returnDict[item['ts']].append(nidDict)
-
+        print collection, time.time() - t
         # print returnDict
         return returnDict
 
