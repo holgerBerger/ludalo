@@ -37,6 +37,10 @@ class DataCollection(object):
             nStringWithNoTime = np.append(nStringWithNoTime, item)
             # nStringWithNoTime.append(item)
 
+        # append zero mdt value
+        nString = np.append(nString, 0)
+        nStringWithNoTime = np.append(nStringWithNoTime, 0)
+
         if ts not in self.timeStampSet:
             # build a numpy matrix to get [[ts, v1, v2, v3, v4]]
             a = np.array([nString])
@@ -50,6 +54,29 @@ class DataCollection(object):
             npts = np.array(self.values[:, 0])
             # get array with timestamp ts and add the values to it.
             foo = self.values[npts == ts] + nStringWithNoTime
+            # overwrite the array at the timestamp pos with the new values.
+            self.values[npts == ts] = foo
+
+        # add timestamp dosen't mater, it is a set.
+        self.timeStampSet.add(ts)
+
+    def appendMDT(self, ts, value):
+        appArray = np.array([0, 0, 0, 0, 0, value[0]])
+        appArrayTs = np.array([ts, 0, 0, 0, 0, value[0]])
+
+        if ts not in self.timeStampSet:
+            # build a numpy matrix to get [[ts, v1, v2, v3, v4]]
+            a = np.array([appArrayTs])
+            # append the new matrix to the original matrix.
+            # [[ts, v1, v2, v3, v4], [ts, v1, v2, v3, v4], ...]
+            a = np.concatenate((self.values, a))
+            self.values = a
+
+        else:
+            # get timestamps
+            npts = np.array(self.values[:, 0])
+            # get array with timestamp ts and add the values to it.
+            foo = self.values[npts == ts] + appArray
             # overwrite the array at the timestamp pos with the new values.
             self.values[npts == ts] = foo
 
@@ -182,8 +209,8 @@ class DataCollection(object):
         #rio_volume_in_kb = np.nan_to_num((rbs / rio) / 1024)
 
         title = self.name
-        graph.plotJob(timestamps, wbs_per_second, wio_per_second,
-                      rbs_per_second, rio_per_second, title, verbose=False)
+        self.realMax = graph.plotJob(timestamps, wbs_per_second, wio_per_second,
+                                     rbs_per_second, rio_per_second, title, verbose=False)
 
     def save(self, db):
         pass
@@ -220,6 +247,9 @@ class dbFsExtraktor(multiprocessing.Process):
             for item in data[key]:
                 if len(item['val']) >= 4:
                     dc.append(key, item['val'])
+                else:
+                    dc.appendMDT(key, item['val'])
+
         return dc
 
     def run(self):

@@ -274,3 +274,4 @@ def plotJob(timestamps, wbs_per_second, wio_per_second, rbs_per_second, rio_per_
     print 'plot to', str(title) + '.png'
     # plt.show()
     plt.close('all')
+    return [np.max(RB_Values), np.max(RIO_Values), np.max(WIO_Values), np.max(WB_Values)]
