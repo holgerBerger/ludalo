@@ -163,17 +163,25 @@ class DataCollection(object):
         return self.quantil(0.75, npArray)
 
     def quantil(self, p, InArray):
-        workingSet = InArray[:]
-        workingSet = sorted(workingSet)
-        n = len(workingSet)
-        index = n * p
-        if int(index) == index:
-            a = workingSet[int(index) - 1]
-            b = workingSet[int(index)]
-            retValue = (a + b) / 2
+        # if inArray len = 0 return
+        if len(InArray) < 1:
+            print 'quantil get empty array!!'
+            return 0
+        elif len(InArray) == 1:
+            print 'quantil get array with one element!!'
+            return InArray[0]
         else:
-            retValue = workingSet[int(math.ceil(index)) - 1]
-        return retValue
+            workingSet = InArray[:]
+            workingSet = sorted(workingSet)
+            n = len(workingSet)
+            index = n * p
+            if int(index) == index:
+                a = workingSet[int(index) - 1]
+                b = workingSet[int(index)]
+                retValue = (a + b) / 2
+            else:
+                retValue = workingSet[int(math.ceil(index)) - 1]
+            return retValue
 
     def calcAll(self):
         self.getTotal = self.getTotal()
@@ -293,7 +301,7 @@ class dbFsExtraktor(multiprocessing.Process):
 
         # main loop fs-extractor
         loopcounter = 0
-        self.dreamer('616145.intern2-2014')
+        # self.dreamer('616145.intern2-2014')
         while True:
 
             # wait for request
