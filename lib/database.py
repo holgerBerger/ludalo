@@ -508,14 +508,14 @@ class Mongo_Conn(object):
         tend = result['end']
         nids = result['nids'].split(',')
 
-        print jobID, tstart, tend, nids
-
         collections = set()
 
         for nid in nids:
             fsList = self.db['nidFS'].find_one({'nid': nid})
             for obj in fsList:
                 collections.add(obj)
+
+        print jobID, tstart, tend, nids, collections
 
         return (collections, tstart, tend, nids)
 
