@@ -252,16 +252,19 @@ class dbFsExtraktor(multiprocessing.Process):
         # collect informations and build objects
         dc = self.selectFromCollection(collection, tstart, tend)
 
-        # calculate stats
-        t = time.time()
-        dc.calcAll()
-        print 'timeToBuild calculations', dc.name, time.time() - t,
-        # generate png
-        t = time.time()
-        dc.get_png()
-        print 'timeToBuild png', dc.name, time.time() - t,
-        # save data to db
-        dc.save(self.db)
+        if len(dc.values) > 1:
+            # calculate stats
+            t = time.time()
+            dc.calcAll()
+            print 'timeToBuild calculations', dc.name, time.time() - t,
+            # generate png
+            t = time.time()
+            dc.get_png()
+            print 'timeToBuild png', dc.name, time.time() - t,
+            # save data to db
+            dc.save(self.db)
+        else:
+            print collection, tstart, tend, 'is empty!!!'
 
     def selectFromCollection(self, collection, tstart, tend):
         dc = DataCollection(collection)
