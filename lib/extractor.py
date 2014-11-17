@@ -264,13 +264,13 @@ class dbFsExtraktor(multiprocessing.Process):
 
     def dreamer(self, jobID):
         # holger example (616145.intern2-2014)
-        raise NotImplementedError
+
         # getting job data
         (collections, tstart, tend, nids) = self.db.getJobData(jobID)
-        dc = DataCollection(None)
 
         # datacollection
         for collection in collections:
+            dc = DataCollection(None)
             data = self.db.selectJobData(collection, tstart, tend, nids)
 
             for key in sorted(data.keys()):
