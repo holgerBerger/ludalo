@@ -279,6 +279,7 @@ class dbFsExtraktor(multiprocessing.Process):
                     dc.append(key, item['val'])
 
             dc.name = str(collection) + str(jobID)
+            print dc.values
             dc.calcAll()
             dc.get_png()
             dc.saveJob(self.db)
