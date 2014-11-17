@@ -512,7 +512,8 @@ class Mongo_Conn(object):
 
         for nid in nids:
             fsList = self.db['nidFS'].find_one({'nid': nid})
-            for obj in fsList:
+            for obj in fsList['fs']:
+                print obj
                 collections.add(obj)
 
         print jobID, tstart, tend, nids, collections
