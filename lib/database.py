@@ -483,6 +483,8 @@ class Mongo_Conn(object):
         # find all timestamps between start and end for the nid in nids[]
         db_query = {"ts": {"$gte": tstart, "$lt": tend}, 'nid': {'$in': nids}}
 
+        print {"ts": {"$gte": tstart, "$lt": tend}, 'nid': {'$in': nids}}
+
         # execute
         result = self.db[collection].find(db_query)
 
@@ -513,10 +515,7 @@ class Mongo_Conn(object):
         for nid in nids:
             fsList = self.db['nidFS'].find_one({'nid': nid})
             for obj in fsList['fs']:
-                print obj
                 collections.add(obj)
-
-        print jobID, tstart, tend, nids, collections
 
         return (collections, tstart, tend, nids)
 
