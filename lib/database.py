@@ -501,11 +501,14 @@ class Mongo_Conn(object):
         return returnDict
 
     def getJobData(self, jobID):
+
         result = self.db['jobs'].find_one({"jobid": jobID})
         # (collection, tstart, tend, nids)
         tstart = result['start']
         tend = result['end']
         nids = result['nids'].split(',')
+
+        print jobID, tstart, tend, nids
 
         collections = set()
 
