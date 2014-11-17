@@ -84,8 +84,11 @@ class DataCollection(object):
         self.timeStampSet.add(ts)
 
     def getDuration(self):
-        d = max(self.values[:, 0]) - min(self.values[:, 0])
-        return d.item(0)
+        if len(self.values[:, 0]) > 1:
+            d = max(self.values[:, 0]) - min(self.values[:, 0])
+            return d.item(0)
+        else:
+            return 0
 
     def getAverage(self):
         a = np.average(self.values[:, 1])
