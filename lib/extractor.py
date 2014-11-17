@@ -221,6 +221,9 @@ class DataCollection(object):
     def save(self, db):
         pass
 
+    def saveJob(self, db):
+        pass
+
 
 class dbFsExtraktor(multiprocessing.Process):
 
