@@ -287,6 +287,7 @@ class dbFsExtraktor(multiprocessing.Process):
 
         # main loop fs-extractor
         loopcounter = 0
+        self.dreamer('616145.intern2-2014')
         while True:
 
             # wait for request
