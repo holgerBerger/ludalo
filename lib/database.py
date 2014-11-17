@@ -501,8 +501,7 @@ class Mongo_Conn(object):
         return returnDict
 
     def getJobData(self, jobID):
-        # holger example (616145.intern2-2014)
-        result = self.db['jobs'].finde_one({"jobid": jobID})
+        result = self.db['jobs'].find_one({"jobid": jobID})
         # (collection, tstart, tend, nids)
         tstart = result['start']
         tend = result['end']
