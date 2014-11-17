@@ -477,6 +477,46 @@ class Mongo_Conn(object):
         # print returnDict
         return returnDict
 
+    def selectJobData(self, collection, tstart, tend, nids):
+
+        t = time.time()
+        # find all timestamps between start and end for the nid in nids[]
+        db_query = {"ts": {"$gte": tstart, "$lt": tend}, 'nid': {'$in': nids}}
+
+        # execute
+        result = self.db[collection].find(db_query)
+
+        # enpty dict of lists
+        returnDict = defaultdict(list)
+
+        for item in result:
+            nidDict = {'fs': collection,
+                       "st": item['st'],
+                       "tgt": item['tgt'],
+                       "nid": item['nid'],
+                       "val": item['val']}
+            returnDict[item['ts']].append(nidDict)
+        print collection, time.time() - t
+        # print returnDict
+        return returnDict
+
+    def getJobData(self, jobID):
+        # holger example (616145.intern2-2014)
+        result = self.db['jobs'].finde_one({"jobid": jobID})
+        # (collection, tstart, tend, nids)
+        tstart = result['start']
+        tend = result['end']
+        nids = result['nids'].split(',')
+
+        collections = set()
+
+        for nid in nids:
+            fsList = self.db['nidFS'].find_one({'nid': nid})
+            for obj in fsList:
+                collections.add(obj)
+
+        return (collections, tstart, tend, nids)
+
     def set_job_calcState(self, jobid, start, calc):
         cyear = time.localtime(start).tm_year
         jobid = jobid + "-" + str(cyear)

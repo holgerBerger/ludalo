@@ -215,7 +215,7 @@ class DataCollection(object):
         self.realMax = graph.plotJob(timestamps, wbs_per_second, wio_per_second,
                                      rbs_per_second, rio_per_second, mdt_per_second, title, verbose=False)
 
-        # print 'quantil:', self.quartil, 'mean:', self.getMean, 'Var:', self.getVar, 
+        # print 'quantil:', self.quartil, 'mean:', self.getMean, 'Var:', self.getVar,
         # '\nStd:', self.getStd, 'aver:', self.getAverage, 'druation:', self.getDuration
 
     def save(self, db):
@@ -239,9 +239,13 @@ class dbFsExtraktor(multiprocessing.Process):
         dc = self.selectFromCollection(collection, tstart, tend)
 
         # calculate stats
+        t = time.time()
         dc.calcAll()
+        print 'timeToBuild calculations', dc.name, time.time() - t,
         # generate png
+        t = time.time()
         dc.get_png()
+        print 'timeToBuild png', dc.name, time.time() - t,
         # save data to db
         dc.save(self.db)
 
@@ -257,6 +261,27 @@ class dbFsExtraktor(multiprocessing.Process):
                     dc.appendMDT(key, item['val'])
 
         return dc
+
+    def dreamer(self, jobID):
+        # holger example (616145.intern2-2014)
+        raise NotImplementedError
+        # getting job data
+        (collections, tstart, tend, nids) = self.db.getJobData(jobID)
+        dc = DataCollection(None)
+
+        # datacollection
+        for collection in collections:
+            data = self.db.selectJobData(collection, tstart, tend, nids)
+
+            for key in sorted(data.keys()):
+                # print key, data[key]['val']
+                for item in data[key]:
+                    dc.append(key, item['val'])
+
+            dc.name = str(collection) + str(jobID)
+            dc.calcAll()
+            dc.get_png()
+            dc.saveJob(self.db)
 
     def run(self):
 
