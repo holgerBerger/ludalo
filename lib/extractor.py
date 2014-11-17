@@ -276,7 +276,10 @@ class dbFsExtraktor(multiprocessing.Process):
             for key in sorted(data.keys()):
                 # print key, data[key]['val']
                 for item in data[key]:
-                    dc.append(key, item['val'])
+                    if len(item['val']) >= 4:
+                        dc.append(key, item['val'])
+                    else:
+                        dc.appendMDT(key, item['val'])
 
             dc.name = str(collection) + str(jobID)
             dc.calcAll()
