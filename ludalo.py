@@ -72,6 +72,10 @@ def mainExtractor(cfg):
     # get config
     extractorSleep = cfg.extractorSleep
     nooextract = cfg.numberOfExtractros
+    db = cfg.getNewDB_Mongo_Conn()
+
+    timerange = 1800
+    maxTokens = nooextract + 3
 
     # create extractors
     extractors = []
@@ -82,21 +86,28 @@ def mainExtractor(cfg):
     # main loop
     while True:
         print 'extractor queue length:', queue.qsize()
-        #joblist = []
-        # check jobs
-        # put jobs in queue
-        # for job in joblist:
-        #    queue.put(job.name)
+
+        # commit tokens
+        tokens = maxTokens - queue.qsize()
 
         fslist = ['lnec', 'nobnec', 'alnec']
-        # check fs
-        # put fs in queue
+
         t = int(time.time())
+
+        # consume tokens for fs
         for fs in fslist:
-            queue.put(('fs', (fs, t - 1800, t)))
-        if queue.qsize() < 5:
+            if tokens > 0:
+                queue.put(('fs', (fs, t - timerange, t)))
+                # consume a token
+                tokens = tokens - 1
+
+        # consume tokens for jobs
+        while tokens > 0:
             # get one job and apend it
-            pass
+            job = db.oneUncalcJob()
+            # queue.put(('job', (fs, t - timerange, t)))
+            print job
+
         time.sleep(extractorSleep)
 
 

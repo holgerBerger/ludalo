@@ -481,7 +481,12 @@ class Mongo_Conn(object):
         return returnDict
 
     def oneUncalcJob(self):
-        ''' return one uncalced job '''
+        ''' return one uncalced jobID and set calcstat'''
+        db_query = {'calc': -1, 'end': {'$gte': 1}}
+        result = self.db['jobs'].find_one(db_query)
+        jobID = result['jobid']
+        self.set_job_calcState(jobID, 0)
+        return jobID
 
     def selectJobData(self, collection, tstart, tend, nids):
 
@@ -523,10 +528,13 @@ class Mongo_Conn(object):
 
         return (collections, tstart, tend, nids)
 
-    def set_job_calcState(self, jobid, start, calc):
-        cyear = time.localtime(start).tm_year
-        jobid = jobid + "-" + str(cyear)
-
+    def set_job_calcState(self, jobid, calc, start=None):
+        # calc -1 job not calculatet
+        # calc 0 job in calculation
+        # calc 1 job compleet calculated
+        if start:
+            cyear = time.localtime(start).tm_year
+            jobid = jobid + "-" + str(cyear)
         self.db["jobs"].update({"jobid": jobid}, {"$set": {"calc": calc}})
 
     def update_jobData(self, jobid, start, end, owner, nids, cmd):
