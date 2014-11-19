@@ -528,6 +528,10 @@ class Mongo_Conn(object):
 
         return (collections, tstart, tend, nids)
 
+    def resetCalcState(self):
+        db_query = {{'calc': 0}, {"$set": {"calc": -1}}}
+        self.db["jobs"].update(db_query)
+
     def set_job_calcState(self, jobid, calc, start=None):
         # calc -1 job not calculatet
         # calc 0 job in calculation
