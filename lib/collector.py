@@ -251,6 +251,7 @@ class Collector(multiprocessing.Process):
 
         # Check the queues if we received some output (until there is nothing more
         # to get).
+        print '  ', self.name, 'Starting loop'
         while not self.stdout_reader.eof() or not self.stderr_reader.eof():
 
             # exit if demanded
@@ -259,11 +260,12 @@ class Collector(multiprocessing.Process):
                 break
 
             # Show what we received from standard output.
-
+            print '  ', self.name, 'waiting for collection signal'
             # wait for signal to send request
             ts = self.sOut.recv()  # this blocks until a send from main
             print '  ', self.name, 'inserter queue len:', self.queue.qsize()
             # print self.name, 'getting send from main start collect'
+            print '  ', self.name, 'sending request to C collector'
             self.sendRequest()
 
             while self.stdout_queue.empty():
@@ -271,8 +273,10 @@ class Collector(multiprocessing.Process):
 
             while not self.stdout_queue.empty():
                 # print "QL", self.stdout_queue.qsize()
+                print '  ', self.name, 'getting data from C collector'
                 line = self.stdout_queue.get()
                 # queue for inserter
+                print '  ', self.name, 'append data to inserter queue'
                 self.queue.put((ts, line))
 
             # Show what we received from standard error.

@@ -39,7 +39,7 @@ class DatabaseInserter(multiprocessing.Process):
             # start the thread and begin to insert if entries in the queue
             self.start()
         except:
-            pass
+            print 'init DatabaseInserter with no mongo connection'
 
     def readhostfile(self):
         hosts = self.cfg.hosts
@@ -137,15 +137,18 @@ class DatabaseInserter(multiprocessing.Process):
         self.nidMap = self.readhostfile()
 
         # self.exit.is_set() fals until exit
+        print '    ', self.name, 'Inserter Starting loop'
         while not (self.exit.is_set() and self.comQueue.empty()):
             while self.comQueue.empty():
                 time.sleep(0.1)
 
+            print '    ', self.name, 'Inserter testing if connection is alive'
             if not self.db or not self.db.alive():
                 self.reconnect()
 
             insertObject = self.comQueue.get()
             # Insert the object form pipe db
+            print '    ', self.name, 'Inserter inserting object'
             try:
                 self.insert(insertObject)
             except Exception:
@@ -172,7 +175,7 @@ class DatabaseInserter(multiprocessing.Process):
             try:
                 self.db.close()
             except Exception:
-                pass
+                print 'db.close faild'
             if nr_try > 9:
                 print 'Reconnection failed! After 9 tries wait 30sec and retry'
                 time.sleep(30)
@@ -181,7 +184,7 @@ class DatabaseInserter(multiprocessing.Process):
             try:
                 self.db = self.cfg.getNewDB_Mongo_Conn()
             except:
-                pass
+                print 'no new mongo connection'
             time.sleep(1)
             self.reconnect(nr_try + 1)
 
@@ -477,13 +480,14 @@ class Mongo_Conn(object):
         # print returnDict
         return returnDict
 
+    def oneUncalcJob(self):
+        ''' return one uncalced job '''
+
     def selectJobData(self, collection, tstart, tend, nids):
 
         t = time.time()
         # find all timestamps between start and end for the nid in nids[]
         db_query = {"ts": {"$gte": tstart, "$lt": tend}, 'nid': {'$in': nids}}
-
-        print {"ts": {"$gte": tstart, "$lt": tend}, 'nid': {'$in': nids}}
 
         # execute
         result = self.db[collection].find(db_query)

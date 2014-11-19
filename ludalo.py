@@ -85,12 +85,15 @@ def mainExtractor(cfg):
         # for job in joblist:
         #    queue.put(job.name)
 
-        fslist = ['lnec', 'nobnec']
+        fslist = ['lnec', 'nobnec', 'alnec']
         # check fs
         # put fs in queue
         t = int(time.time())
         for fs in fslist:
-            queue.put((fs, t - 1800, t))
+            queue.put(('fs', (fs, t - 1800, t)))
+        if queue.qsize() < 5:
+            # get one job and apend it
+            pass
         time.sleep(extractorSleep)
 
 

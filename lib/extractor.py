@@ -322,6 +322,10 @@ class dbFsExtraktor(multiprocessing.Process):
                 obj = self.queue.get()
                 # calcLilst.append(obj)
                 #resultObjects = self.pool.map(extract, calcLilst)
-                self.extract(obj)
+                if obj[0] == 'fs':
+                    self.extract(obj[1])
+                elif obj[0] == 'job':
+                    self.dreamer(obj[1])
+
             loopcounter = loopcounter + 1
             print 'loop:', loopcounter
