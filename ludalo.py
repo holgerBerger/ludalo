@@ -83,6 +83,8 @@ def mainExtractor(cfg):
     for x in xrange(0, nooextract):
         extractors.append(extractor.dbFsExtraktor(cfg, queue))
 
+    db.resetCalcState()
+
     # main loop
     while True:
         print 'extractor queue length:', queue.qsize()
