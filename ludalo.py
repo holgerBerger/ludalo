@@ -109,6 +109,7 @@ def mainExtractor(cfg):
             job = db.oneUncalcJob()
             # queue.put(('job', (fs, t - timerange, t)))
             print job
+            tokens = tokens - 1
 
         time.sleep(extractorSleep)
 
