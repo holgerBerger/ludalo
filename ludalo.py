@@ -34,8 +34,10 @@ def mainCollector(cfg):
 
     try:
         while True:
+            print 'Main-Thread: Starting loop'
             iteration = iteration + 1
             insertTimestamp = int(time.time())
+            print 'Main-Thread: testing if collector is alive'
             for pair in CollectorInserter:
                 if not pair.inserter_is_alive():
                     # try new connection
@@ -47,6 +49,7 @@ def mainCollector(cfg):
                     print 'Main-Thread: try recover collectror', pair.collector
                     pair.collector_reconnect()
 
+                print 'Main-Thread: send collect signal'
                 # send signal to collect data
                 pair.collect(insertTimestamp)
 
