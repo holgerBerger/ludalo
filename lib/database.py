@@ -515,6 +515,7 @@ class Mongo_Conn(object):
 
         result = self.db['jobs'].find_one({"jobid": jobID})
         # (collection, tstart, tend, nids)
+        print 'result set', result
         tstart = result['start']
         tend = result['end']
         nids = result['nids'].split(',')
@@ -534,15 +535,15 @@ class Mongo_Conn(object):
     def saveJobStats(self, jobID, fs, stats):
         total, quartil, mean, var, std, average, duration = stats
 
-        self.db["jobsStats"].update({'jobid': jobID}, {'$set': { 
-                                                            'fs': fs,
-                                                            'total': total,
-                                                            'quartil': quartil,
-                                                            'mean': mean,
-                                                            'var': var, 
-                                                            'std': std,
-                                                            'average': average,
-                                                            }})
+        self.db["jobsStats"].update({'jobid': jobID}, {'$set': {
+            'fs': fs,
+            'total': total,
+            'quartil': quartil,
+            'mean': mean,
+            'var': var,
+            'std': std,
+            'average': average,
+        }})
 
     def set_job_calcState(self, jobid, calc, start=None):
         # calc -1 job not calculatet
