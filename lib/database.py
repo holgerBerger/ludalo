@@ -462,7 +462,7 @@ class Mongo_Conn(object):
     def getFsData(self, collection, tstart, tend):
         ''' this returns a dic witch includ all document form tstart to tend in
             the collection 'collection'. '''
-        t = time.time()
+        #t = time.time()
         result = self.db[collection].find(
             {"ts": {"$gte": tstart, "$lt": tend}, "nid": "aggr"})
 
@@ -476,7 +476,7 @@ class Mongo_Conn(object):
                        "nid": item['nid'],
                        "val": item['val']}
             returnDict[item['ts']].append(nidDict)
-        print collection, time.time() - t
+        #print collection, time.time() - t
         # print returnDict
         return returnDict
 
@@ -490,7 +490,7 @@ class Mongo_Conn(object):
 
     def selectJobData(self, collection, tstart, tend, nids):
 
-        t = time.time()
+
         # find all timestamps between start and end for the nid in nids[]
         db_query = {"ts": {"$gte": tstart, "$lt": tend}, 'nid': {'$in': nids}}
 
@@ -507,7 +507,7 @@ class Mongo_Conn(object):
                        "nid": item['nid'],
                        "val": item['val']}
             returnDict[item['ts']].append(nidDict)
-        print collection, time.time() - t
+
         # print returnDict
         return returnDict
 
@@ -515,7 +515,7 @@ class Mongo_Conn(object):
 
         result = self.db['jobs'].find_one({"jobid": jobID})
         # (collection, tstart, tend, nids)
-        print 'jobid', jobID, 'result set', result
+        # print 'jobid', jobID, 'result set', result
         tstart = result['start']
         tend = result['end']
         nids = result['nids'].split(',')

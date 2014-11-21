@@ -253,6 +253,7 @@ class dbFsExtraktor(multiprocessing.Process):
     def extract(self, input):
         (collection, tstart, tend) = input
         # collect informations and build objects
+        print self.name, 'extrac:', collection
         dc = self.selectFromCollection(collection, tstart, tend)
 
         if len(dc.values) > 1:
@@ -286,7 +287,7 @@ class dbFsExtraktor(multiprocessing.Process):
         # holger example (616145.intern2-2014)
 
         # getting job data
-        print 'dreame jobID', jobID[0]
+        print self.name, ' dreame jobID', jobID[0]
         (collections, tstart, tend, nids) = self.db.getJobData(jobID[0])
 
         # datacollection
@@ -332,4 +333,4 @@ class dbFsExtraktor(multiprocessing.Process):
                     self.dreamer(obj[1])
 
             loopcounter = loopcounter + 1
-            print 'loop:', loopcounter
+            print self.name, 'loop:', loopcounter
