@@ -234,7 +234,8 @@ class DataCollection(object):
 
     def saveJob(self, db):
         jobID, fs = self.name.split('@')
-        stats = (self.total, self.quartil, self.mean, self.var, self.std, self.average, self.duration)
+        stats = (self.total, self.quartil, self.mean, self.var,
+                 self.std, self.average, self.duration)
         db.saveJobStats(jobID, fs, stats)
 
 
@@ -325,8 +326,10 @@ class dbFsExtraktor(multiprocessing.Process):
                 # calcLilst.append(obj)
                 #resultObjects = self.pool.map(extract, calcLilst)
                 if obj[0] == 'fs':
+                    print 'fs', obj[0]
                     self.extract(obj[1])
                 elif obj[0] == 'job':
+                    print 'job', obj[0]
                     self.dreamer(obj[1])
 
             loopcounter = loopcounter + 1
