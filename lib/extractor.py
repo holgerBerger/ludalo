@@ -286,8 +286,8 @@ class dbFsExtraktor(multiprocessing.Process):
         # holger example (616145.intern2-2014)
 
         # getting job data
-        print 'dreame jobID', jobID
-        (collections, tstart, tend, nids) = self.db.getJobData(jobID)
+        print 'dreame jobID', jobID[0]
+        (collections, tstart, tend, nids) = self.db.getJobData(jobID[0])
 
         # datacollection
         for collection in collections:
