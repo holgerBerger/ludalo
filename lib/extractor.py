@@ -257,13 +257,13 @@ class dbFsExtraktor(multiprocessing.Process):
 
         if len(dc.values) > 1:
             # calculate stats
-            t = time.time()
+            #t = time.time()
             dc.calcAll()
-            print 'timeToBuild calculations', dc.name, time.time() - t,
+            #print 'timeToBuild calculations', dc.name, time.time() - t,
             # generate png
-            t = time.time()
+            #t = time.time()
             dc.get_png()
-            print 'timeToBuild png', dc.name, time.time() - t,
+            #print 'timeToBuild png', dc.name, time.time() - t,
             # save data to db
             dc.save(self.db)
         else:
@@ -326,10 +326,8 @@ class dbFsExtraktor(multiprocessing.Process):
                 # calcLilst.append(obj)
                 #resultObjects = self.pool.map(extract, calcLilst)
                 if obj[0] == 'fs':
-                    print 'fs', obj[0]
                     self.extract(obj[1])
                 elif obj[0] == 'job':
-                    print 'job', obj[0]
                     self.dreamer(obj[1])
 
             loopcounter = loopcounter + 1
