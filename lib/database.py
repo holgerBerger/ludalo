@@ -515,7 +515,7 @@ class Mongo_Conn(object):
 
         result = self.db['jobs'].find_one({"jobid": jobID})
         # (collection, tstart, tend, nids)
-        print 'result set', result
+        print 'jobid', jobID, 'result set', result
         tstart = result['start']
         tend = result['end']
         nids = result['nids'].split(',')
