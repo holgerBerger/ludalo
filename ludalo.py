@@ -107,7 +107,7 @@ def mainExtractor(cfg):
         while tokens > 0:
             # get one job and apend it
             job = db.oneUncalcJob()
-            queue.put(('job', (fs, t - timerange, t)))
+            queue.put(('job', (job, t - timerange, t)))
             print job
             tokens = tokens - 1
 
