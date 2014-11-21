@@ -531,6 +531,19 @@ class Mongo_Conn(object):
     def resetCalcState(self):
         self.db["jobs"].update({'calc': 0}, {"$set": {"calc": -1}})
 
+    def saveJobStats(self, jobID, fs, stats):
+        total, quartil, mean, var, std, average, duration = stats
+
+        self.db["jobsStats"].update({'jobid': jobID}, {'$set': { 
+                                                            'fs': fs,
+                                                            'total': total,
+                                                            'quartil': quartil,
+                                                            'mean': mean,
+                                                            'var': var, 
+                                                            'std': std,
+                                                            'average': average,
+                                                            }})
+
     def set_job_calcState(self, jobid, calc, start=None):
         # calc -1 job not calculatet
         # calc 0 job in calculation

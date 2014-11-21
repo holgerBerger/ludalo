@@ -187,16 +187,16 @@ class DataCollection(object):
             return retValue
 
     def calcAll(self):
-        self.getTotal = self.getTotal()
+        self.total = self.getTotal()
         # median of np.matrix is broken #4301 29.10.2014
         # self.getMedian = self.getMedian()
         # >>> np.version.version '1.8.1'
         self.quartil = self.getQuartil()
-        self.getMean = self.getMean()
-        self.getVar = self.getVar()
-        self.getStd = self.getStd()
-        self.getAverage = self.getAverage()
-        self.getDuration = self.getDuration()
+        self.mean = self.getMean()
+        self.var = self.getVar()
+        self.std = self.getStd()
+        self.average = self.getAverage()
+        self.duration = self.getDuration()
 
     def get_png(self):
 
@@ -233,7 +233,9 @@ class DataCollection(object):
         pass
 
     def saveJob(self, db):
-        pass
+        jobID, fs = self.name.split('@')
+        stats = (self.total, self.quartil, self.mean, self.var, self.std, self.average, self.duration)
+        db.saveJobStats(jobID, fs, stats)
 
 
 class dbFsExtraktor(multiprocessing.Process):
@@ -298,9 +300,9 @@ class dbFsExtraktor(multiprocessing.Process):
                     else:
                         dc.appendMDT(key, item['val'])
 
-            dc.name = str(collection) + str(jobID)
+            dc.name = str(jobID) + '@' + str(collection)
             dc.calcAll()
-            dc.get_png()
+            # dc.get_png()
             dc.saveJob(self.db)
 
     def run(self):
