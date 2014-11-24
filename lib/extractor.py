@@ -237,6 +237,7 @@ class DataCollection(object):
         stats = (self.total, self.quartil, self.mean, self.var,
                  self.std, self.average, self.duration)
         db.saveJobStats(jobID, fs, stats)
+        db.set_job_calcState(jobID, 1)
 
 
 class dbFsExtraktor(multiprocessing.Process):
@@ -272,7 +273,8 @@ class dbFsExtraktor(multiprocessing.Process):
             print '  ', collection, tstart, tend, 'is empty!!!'
 
     def selectFromCollection(self, collection, tstart, tend):
-        dc = DataCollection(collection)
+        fdName = str(collection) + '_' + str(int((tend - tstart) / 60))
+        dc = DataCollection(fdName)
         data = self.db.getFsData(collection, tstart, tend)
         for key in sorted(data.keys()):
             # print key, data[key]['val']

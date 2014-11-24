@@ -490,7 +490,6 @@ class Mongo_Conn(object):
 
     def selectJobData(self, collection, tstart, tend, nids):
 
-
         # find all timestamps between start and end for the nid in nids[]
         db_query = {"ts": {"$gte": tstart, "$lt": tend}, 'nid': {'$in': nids}}
 

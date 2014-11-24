@@ -94,7 +94,13 @@ def mainExtractor(cfg):
 
     jobToken = 0
     fsToken = 0
+    fsPos = 0
     # main loop
+
+    twoHouer = 60*60*2
+    twoDays = 60*60*24*2
+    ts = int(time.time())
+
     while True:
         print 'extractor queue length:', queue.qsize()
 
@@ -109,7 +115,7 @@ def mainExtractor(cfg):
             # return a fs token
             elif rt == 'fs':
                 # return a job token (stolen)
-                if fsToken >= len(fslist) + 1:
+                if fsToken >= len(fslist):
                     jobToken = jobToken + 1
                     print 'return job token', jobToken
                 else:
@@ -136,11 +142,22 @@ def mainExtractor(cfg):
 
         # consume tokens for jobs
         while jobToken > 0:
-            # get one job and apend it
-            job = db.oneUncalcJob()
-            queue.put(('job', (job, t - timerange, t)))
-            print 'consume a job token', job
-            jobToken = jobToken - 1
+            if (ts + timerange) < t:
+                fs = fslist[fsPos]
+                print 'long fs png'
+                queue.put(('fs', (fs, t - twoDays, t)))
+                jobToken = jobToken - 1
+                fsPos = fsPos + 1
+                if fsPos >= len(fslist):
+                    fsPos = 0
+                    ts = int(time.time())
+
+            else:
+                # get one job and apend it
+                job = db.oneUncalcJob()
+                queue.put(('job', (job, t - timerange, t)))
+                print 'consume a job token', job
+                jobToken = jobToken - 1
 
         print 'token job/fs:', jobToken, fsToken
         time.sleep(extractorSleep)
