@@ -87,14 +87,10 @@ def mainExtractor(cfg):
 
     db.resetCalcState()
     for x in xrange(0, len(fslist)):
-        print 'fs', x
         tokenQueue.put('fs')
 
     for y in xrange(0, maxTokens - len(fslist)):
-        print 'job', y
         tokenQueue.put('job')
-
-    print 'setup, maxTokens', maxTokens, maxTokens - len(fslist)
 
     jobToken = 0
     fsToken = 0
@@ -104,19 +100,23 @@ def mainExtractor(cfg):
 
         # commit tokens
         while tokenQueue.qsize() > 0:
+            print 'tokenQueue', tokenQueue.qsize()
             rt = tokenQueue.get()
 
             # return a job token
             if rt == 'job':
                 jobToken = jobToken + 1
+                print 'job token', jobToken
 
             # return a fs token
             elif rt == 'fs':
                 # return a job token (stolen)
                 if fsToken >= len(fslist) + 1:
                     jobToken = jobToken + 1
+                    print 'return job token', jobToken
                 else:
                     fsToken = fsToken + 1
+                    print 'fs token', fsToken
             else:
                 print 'undef token:', rt
         print 'token job/fs:', jobToken, fsToken
@@ -128,6 +128,7 @@ def mainExtractor(cfg):
             if fsToken > 0:
                 queue.put(('fs', (fs, t - timerange, t)))
                 # consume a token
+                print 'consume a fsToken', fs
                 fsToken = fsToken - 1
 
             elif jobToken > 0:
@@ -141,9 +142,10 @@ def mainExtractor(cfg):
             # get one job and apend it
             job = db.oneUncalcJob()
             queue.put(('job', (job, t - timerange, t)))
-            print job
+            print 'consume a job token', job
             jobToken = jobToken - 1
 
+        print 'token job/fs:', jobToken, fsToken
         time.sleep(extractorSleep)
 
 
