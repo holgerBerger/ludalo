@@ -86,12 +86,12 @@ def mainExtractor(cfg):
         extractors.append(extractor.dbFsExtraktor(cfg, queue, tokenQueue))
 
     db.resetCalcState()
-    for x in xrange(1, len(fslist)):
+    for x in xrange(0, len(fslist)):
         print 'fs', x
         tokenQueue.put('fs')
 
-    for x in xrange(1, maxTokens - len(fslist)):
-        print 'job', x
+    for y in xrange(1, maxTokens - len(fslist)):
+        print 'job', y
         tokenQueue.put('job')
 
     print 'setup, maxTokens', maxTokens
