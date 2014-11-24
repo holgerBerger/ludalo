@@ -261,17 +261,15 @@ class dbFsExtraktor(multiprocessing.Process):
             # calculate stats
             #t = time.time()
             dc.calcAll()
-            #print 'timeToBuild calculations', dc.name, time.time() - t,
+            # print 'timeToBuild calculations', dc.name, time.time() - t,
             # generate png
             #t = time.time()
             dc.get_png()
-            #print 'timeToBuild png', dc.name, time.time() - t,
+            # print 'timeToBuild png', dc.name, time.time() - t,
             # save data to db
             dc.save(self.db)
         else:
             print '  ', collection, tstart, tend, 'is empty!!!'
-
-        self.tokenQueue.put('fs')
 
     def selectFromCollection(self, collection, tstart, tend):
         dc = DataCollection(collection)
@@ -310,7 +308,6 @@ class dbFsExtraktor(multiprocessing.Process):
             dc.calcAll()
             # dc.get_png()
             dc.saveJob(self.db)
-            self.tokenQueue.put('job')
 
     def run(self):
 
@@ -333,8 +330,10 @@ class dbFsExtraktor(multiprocessing.Process):
                 #resultObjects = self.pool.map(extract, calcLilst)
                 if obj[0] == 'fs':
                     self.extract(obj[1])
+                    self.tokenQueue.put('job')
                 elif obj[0] == 'job':
                     self.dreamer(obj[1])
+                    self.tokenQueue.put('fs')
 
             loopcounter = loopcounter + 1
             print '  ', self.name, 'loop:', loopcounter
