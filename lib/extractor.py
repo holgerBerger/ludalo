@@ -168,10 +168,10 @@ class DataCollection(object):
     def quantil(self, p, InArray):
         # if inArray len = 0 return
         if len(InArray) < 1:
-            print 'quantil get empty array!!'
+            print '  ', 'quantil get empty array!!'
             return 0
         elif len(InArray) == 1:
-            print 'quantil get array with one element!!'
+            print '  ', 'quantil get array with one element!!'
             return InArray[0]
         else:
             workingSet = InArray[:]
@@ -243,17 +243,18 @@ class dbFsExtraktor(multiprocessing.Process):
 
     """docstring for dbExtraktor"""
 
-    def __init__(self, cfg, queue):
+    def __init__(self, cfg, queue, tokenQueue):
         super(dbFsExtraktor, self).__init__()
         self.db = cfg.getNewDB_Mongo_Conn()
         self.queue = queue
+        self.tokenQueue = tokenQueue
         #self.pool = multiprocessing.Pool(processes=4)
         self.start()
 
     def extract(self, input):
         (collection, tstart, tend) = input
         # collect informations and build objects
-        print self.name, 'extrac:', collection
+        print '  ', self.name, 'extrac:', collection
         dc = self.selectFromCollection(collection, tstart, tend)
 
         if len(dc.values) > 1:
@@ -268,7 +269,9 @@ class dbFsExtraktor(multiprocessing.Process):
             # save data to db
             dc.save(self.db)
         else:
-            print collection, tstart, tend, 'is empty!!!'
+            print '  ', collection, tstart, tend, 'is empty!!!'
+
+        self.tokenQueue.put('fs')
 
     def selectFromCollection(self, collection, tstart, tend):
         dc = DataCollection(collection)
@@ -287,7 +290,7 @@ class dbFsExtraktor(multiprocessing.Process):
         # holger example (616145.intern2-2014)
 
         # getting job data
-        print self.name, ' dreame jobID', jobID[0]
+        print '  ', self.name, ' dreame jobID', jobID[0]
         (collections, tstart, tend, nids) = self.db.getJobData(jobID[0])
 
         # datacollection
@@ -307,6 +310,7 @@ class dbFsExtraktor(multiprocessing.Process):
             dc.calcAll()
             # dc.get_png()
             dc.saveJob(self.db)
+            self.tokenQueue.put('job')
 
     def run(self):
 
@@ -333,4 +337,4 @@ class dbFsExtraktor(multiprocessing.Process):
                     self.dreamer(obj[1])
 
             loopcounter = loopcounter + 1
-            print self.name, 'loop:', loopcounter
+            print '  ', self.name, 'loop:', loopcounter

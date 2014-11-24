@@ -75,41 +75,69 @@ def mainExtractor(cfg):
     db = cfg.getNewDB_Mongo_Conn()
 
     timerange = 1800
-    maxTokens = nooextract + 3
+    maxTokens = nooextract
+    fslist = ['lnec', 'nobnec', 'alnec']
 
     # create extractors
     extractors = []
     queue = multiprocessing.Queue()
+    tokenQueue = multiprocessing.Queue()
     for x in xrange(0, nooextract):
-        extractors.append(extractor.dbFsExtraktor(cfg, queue))
+        extractors.append(extractor.dbFsExtraktor(cfg, queue, tokenQueue))
 
     db.resetCalcState()
+    for x in xrange(1, len(fslist)):
+        tokenQueue.put('fs')
 
+    for x in xrange(1, maxTokens - len(fslist)):
+        tokenQueue.put('job')
+
+    jobToken = 0
+    fsToken = 0
     # main loop
     while True:
         print 'extractor queue length:', queue.qsize()
 
         # commit tokens
-        tokens = maxTokens - queue.qsize()
+        while queue.qsize() < 0:
+            rt = queue.get()
 
-        fslist = ['lnec', 'nobnec', 'alnec']
+            # return a job token
+            if rt == 'job':
+                jobToken = jobToken + 1
+
+            # return a fs token
+            elif rt == 'fs':
+                # return a job token (stolen)
+                if fsToken >= len(fslist) + 1:
+                    jobToken = jobToken + 1
+                else:
+                    fsToken = fsToken + 1
+            else:
+                print 'undef token:', rt
 
         t = int(time.time())
 
         # consume tokens for fs
         for fs in fslist:
-            if tokens > 0:
+            if fsToken > 0:
                 queue.put(('fs', (fs, t - timerange, t)))
                 # consume a token
-                tokens = tokens - 1
+                fsToken = fsToken - 1
+
+            elif jobToken > 0:
+                queue.put(('fs', (fs, t - timerange, t)))
+                # consume a token
+                print 'steal job token for fs:', fs
+                jobToken = jobToken - 1
 
         # consume tokens for jobs
-        while tokens > 0:
+        while jobToken > 0:
             # get one job and apend it
             job = db.oneUncalcJob()
             queue.put(('job', (job, t - timerange, t)))
             print job
-            tokens = tokens - 1
+            jobToken = jobToken - 1
 
         time.sleep(extractorSleep)
 
