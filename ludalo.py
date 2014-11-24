@@ -87,10 +87,14 @@ def mainExtractor(cfg):
 
     db.resetCalcState()
     for x in xrange(1, len(fslist)):
+        print 'fs', x
         tokenQueue.put('fs')
 
     for x in xrange(1, maxTokens - len(fslist)):
+        print 'job', x
         tokenQueue.put('job')
+
+    print 'setup, maxTokens', maxTokens
 
     jobToken = 0
     fsToken = 0
