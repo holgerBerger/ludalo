@@ -97,12 +97,13 @@ def mainExtractor(cfg):
     fsPos = 0
     # main loop
 
-    twoHouer = 60*60*2
-    twoDays = 60*60*24*2
+    # twoHouer = 60*60*2
+    twoDays = 60 * 60 * 24 * 2
     ts = int(time.time())
 
     while True:
         print 'extractor queue length:', queue.qsize()
+        print 'token job/fs:', jobToken, fsToken
 
         # commit tokens
         while tokenQueue.qsize() > 0:
@@ -122,7 +123,7 @@ def mainExtractor(cfg):
                     fsToken = fsToken + 1
             else:
                 print 'undef token:', rt
-        # print 'token job/fs:', jobToken, fsToken
+        print 'token job/fs:', jobToken, fsToken
 
         t = int(time.time())
 
@@ -159,7 +160,6 @@ def mainExtractor(cfg):
                 print 'consume a job token', job
                 jobToken = jobToken - 1
 
-        print 'token job/fs:', jobToken, fsToken
         time.sleep(extractorSleep)
 
 
