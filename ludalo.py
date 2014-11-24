@@ -103,7 +103,7 @@ def mainExtractor(cfg):
         print 'extractor queue length:', queue.qsize()
 
         # commit tokens
-        while tokenQueue.qsize() < 0:
+        while tokenQueue.qsize() > 0:
             rt = tokenQueue.get()
 
             # return a job token
