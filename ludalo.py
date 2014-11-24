@@ -115,6 +115,7 @@ def mainExtractor(cfg):
                     fsToken = fsToken + 1
             else:
                 print 'undef token:', rt
+        print 'token job/fs:', jobToken, fsToken
 
         t = int(time.time())
 
