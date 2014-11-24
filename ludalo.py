@@ -100,13 +100,11 @@ def mainExtractor(cfg):
 
         # commit tokens
         while tokenQueue.qsize() > 0:
-            print 'tokenQueue', tokenQueue.qsize()
             rt = tokenQueue.get()
 
             # return a job token
             if rt == 'job':
                 jobToken = jobToken + 1
-                print 'job token', jobToken
 
             # return a fs token
             elif rt == 'fs':
@@ -116,10 +114,9 @@ def mainExtractor(cfg):
                     print 'return job token', jobToken
                 else:
                     fsToken = fsToken + 1
-                    print 'fs token', fsToken
             else:
                 print 'undef token:', rt
-        print 'token job/fs:', jobToken, fsToken
+        # print 'token job/fs:', jobToken, fsToken
 
         t = int(time.time())
 
@@ -128,7 +125,7 @@ def mainExtractor(cfg):
             if fsToken > 0:
                 queue.put(('fs', (fs, t - timerange, t)))
                 # consume a token
-                print 'consume a fsToken', fs
+                # print 'consume a fsToken', fs
                 fsToken = fsToken - 1
 
             elif jobToken > 0:
