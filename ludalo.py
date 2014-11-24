@@ -90,7 +90,7 @@ def mainExtractor(cfg):
         print 'fs', x
         tokenQueue.put('fs')
 
-    for y in xrange(1, maxTokens - len(fslist)):
+    for y in xrange(0, maxTokens - len(fslist)):
         print 'job', y
         tokenQueue.put('job')
 
