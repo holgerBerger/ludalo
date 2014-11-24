@@ -94,7 +94,7 @@ def mainExtractor(cfg):
         print 'job', y
         tokenQueue.put('job')
 
-    print 'setup, maxTokens', maxTokens
+    print 'setup, maxTokens', maxTokens, maxTokens - len(fslist)
 
     jobToken = 0
     fsToken = 0
