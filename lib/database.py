@@ -534,15 +534,16 @@ class Mongo_Conn(object):
     def saveJobStats(self, jobID, fs, stats):
         total, quartil, mean, var, std, average, duration = stats
 
-        self.db["jobStats"].update({'jobid': jobID}, {'$set': {
-            'fs': fs,
-            'total': total,
-            'quartil': quartil,
-            'mean': mean,
-            'var': var,
-            'std': std,
-            'average': average,
-        }}, upsert=True)
+        print '    saveJobStats', jobID
+        #self.db["jobStats"].update({'jobid': jobID}, {'$set': {
+        #    'fs': fs,
+        #    'total': total,
+        #    'quartil': quartil,
+        #    'mean': mean,
+        #    'var': var,
+        #    'std': std,
+        #    'average': average,
+        #}}, upsert=True)
 
     def set_job_calcState(self, jobid, calc, start=None):
         # calc -1 job not calculatet
