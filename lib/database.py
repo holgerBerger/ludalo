@@ -542,7 +542,7 @@ class Mongo_Conn(object):
             'var': var,
             'std': std,
             'average': average,
-        }})
+        }}, upsert=True)
 
     def set_job_calcState(self, jobid, calc, start=None):
         # calc -1 job not calculatet
