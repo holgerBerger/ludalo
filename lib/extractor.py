@@ -236,6 +236,7 @@ class DataCollection(object):
         jobID, fs = self.name.split('@')
         stats = (self.total, self.quartil, self.mean, self.var,
                  self.std, self.average, self.duration)
+        print '   saveJob', jobID, fs, stats
         db.saveJobStats(jobID, fs, stats)
         db.set_job_calcState(jobID, 1)
 
