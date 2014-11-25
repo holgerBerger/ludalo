@@ -534,7 +534,7 @@ class Mongo_Conn(object):
     def saveJobStats(self, jobID, fs, stats):
         total, quartil, mean, var, std, average, duration = stats
 
-        self.db["jobsStats"].update({'jobid': jobID}, {'$set': {
+        self.db["jobStats"].update({'jobid': jobID}, {'$set': {
             'fs': fs,
             'total': total,
             'quartil': quartil,
