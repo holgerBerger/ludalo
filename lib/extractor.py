@@ -236,7 +236,6 @@ class DataCollection(object):
         jobID, fs = self.name.split('@')
         stats = (self.total, self.quartil, self.mean, self.var,
                  self.std, self.average, self.duration)
-        print '   saveJob', jobID, fs, stats
         db.saveJobStats(jobID, fs, stats)
         db.set_job_calcState(jobID, 1)
 
@@ -308,9 +307,12 @@ class dbFsExtraktor(multiprocessing.Process):
                         dc.appendMDT(key, item['val'])
 
             dc.name = str(jobID[0]) + '@' + str(collection)
-            dc.calcAll()
-            # dc.get_png()
-            dc.saveJob(self.db)
+            if len(dc.values) > 1:
+                dc.calcAll()
+                # dc.get_png()
+                dc.saveJob(self.db)
+            else:
+                print '  ', self.name, 'empty collection', collection
 
     def run(self):
 

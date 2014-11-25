@@ -529,21 +529,20 @@ class Mongo_Conn(object):
         return (collections, tstart, tend, nids)
 
     def resetCalcState(self):
-        self.db["jobs"].update({'calc': 0}, {"$set": {"calc": -1}})
+        self.db["jobs"].update({'calc': 0}, {"$set": {"calc": -1}}, multi=True)
 
     def saveJobStats(self, jobID, fs, stats):
         total, quartil, mean, var, std, average, duration = stats
 
-        print '    saveJobStats', jobID
-        #self.db["jobStats"].update({'jobid': jobID}, {'$set': {
-        #    'fs': fs,
-        #    'total': total,
-        #    'quartil': quartil,
-        #    'mean': mean,
-        #    'var': var,
-        #    'std': std,
-        #    'average': average,
-        #}}, upsert=True)
+        self.db["jobStats"].update({'jobid': jobID}, {'$set': {
+            'fs': fs,
+            'total': total,
+            'quartil': quartil,
+            'mean': mean,
+            'var': var,
+            'std': std,
+            'average': average,
+        }}, upsert=True)
 
     def set_job_calcState(self, jobid, calc, start=None):
         # calc -1 job not calculatet
@@ -552,7 +551,6 @@ class Mongo_Conn(object):
         if start:
             cyear = time.localtime(start).tm_year
             jobid = jobid + "-" + str(cyear)
-        print '   jobupdate calcstat', jobid, calc
         self.db["jobs"].update({"jobid": jobid}, {"$set": {"calc": calc}})
 
     def update_jobData(self, jobid, start, end, owner, nids, cmd):
