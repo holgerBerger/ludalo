@@ -315,7 +315,7 @@ class dbFsExtraktor(multiprocessing.Process):
                 # dc.get_png()
                 dc.saveJob(self.db)
             else:
-                self.db.set_job_calcState(jobID, 2)
+                self.db.set_job_calcState(jobID[0], 2)
                 print '  ', self.name, 'empty collection', collection
 
     def run(self):
