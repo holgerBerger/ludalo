@@ -548,6 +548,7 @@ class Mongo_Conn(object):
         # calc -1 job not calculatet
         # calc 0 job in calculation
         # calc 1 job compleet calculated
+        # calc 2 no data or curupted
         if start:
             cyear = time.localtime(start).tm_year
             jobid = jobid + "-" + str(cyear)

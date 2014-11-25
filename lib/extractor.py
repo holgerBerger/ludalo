@@ -236,8 +236,11 @@ class DataCollection(object):
         jobID, fs = self.name.split('@')
         stats = (self.total, self.quartil, self.mean, self.var,
                  self.std, self.average, self.duration)
-        db.saveJobStats(jobID, fs, stats)
-        db.set_job_calcState(jobID, 1)
+        if sum(self.total) > 0:
+            db.saveJobStats(jobID, fs, stats)
+            db.set_job_calcState(jobID, 1)
+        else:
+            db.set_job_calcState(jobID, 2)
 
 
 class dbFsExtraktor(multiprocessing.Process):
@@ -312,6 +315,7 @@ class dbFsExtraktor(multiprocessing.Process):
                 # dc.get_png()
                 dc.saveJob(self.db)
             else:
+                self.db.set_job_calcState(jobID, 2)
                 print '  ', self.name, 'empty collection', collection
 
     def run(self):
