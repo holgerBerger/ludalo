@@ -551,6 +551,7 @@ class Mongo_Conn(object):
         if start:
             cyear = time.localtime(start).tm_year
             jobid = jobid + "-" + str(cyear)
+        print '   jobupdate calcstat', jobid, calc
         self.db["jobs"].update({"jobid": jobid}, {"$set": {"calc": calc}})
 
     def update_jobData(self, jobid, start, end, owner, nids, cmd):
