@@ -307,7 +307,7 @@ class dbFsExtraktor(multiprocessing.Process):
                     else:
                         dc.appendMDT(key, item['val'])
 
-            dc.name = str(jobID) + '@' + str(collection)
+            dc.name = str(jobID[0]) + '@' + str(collection)
             dc.calcAll()
             # dc.get_png()
             dc.saveJob(self.db)
