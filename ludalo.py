@@ -67,10 +67,11 @@ def mainCollector(cfg):
             cip.collect(insertTimestamp)
         print 'Bye'
 
+
 def testExtract(cfg):
     db = cfg.getNewDB_Mongo_Conn()
 
-    result = db['jobStats'].find()
+    result = db.db['jobStats'].find()
     for item in result:
         print item['jobid']
 
