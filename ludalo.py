@@ -67,6 +67,13 @@ def mainCollector(cfg):
             cip.collect(insertTimestamp)
         print 'Bye'
 
+def testExtract(cfg):
+    db = cfg.getNewDB_Mongo_Conn()
+
+    result = db['jobStats'].find()
+    for item in result:
+        print item['jobid']
+
 
 def mainExtractor(cfg):
     # get config
@@ -176,4 +183,4 @@ if __name__ == '__main__':
     cfg = database.DatabaseConfigurator(conf)
 
     # if collector than this but think of extractor
-    mainExtractor(cfg)
+    testExtract(cfg)
