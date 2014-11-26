@@ -476,13 +476,15 @@ class Mongo_Conn(object):
                        "nid": item['nid'],
                        "val": item['val']}
             returnDict[item['ts']].append(nidDict)
-        #print collection, time.time() - t
+        # print collection, time.time() - t
         # print returnDict
         return returnDict
 
     def getJobsLeft(self):
-        jobsLeft = self.db['jobs'].find({'calc': -1}).count()
-        return jobsLeft
+        jobsRun = self.db['jobs'].find({'calc': -1}).count()
+        jobsLeft = self.db['jobs'].find(
+            {'calc': -1, 'end': {'$gte': 1}}).count()
+        return (jobsLeft, jobsRun)
 
     def oneUncalcJob(self):
         ''' return one uncalced jobID and set calcstat'''

@@ -118,7 +118,8 @@ def mainExtractor(cfg):
 
     while True:
         print 'extractor queue length:', queue.qsize()
-        print 'Jobs remaining:', db.getJobsLeft()
+        jobsLeft, jobsRun = db.getJobsLeft()
+        print 'Jobs remaining:', jobsLeft, 'Running Jobs:', jobsRun
 
         # commit tokens
         while tokenQueue.qsize() > 0:
