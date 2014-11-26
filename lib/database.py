@@ -480,6 +480,10 @@ class Mongo_Conn(object):
         # print returnDict
         return returnDict
 
+    def getJobsLeft(self):
+        jobsLeft = self.db['jobs'].find({'calc': -1}).count()
+        return jobsLeft
+
     def oneUncalcJob(self):
         ''' return one uncalced jobID and set calcstat'''
         db_query = {'calc': -1, 'end': {'$gte': 1}}
