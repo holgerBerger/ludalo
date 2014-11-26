@@ -90,7 +90,7 @@ def mainExtractor(cfg):
     db = cfg.getNewDB_Mongo_Conn()
 
     timerange = 1800
-    maxTokens = nooextract
+    maxTokens = nooextract + 2
     fslist = ['lnec', 'nobnec', 'alnec']
 
     # create extractors
