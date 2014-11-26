@@ -74,9 +74,12 @@ def testExtract(cfg):
     result = db.db['jobStats'].find()
     for item in result:
         if item['total'][3] <= 0 and item['total'][1] > 0:
-            print item['jobid'], item['total'][1], item['total'][3]
+            pass
         elif item['total'][1] / item['total'][3] > 1:
-            print item['jobid'], item['total'][1], item['total'][3]
+            if item['end'] - item['start'] > 2880:
+                print item['jobid'], item['total'][1], item['total'][3]
+            else:
+                print '   ', item['jobid'], item['total'][1], item['total'][3]
 
 
 def mainExtractor(cfg):
