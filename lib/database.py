@@ -484,9 +484,12 @@ class Mongo_Conn(object):
         ''' return one uncalced jobID and set calcstat'''
         db_query = {'calc': -1, 'end': {'$gte': 1}}
         result = self.db['jobs'].find_one(db_query)
-        jobID = result['jobid']
-        self.set_job_calcState(jobID, 0)
-        return jobID
+        if result:
+            jobID = result['jobid']
+            self.set_job_calcState(jobID, 0)
+            return jobID
+        else:
+            return None
 
     def selectJobData(self, collection, tstart, tend, nids):
 

@@ -171,9 +171,13 @@ def mainExtractor(cfg):
             else:
                 # get one job and apend it
                 job = db.oneUncalcJob()
-                queue.put(('job', (job, t - timerange, t)))
-                print 'consume a job token', job
-                jobToken = jobToken - 1
+                if job:
+                    queue.put(('job', (job, t - timerange, t)))
+                    print 'consume a job token', job
+                    jobToken = jobToken - 1
+                else:
+                    print 'no jobs to calculat...'
+                    break
 
         time.sleep(extractorSleep)
 
@@ -191,4 +195,4 @@ if __name__ == '__main__':
     cfg = database.DatabaseConfigurator(conf)
 
     # if collector than this but think of extractor
-    testExtract(cfg)
+    mainExtractor(cfg)
