@@ -76,7 +76,8 @@ def testExtract(cfg):
         if item['total'][3] <= 0 and item['total'][1] > 0:
             pass
         elif item['total'][1] / item['total'][3] > 1:
-            if item['end'] - item['start'] > 2880:
+            job = db.db['jobs'].find_one({'jobid': item['jobid']})
+            if job['end'] - job['start'] > 2880:
                 print item['jobid'], item['total'][1], item['total'][3]
             else:
                 print '   ', item['jobid'], item['total'][1], item['total'][3]
