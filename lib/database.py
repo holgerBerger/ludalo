@@ -572,6 +572,15 @@ class Mongo_Conn(object):
         dbjobid = jobid + "-" + str(cyear)
         self.db["jobs"].update({"jobid": dbjobid}, {"$set": {"end": end}})
 
+    # statisic
+
+    def updateJobStats(self):
+        pass
+        #self.db['webCache'].update({'typ': 'job'},
+        #                           {'$set':
+        #                           {'run': getJobsLeft()[1],
+        #                            ''}})
+
     def closeConn(self):
         self.client.close()
 

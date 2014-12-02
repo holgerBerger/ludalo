@@ -275,6 +275,9 @@ class dbFsExtraktor(multiprocessing.Process):
         else:
             print '  ', collection, tstart, tend, 'is empty!!!'
 
+        # free memory
+        del dc
+
     def selectFromCollection(self, collection, tstart, tend):
         fdName = str(collection) + '_' + str(int((tend - tstart) / 60))
         dc = DataCollection(fdName)
@@ -317,6 +320,9 @@ class dbFsExtraktor(multiprocessing.Process):
             else:
                 self.db.set_job_calcState(jobID[0], 2)
                 print '  ', self.name, 'empty collection', collection
+
+            # free memory
+            del dc
 
     def run(self):
 
