@@ -17,10 +17,12 @@ def mainCollector(cfg):
     import lib.collector as collector
     import datetime
     import json
+    from multiprocessing import Manager
 
     # setup
     collectInfo = open('collector.cfg', 'r')
     ips = json.load(collectInfo)
+    sharedDict = Manager().dict()
 
     numberOfInserterPerDatabase = cfg.numberOfInserterPerDatabase   # or more?
     sleepingTime = cfg.sleepTime
@@ -29,7 +31,7 @@ def mainCollector(cfg):
     # create collectoer and assert inserter
     for key in ips.keys():
         cip = collector.CollectorInserterPair(
-            ips[key], cfg, numberOfInserterPerDatabase)
+            ips[key], cfg, numberOfInserterPerDatabase, sharedDict)
         CollectorInserter.append(cip)
 
     iteration = 0

@@ -28,15 +28,16 @@ class DatabaseInserter(multiprocessing.Process):
     dependencies to the collector.
     '''
 
-    def __init__(self, comQueue, cfg):
+    def __init__(self, comQueue, cfg, sharedDict):
         super(DatabaseInserter, self).__init__()
+        self.sharedDict = sharedDict
         self.comQueue = comQueue
         self.cfg = cfg
         self.db = None
         # use this to end job from outside!
         self.exit = multiprocessing.Event()
         try:
-            self.db = self.cfg.getNewDB_Mongo_Conn()
+            self.db = self.cfg.getNewDB_Mongo_Conn(self.sharedDict)
             # start the thread and begin to insert if entries in the queue
             self.start()
         except:
@@ -183,7 +184,7 @@ class DatabaseInserter(multiprocessing.Process):
                 nr_try = 0
             self.db = None
             try:
-                self.db = self.cfg.getNewDB_Mongo_Conn()
+                self.db = self.cfg.getNewDB_Mongo_Conn(self.sharedDict)
             except:
                 print 'no new mongo connection'
             time.sleep(1)
@@ -373,7 +374,7 @@ class Mongo_Conn(object):
 
     """docstring for Mongo_Conn"""
 
-    def __init__(self, host, port, dbname):
+    def __init__(self, host, port, dbname, sharedDict=None):
         super(Mongo_Conn, self).__init__()
         try:
             from pymongo import MongoClient
@@ -382,6 +383,7 @@ class Mongo_Conn(object):
             raise e
 
         self.name = 'Mongo_Conn'
+        self.sharedDict = sharedDict
         self.lock = multiprocessing.Lock()
         # geting client and connect
         self.client = MongoClient(host, port)
@@ -392,15 +394,16 @@ class Mongo_Conn(object):
         # getting collection
         self.collection = self.db['performanceData']
         self.collectionJobs = self.db['jobs']
-        self.FSmap = self.getFSmap()
+
+        # get fs map
+        if self.sharedDict is not None:
+            self.getFSmap()
 
     def getFSmap(self):
         dbNidFS = self.db['nidFS']
         result = dbNidFS.find()
-        returnDict = {}
         for item in result:
-            returnDict[item['nid']] = item['fs']
-        return returnDict
+            self.sharedDict[item['nid']] = item['fs']
 
     def insert_performance(self, objlist):
         fslist = {}
@@ -423,22 +426,20 @@ class Mongo_Conn(object):
         # sum / (t2 - t1))
 
     def insert_nidFS(self, nid, fs):
-        nidFS = self.db['nidFS']
+        nidFS = self.db['nidFS']  # collection in the database
         try:
-            fsList = self.FSmap[nid]
-            if fs not in fsList:
-                fs.append(fs)
-                self.FSmap[nid].append(fs)
-                nidFS.update({'nid': nid}, {'nid': nid, 'fs': fsList})
+            if fs not in self.sharedDict[nid]:
+                self.sharedDict[nid].append(fs)
+                nidFS.update({'nid': nid}, {'nid': nid, 'fs': self.sharedDict[nid]})
 
         except KeyError:
             print 'insert new fs (', fs, ') to nid (', nid, ')'
-            self.FSmap[nid] = [fs]
+            self.sharedDict[nid] = [fs]
             obj = {'nid': nid, 'fs': [fs]}
             nidFS.update({'nid': nid}, obj, upsert=True)
 
         except Exception, e:
-            # todo test this
+            # if somthing else is wrong
             print repr(e)
             raise e
 
@@ -687,7 +688,7 @@ class DatabaseConfigurator(object):
         f = open(defaultCfgFile, 'w')
         f.write(cfgString)
 
-    def getNewDB_Mongo_Conn(self):
+    def getNewDB_Mongo_Conn(self, sharedDict):
         if self.cfg.has_section(self.sectionMongo):
             if self.cfg.getboolean(self.sectionMongo, 'aktiv'):
                 # host, port, dbname
@@ -695,7 +696,7 @@ class DatabaseConfigurator(object):
                 port = self.cfg.getint(self.sectionMongo, 'port')
                 dbname = self.cfg.get(self.sectionMongo, 'dbname')
                 # do stuff
-                return Mongo_Conn(host, port, dbname)
+                return Mongo_Conn(host, port, dbname, sharedDict)
         else:
             print 'No connection MongoDB configered!'
 

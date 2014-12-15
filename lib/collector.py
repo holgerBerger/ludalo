@@ -27,7 +27,7 @@ class CollectorInserterPair(object):
 
     """docstring for CollectorInserterPair"""
 
-    def __init__(self, ssh, cfg, numberOfInserterPerDatabase):
+    def __init__(self, ssh, cfg, numberOfInserterPerDatabase, sharedDict):
         super(CollectorInserterPair, self).__init__()
 
         # pipe to send signals to the collector
@@ -46,9 +46,11 @@ class CollectorInserterPair(object):
         # all inserter are in this list. more than one inserter per collctor
         self.inserterList = []
 
+        self.sharedDict = sharedDict
+
         # generate inserter's
         for x in xrange(0, self.numberOfInserterPerDatabase):
-            nIns = database.DatabaseInserter(self.comQueue, self.cfg)
+            nIns = database.DatabaseInserter(self.comQueue, self.cfg, self.sharedDict)
             self.inserterList.append(nIns)
 
         # generate collector
@@ -71,7 +73,7 @@ class CollectorInserterPair(object):
                 self.inserterList.remove(inserter)
                 print 'generating new inserter'
                 newInserter = database.DatabaseInserter(
-                    self.comQueue, self.cfg)
+                    self.comQueue, self.cfg, self.sharedDict)
                 self.inserterList.append(newInserter)
 
     def collector_reconnect(self):
