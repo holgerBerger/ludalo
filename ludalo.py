@@ -1,10 +1,5 @@
 import time
-import json
-import multiprocessing
-import datetime
 import lib.database as database
-import lib.collector as collector
-import lib.extractor as extractor
 import sys
 
 
@@ -12,10 +7,17 @@ import sys
 
 this is the main function of the ludalo project.
 
+autor Uwe Schilling
+
 '''
 
 
 def mainCollector(cfg):
+    # imports
+    import lib.collector as collector
+    import datetime
+    import json
+
     # setup
     collectInfo = open('collector.cfg', 'r')
     ips = json.load(collectInfo)
@@ -84,6 +86,10 @@ def testExtract(cfg):
 
 
 def mainExtractor(cfg):
+    # imports
+    import lib.extractor as extractor
+    import multiprocessing
+
     # get config
     extractorSleep = cfg.extractorSleep
     nooextract = cfg.numberOfExtractros

@@ -16,6 +16,7 @@ partially support for:
 - mysql
 - sqlite3
 
+autor Uwe Schilling
 '''
 
 
@@ -374,7 +375,11 @@ class Mongo_Conn(object):
 
     def __init__(self, host, port, dbname):
         super(Mongo_Conn, self).__init__()
-        from pymongo import MongoClient
+        try:
+            from pymongo import MongoClient
+        except Exception, e:
+            print 'pleas install pymongo, import failed.'
+            raise e
 
         self.name = 'Mongo_Conn'
         self.lock = multiprocessing.Lock()
