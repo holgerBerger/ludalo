@@ -119,6 +119,10 @@ class DatabaseInserter(multiprocessing.Process):
                     self.nidMap[resourceIP] = resourceIP
                     resourceName = resourceIP
 
+                # appendens for cray or other systems:
+                if self.cfg.postfix:
+                    resourceName = resourceName + '@' + self.cfg.postfix
+
                 # except Exception, e:
                     # print repr(e)
 
@@ -648,6 +652,9 @@ class DatabaseConfigurator(object):
         if self.cfg.has_section('replacePattern'):
             self.pattern = self.cfg.get('replacePattern', 'pattern')
             self.replace = self.cfg.get('replacePattern', 'replace')
+
+        if self.cfg.has_section('batchsystem'):
+            self.postfix = self.cfg.get('batchsystem', 'postfix')
 
     def writeDefaultConfig(self, defaultCfgFile):
         cfgString = ('[MongoDB]' + '\n' +
