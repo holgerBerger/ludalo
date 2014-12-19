@@ -58,8 +58,8 @@ class DatabaseInserter(multiprocessing.Process):
             with open(hosts, "r") as f:
                 for l in f:
                     if not l.startswith('#'):
-                        sp = l[:-1].split()
-                        if len(sp) == 0:
+                        sp = l.rstrip().split()
+                        if len(sp) <= 2:
                             continue
                         ip = sp[0]
                         name = sp[1]
@@ -114,6 +114,10 @@ class DatabaseInserter(multiprocessing.Process):
                 resource_values = ost_map[key]
                 sk = key.split('@')
                 resourceIP = sk[0]
+
+                # resources are digie
+                if 'nid' not in resourceIP:
+                    resourceIP = 'nid' + resourceIP
 
                 # take name from nidMap if no name take ip
                 try:
