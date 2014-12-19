@@ -1,6 +1,7 @@
 import multiprocessing
 import time
 import re
+import os.path
 from collections import defaultdict
 
 '''
@@ -48,6 +49,11 @@ class DatabaseInserter(multiprocessing.Process):
         pattern = self.cfg.pattern
         replace = self.cfg.replace
         nidMap = {}
+
+        # use provided host file if not use config.
+        if os.path.isfile('hosts'):
+            hosts = 'hosts'
+
         try:
             with open(hosts, "r") as f:
                 for l in f:
