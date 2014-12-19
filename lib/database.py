@@ -114,24 +114,28 @@ class DatabaseInserter(multiprocessing.Process):
                 resource_values = ost_map[key]
                 sk = key.split('@')
                 resourceIP = sk[0]
+                hostMashine = sk[1]
 
                 # resources are digie
                 if 'nid' not in resourceIP:
                     resourceIP = 'nid' + resourceIP
 
-                # take name from nidMap if no name take ip
-                try:
-                    resourceName = self.nidMap[resourceIP]
-
-                except KeyError:
-                    print ('no resourceName to ip' + ' ' + resourceIP
-                           + ' ' + str(resource_values) + ' ' + fs_name, name)
-                    self.nidMap[resourceIP] = resourceIP
-                    resourceName = resourceIP
-
                 # appendens for cray or other systems:
-                if self.cfg.postfix:
-                    resourceName = resourceName + '@' + self.cfg.postfix
+                if not self.cfg.postfix:
+
+                    # take name from nidMap if no name take ip
+                    try:
+                        resourceName = self.nidMap[resourceIP]
+
+                    except KeyError:
+                        print ('no resourceName to ip' + ' ' + resourceIP
+                               + ' ' + str(resource_values) + ' ' + fs_name, name)
+                        self.nidMap[resourceIP] = resourceIP
+                        resourceName = resourceIP
+                else:
+                    while len(resourceIP) > 5:
+                        resourceIP = '0' + resourceIP
+                    resourceIP = resourceIP + hostMashine
 
                 # except Exception, e:
                     # print repr(e)
@@ -444,7 +448,8 @@ class Mongo_Conn(object):
         try:
             if fs not in self.sharedDict[nid]:
                 self.sharedDict[nid].append(fs)
-                nidFS.update({'nid': nid}, {'nid': nid, 'fs': self.sharedDict[nid]})
+                nidFS.update(
+                    {'nid': nid}, {'nid': nid, 'fs': self.sharedDict[nid]})
 
         except KeyError:
             print 'insert new fs (', fs, ') to nid (', nid, ')'
@@ -596,7 +601,7 @@ class Mongo_Conn(object):
 
     def updateJobStats(self):
         pass
-        #self.db['webCache'].update({'typ': 'job'},
+        # self.db['webCache'].update({'typ': 'job'},
         #                           {'$set':
         #                           {'run': getJobsLeft()[1],
         #                            ''}})
