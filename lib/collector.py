@@ -50,7 +50,8 @@ class CollectorInserterPair(object):
 
         # generate inserter's
         for x in xrange(0, self.numberOfInserterPerDatabase):
-            nIns = database.DatabaseInserter(self.comQueue, self.cfg, self.sharedDict)
+            nIns = database.DatabaseInserter(
+                self.comQueue, self.cfg, self.sharedDict)
             self.inserterList.append(nIns)
 
         # generate collector
@@ -119,7 +120,9 @@ class AsynchronousFileReader(threading.Thread):
             # if not json print the exeption and the string
             try:
                 # print "inserted into queue:" ,line
+                t1 = time.time()
                 self._queue.put(json.loads(line))
+                print 'json decode time:', time.time() - t1
             except Exception, e:
                 # print "inserted into queue:" ,line
                 self._queue.put(line)
@@ -262,12 +265,12 @@ class Collector(multiprocessing.Process):
                 break
 
             # Show what we received from standard output.
-            print '  ', self.name, 'waiting for collection signal'
+            # print '  ', self.name, 'waiting for collection signal'
             # wait for signal to send request
             ts = self.sOut.recv()  # this blocks until a send from main
             print '  ', self.name, 'inserter queue len:', self.queue.qsize()
             # print self.name, 'getting send from main start collect'
-            print '  ', self.name, 'sending request to C collector'
+            # print '  ', self.name, 'sending request to C collector'
             self.sendRequest()
 
             while self.stdout_queue.empty():
@@ -275,10 +278,10 @@ class Collector(multiprocessing.Process):
 
             while not self.stdout_queue.empty():
                 # print "QL", self.stdout_queue.qsize()
-                print '  ', self.name, 'getting data from C collector'
+                # print '  ', self.name, 'getting data from C collector'
                 line = self.stdout_queue.get()
                 # queue for inserter
-                print '  ', self.name, 'append data to inserter queue'
+                # print '  ', self.name, 'append data to inserter queue'
                 self.queue.put((ts, line))
 
             # Show what we received from standard error.

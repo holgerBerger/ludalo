@@ -92,6 +92,8 @@ class DatabaseInserter(multiprocessing.Process):
         data = jsonDict[1]
         insert_me = []
 
+        t1 = time.time()
+
         # Split the json into data obj
         for base in data.keys():
             sb = base.split('-')  # "alnec-OST0002"
@@ -148,9 +150,12 @@ class DatabaseInserter(multiprocessing.Process):
                     resource_values, fs_name, s_type)
 
                 insert_me.append(ins)
-
+        print 'time to bild inserter object:', time.time() - t1
         # Insert data Obj
+
+        t1 = time.time()
         self.db.insert_performance(insert_me)
+        print 'time to insert:', time.time() - t1
 
     def run(self):
         # build hostmap
@@ -162,13 +167,13 @@ class DatabaseInserter(multiprocessing.Process):
             while self.comQueue.empty():
                 time.sleep(0.1)
 
-            print '    ', self.name, 'Inserter testing if connection is alive'
+            # print '    ', self.name, 'Inserter testing if connection is alive'
             if not self.db or not self.db.alive():
                 self.reconnect()
 
             insertObject = self.comQueue.get()
             # Insert the object form pipe db
-            print '    ', self.name, 'Inserter inserting object'
+            # print '    ', self.name, 'Inserter inserting object'
             try:
                 self.insert(insertObject)
             except Exception:
