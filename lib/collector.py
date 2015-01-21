@@ -85,7 +85,10 @@ class CollectorInserterPair(object):
             self.collector = Collector(self.ssh, self.pipeOut, self.comQueue)
 
     def collect(self, insertTimestamp):
-        self.pipeIn.send(insertTimestamp)
+        if self.comQueue.qsize() < 128:
+            self.pipeIn.send(insertTimestamp)
+        else:
+            print self.name, 'queue size is to large, mayby the db server is down. Skip frame:', insertTimestamp
 
     def shutdown(self):
         print self.name, 'sending shutdown'
