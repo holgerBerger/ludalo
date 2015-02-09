@@ -204,4 +204,4 @@ if __name__ == '__main__':
     cfg = database.DatabaseConfigurator(conf)
 
     # if collector than this but think of extractor
-    mainExtractor(cfg)
+    mainCollector(cfg)
