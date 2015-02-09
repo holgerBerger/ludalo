@@ -1,35 +1,52 @@
+""" @package    lib.database
+
+    @brief      This is the main function of the ludalo project.
+
+    @details    This module handles all things assigned to the database.
+                Database inserters, data structur cases and database
+                connections.
+                Here is also the place for the configparser wich
+                collects the setup from the config to connect to the
+                different databases.
+
+                support for:
+                - mongo db (full)
+
+                partially support for:
+                - mysql
+                - sqlite3
+
+    @autor      Uwe Schilling uweschilling[at]hlrs.de
+"""
 import multiprocessing
 import time
 import re
 import os.path
 from collections import defaultdict
 
-'''
-This module handles all things assigned to the database.
-Database inserters, data structur cases and database connections.
-Here is also the place for the configparser wich collects the setup
-from the config to connect to the different databases.
-
-support for:
-- mongo db (full)
-
-partially support for:
-- mysql
-- sqlite3
-
-autor Uwe Schilling
-'''
-
 
 class DatabaseInserter(multiprocessing.Process):
 
-    '''
-    This class handles the data from the collectors (inserterQueue)
-    implemented as Thread to insert async and with as less as possible
-    dependencies to the collector.
-    '''
+    """ @package    lib.database
+        @brief      This class handles the data from the collectors.
+
+        @details    To store the informations form the collectors into the
+                    database is this class needet. It handles async the
+                    incomming data form the \em comQueue and inset it into
+                    the database with as less as possible
+                    dependencies to the collector.
+
+        @param      comQueue is a queue form the python \em multiprocessing modul
+        @param      cfg is a \em DatabaseConfigurator object. witch is generated
+                    by the ludalo main funktion
+        @param      sharedDict is a shared object from the
+                    \em multiprocessing.Manager modul.
+    """
 
     def __init__(self, comQueue, cfg, sharedDict):
+        """ @package    lib.database
+            @brief      Class inti with first database connection
+        """
         super(DatabaseInserter, self).__init__()
         self.sharedDict = sharedDict
         self.comQueue = comQueue
@@ -45,6 +62,13 @@ class DatabaseInserter(multiprocessing.Process):
             print 'init DatabaseInserter with no mongo connection'
 
     def readhostfile(self):
+        """ @package    lib.database
+            @brief      This funktion builds the mapping from ip to hostname.
+            @details    The \em self.nidMap is build when the process is
+                        started and is needet for the maping from ip based
+                        adressing to hoste name adressing.
+            @return     The nidMap witch is a dictornary containing [Hostname: HostIP]
+        """
         hosts = self.cfg.hosts
         pattern = self.cfg.pattern
         replace = self.cfg.replace
@@ -70,9 +94,17 @@ class DatabaseInserter(multiprocessing.Process):
         return nidMap
 
     def insert(self, jsonDict):
-        '''
-            split the json object into the informations for the
-            database. the json object is defined as:
+        """ @package    lib.database
+            @brief      Extract the datasets from the jsonDict and prepar it for
+                        the database.
+            @details    The jsonDoct must be converted to a data structur that
+                        is compatible with the database
+                        ( \em lib.database.PerformanceData ).
+                        therfor the jsonDict will be itterated and the
+                        information extracted.
+
+            @param      jsonDict the json object is defined as:
+            @code
                 {} json
                     {} fs-ost-/mdsname
                         [] aggr
@@ -86,7 +118,8 @@ class DatabaseInserter(multiprocessing.Process):
                             [2] wio
                             [3] wb
                 [...]
-        '''
+            @endcode
+        """
 
         insertTimestamp = jsonDict[0]
         data = jsonDict[1]
@@ -158,6 +191,18 @@ class DatabaseInserter(multiprocessing.Process):
         print 'time to insert:', time.time() - t1
 
     def run(self):
+        """ @package    lib.database
+            @brief      Run this as its owen process.
+            @details    "main" funkten of the \em DatabaseInserter.
+                        It runs a infinit loop and checks the commutnication
+                        Queue for aktions. if this queue is empty it sleeps for
+                        0.1 sec and allow the processor to go into a energy
+                        efficient mode. (soft pull)
+                        If ther is an object in the queue this funkten will
+                        pull it out and intsert it into the database.
+                        If this fails, it will push it back to the queue to
+                        pervent data lost.
+        """
         # build hostmap
         self.nidMap = self.readhostfile()
 
@@ -167,7 +212,8 @@ class DatabaseInserter(multiprocessing.Process):
             while self.comQueue.empty():
                 time.sleep(0.1)
 
-            # print '    ', self.name, 'Inserter testing if connection is alive'
+            # print '    ', self.name, 'Inserter testing if connection is
+            # alive'
             if not self.db or not self.db.alive():
                 self.reconnect()
 
@@ -185,16 +231,28 @@ class DatabaseInserter(multiprocessing.Process):
         print 'exit inserter', self.name
 
     def _close(self):
-        '''
-            to close the connectionen properly if the db thread has problems
-        '''
+        """ @package    lib.database
+            @brief      This close the connectionen properly
+                        if the db thread has problems.
+        """
         if self.db:
             self.db.closeConn()
 
     def shutdown(self):
+        """ @package    lib.database
+            @brief      Try to exit gracefully.
+        """
         self.exit.set()
 
     def reconnect(self, nr_try=0):
+        """ @package    lib.database
+            @brief      Fail save reconnect funktion
+            @details    This funktin trys 9 reconnect in short order. After
+                        that is a sleep for 30 seconds to prevent spaming on
+                        the network connection.
+            @param      optional nr_try default is 0. this is the first call.
+                        the funktion calls itself with nr_try + 1.
+        """
         # try 9 reconnects if not exit
         if not self.db or not self.db.alive():
             try:
@@ -216,12 +274,22 @@ class DatabaseInserter(multiprocessing.Process):
 
 class PerformanceData(object):
 
-    """
-        this class holds the data and information about the Performance Data
-        it will return the right data object for the different databases.
+    """ @package    lib.database
+        @brief      Store the Performance data in a unived way.
+        @details    Unived data storage. It generates a singel data set
+                    for the different databases.
     """
 
     def __init__(self, timestamp, target, nid, values, fs, s_type):
+        """ @package    lib.database
+            @brief      Class inti with all the values needet
+            @param      timestamp   Unix timestamp
+            @param      target      e.g. OST0002
+            @param      nid         the node id
+            @param      values      array of data
+            @param      fs          filesystem of the data set
+            @param      s_type      the server type mds or ost
+        """
         super(PerformanceData, self).__init__()
 
         self.timestamp = timestamp
@@ -232,6 +300,10 @@ class PerformanceData(object):
         self.fs = fs
 
     def getMongo_Obj(self):
+        """ @package    lib.database
+            @brief      create a data set for the mognoDB
+            @return     a python dictonary with the data
+        """
         obj = {"ts": self.timestamp,
                "st": self.s_type,
                "tgt": self.target,
@@ -240,6 +312,10 @@ class PerformanceData(object):
         return obj
 
     def getSQL_Obj(self):
+        """ @package    lib.database
+            @brief      create a data set for MySQL and sqlite3
+            @return     a python tuple with the data
+        """
 
         if len(self.values) < 3:
             newValues = []
