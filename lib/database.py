@@ -27,8 +27,7 @@ from collections import defaultdict
 
 class DatabaseInserter(multiprocessing.Process):
 
-    """ @package    lib.database
-        @brief      This class handles the data from the collectors.
+    """ @brief      This class handles the data from the collectors.
 
         @details    To store the informations form the collectors into the
                     database is this class needet. It handles async the
@@ -44,8 +43,7 @@ class DatabaseInserter(multiprocessing.Process):
     """
 
     def __init__(self, comQueue, cfg, sharedDict):
-        """ @package    lib.database
-            @brief      Class inti with first database connection
+        """ @brief      Class inti with first database connection
         """
         super(DatabaseInserter, self).__init__()
         self.sharedDict = sharedDict
@@ -62,8 +60,7 @@ class DatabaseInserter(multiprocessing.Process):
             print 'init DatabaseInserter with no mongo connection'
 
     def readhostfile(self):
-        """ @package    lib.database
-            @brief      This funktion builds the mapping from ip to hostname.
+        """ @brief      This funktion builds the mapping from ip to hostname.
             @details    The \em self.nidMap is build when the process is
                         started and is needet for the maping from ip based
                         adressing to hoste name adressing.
@@ -94,8 +91,7 @@ class DatabaseInserter(multiprocessing.Process):
         return nidMap
 
     def insert(self, jsonDict):
-        """ @package    lib.database
-            @brief      Extract the datasets from the jsonDict and prepar it for
+        """ @brief      Extract the datasets from the jsonDict and prepar it for
                         the database.
             @details    The jsonDoct must be converted to a data structur that
                         is compatible with the database
@@ -191,8 +187,7 @@ class DatabaseInserter(multiprocessing.Process):
         print 'time to insert:', time.time() - t1
 
     def run(self):
-        """ @package    lib.database
-            @brief      Run this as its owen process.
+        """ @brief      Run this as its owen process.
             @details    "main" funkten of the \em DatabaseInserter.
                         It runs a infinit loop and checks the commutnication
                         Queue for aktions. if this queue is empty it sleeps for
@@ -231,22 +226,20 @@ class DatabaseInserter(multiprocessing.Process):
         print 'exit inserter', self.name
 
     def _close(self):
-        """ @package    lib.database
-            @brief      This close the connectionen properly
+        """ @brief      This close the connectionen properly
                         if the db thread has problems.
         """
         if self.db:
             self.db.closeConn()
 
     def shutdown(self):
-        """ @package    lib.database
+        """
             @brief      Try to exit gracefully.
         """
         self.exit.set()
 
     def reconnect(self, nr_try=0):
-        """ @package    lib.database
-            @brief      Fail save reconnect funktion
+        """ @brief      Fail save reconnect funktion
             @details    This funktin trys 9 reconnect in short order. After
                         that is a sleep for 30 seconds to prevent spaming on
                         the network connection.
@@ -273,16 +266,12 @@ class DatabaseInserter(multiprocessing.Process):
 
 
 class PerformanceData(object):
-
-    """ @package    lib.database
-        @brief      Store the Performance data in a unived way.
+    """ @brief      Store the Performance data in a unived way.
         @details    Unived data storage. It generates a singel data set
                     for the different databases.
     """
-
     def __init__(self, timestamp, target, nid, values, fs, s_type):
-        """ @package    lib.database
-            @brief      Class inti with all the values needet
+        """ @brief      Class inti with all the values needet
             @param      timestamp   Unix timestamp
             @param      target      e.g. OST0002
             @param      nid         the node id
@@ -299,11 +288,10 @@ class PerformanceData(object):
         self.values = values
         self.fs = fs
 
-    """ @package    lib.database
-        @brief      create a data set for the mognoDB
-        @return     a python dictonary with the data
-    """
     def getMongo_Obj(self):
+        """ @brief      create a data set for the mognoDB
+            @return     a python dictonary with the data
+        """
         obj = {"ts": self.timestamp,
                "st": self.s_type,
                "tgt": self.target,
@@ -312,8 +300,7 @@ class PerformanceData(object):
         return obj
 
     def getSQL_Obj(self):
-        """ @package    lib.database
-            @brief      create a data set for MySQL and sqlite3
+        """ @brief      create a data set for MySQL and sqlite3
             @return     a python tuple with the data
         """
 
