@@ -299,11 +299,11 @@ class PerformanceData(object):
         self.values = values
         self.fs = fs
 
+    """ @package    lib.database
+        @brief      create a data set for the mognoDB
+        @return     a python dictonary with the data
+    """
     def getMongo_Obj(self):
-        """ @package    lib.database
-            @brief      create a data set for the mognoDB
-            @return     a python dictonary with the data
-        """
         obj = {"ts": self.timestamp,
                "st": self.s_type,
                "tgt": self.target,
