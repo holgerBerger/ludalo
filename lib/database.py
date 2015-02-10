@@ -1,9 +1,8 @@
 """ @package    lib.database
 
-    @brief      This is the main function of the ludalo project.
+    @brief      This module handles all things assigned to the database.
 
-    @details    This module handles all things assigned to the database.
-                Database inserters, data structur cases and database
+    @details    Database inserters, data structur cases and database
                 connections.
                 Here is also the place for the configparser wich
                 collects the setup from the config to connect to the
@@ -681,10 +680,9 @@ class Mongo_Conn(object):
         return returnDict
 
     def getJobData(self, jobID):
-        """ @brief
-            @details
-            @param
-            @return
+        """ @brief      Get infos of one Job
+            @param      jobID the ID of the job
+            @return     (filesystem, tstart, tend, list of nids)
         """
         result = self.db['jobs'].find_one({"jobid": jobID})
         # (collection, tstart, tend, nids)
@@ -703,9 +701,17 @@ class Mongo_Conn(object):
         return (collections, tstart, tend, nids)
 
     def resetCalcState(self):
+        """ @brief  Resets all Job in the uncalculated State on the DB.
+        """
         self.db["jobs"].update({'calc': 0}, {"$set": {"calc": -1}}, multi=True)
 
     def saveJobStats(self, jobID, fs, stats):
+        """ @brief      Save job stats
+            @details    Write statistic of one job back to the database
+            @param      jobID   Job ID
+            @param      fs      Filesystem of the Job
+            @param      stats   a tuple of (total, quartil, mean, var, std, average, duration)
+        """
         total, quartil, mean, var, std, average, duration = stats
 
         self.db["jobStats"].update({'jobid': jobID}, {'$set': {
@@ -719,16 +725,31 @@ class Mongo_Conn(object):
         }}, upsert=True)
 
     def set_job_calcState(self, jobid, calc, start=None):
-        # calc -1 job not calculatet
-        # calc 0 job in calculation
-        # calc 1 job compleet calculated
-        # calc 2 no data or curupted
+        """ @brief      set the calculate stat of a job
+            @details    # calc -1 job not calculatet
+                        # calc 0 job in calculation
+                        # calc 1 job compleet calculated
+                        # calc 2 no data or curupted
+            @param      jobid   ID of the Job
+            @param      calc    is the calc status see details
+            @param      start   if ID not from the Databas pleas append start
+                                time this is to prevent duplicated job ids
+        """
+
         if start:
             cyear = time.localtime(start).tm_year
             jobid = jobid + "-" + str(cyear)
         self.db["jobs"].update({"jobid": jobid}, {"$set": {"calc": calc}})
 
     def update_jobData(self, jobid, start, end, owner, nids, cmd):
+        """ @brief      update job end time
+            @param      jobid
+            @param      start   job start timestamp
+            @param      end     job end timestamp
+            @param      owner   user id
+            @param      nids    list of nids
+            @param      cmd
+        """
         cyear = time.localtime(end).tm_year
         # to handle year change, do it twice, will update only once
         dbjobid = jobid + "-" + str(cyear - 1)
@@ -740,6 +761,8 @@ class Mongo_Conn(object):
     # statisic
 
     def updateJobStats(self):
+        """ @brief      not NotImplemented
+        """
         pass
         # self.db['webCache'].update({'typ': 'job'},
         #                           {'$set':
@@ -747,18 +770,30 @@ class Mongo_Conn(object):
         #                            ''}})
 
     def closeConn(self):
+        """ @brief      close the database connection
+        """
         self.client.close()
 
     def commit(self):
+        """ @brief      the other db systems require a commit but Mongo not.
+        """
         pass
 
     def alive(self):
+        """ @brief      Status of the connection
+            @return     True    if connection is alive
+                        False   if connection is dead
+        """
         return self.client.alive()
 
 
 class DatabaseConfigurator(object):
 
-    """this class handles the configparser"""
+    """ @brief      This class handles the configparser
+        @details
+        @param
+        @return
+    """
 
     def __init__(self, cfgFile):
         super(DatabaseConfigurator, self).__init__()
