@@ -266,10 +266,12 @@ class DatabaseInserter(multiprocessing.Process):
 
 
 class PerformanceData(object):
+
     """ @brief      Store the Performance data in a unived way.
         @details    Unived data storage. It generates a singel data set
                     for the different databases.
     """
+
     def __init__(self, timestamp, target, nid, values, fs, s_type):
         """ @brief      Class inti with all the values needet
             @param      timestamp   Unix timestamp
@@ -325,7 +327,10 @@ class PerformanceData(object):
 
 class MySQL_Conn(object):
 
-    """docstring for MySQL_Conn"""
+    """ @brief      Database Connection Class for MySQL
+        @details    Provide the funktions to comunicate with the database
+        @warning    This is untested and not fully implemented.
+    """
 
     def __init__(self, host, port, user, password, dbname):
         import MySQLdb
@@ -393,7 +398,10 @@ class MySQL_Conn(object):
 
 class SQLight_Conn(object):
 
-    """docstring for SQLight_Conn"""
+    """ @brief      Database Connection Class for SQLight
+        @details    Provide the funktions to comunicate with the database
+        @warning    This is untested and not fully implemented.
+    """
 
     def __init__(self, path):
         super(SQLight_Conn, self).__init__()
@@ -458,9 +466,20 @@ class SQLight_Conn(object):
 
 class Mongo_Conn(object):
 
-    """docstring for Mongo_Conn"""
+    """ @brief      Database Connection Class for MongoDB
+        @details    Provide the funktions to comunicate with the database
+    """
 
     def __init__(self, host, port, dbname, sharedDict=None):
+        """ @brief      Init Methode for the database
+
+            @param      host        Hostename or IP adress for the Databaseserver
+            @param      prot        Prot of the databesserver
+            @param      dbname      Name of the Database
+            @param      sharedDict  The nid map shared object
+
+        """
+
         super(Mongo_Conn, self).__init__()
         try:
             from pymongo import MongoClient
@@ -486,12 +505,20 @@ class Mongo_Conn(object):
             self.getFSmap()
 
     def getFSmap(self):
+        """ @brief      Funktion to update the sharedDict
+            @details    This will collect old information form the database
+                        and Provide it to all other Processes
+        """
         dbNidFS = self.db['nidFS']
         result = dbNidFS.find()
         for item in result:
             self.sharedDict[item['nid']] = item['fs']
 
     def insert_performance(self, objlist):
+        """ @brief      Insert an all objects form a list into the DB.
+            @param      objlist is a list of all \em PerformanceData
+                        objects to insert.
+        """
         fslist = {}
         for obj in objlist:
             if obj.fs not in fslist:
@@ -512,6 +539,15 @@ class Mongo_Conn(object):
         # sum / (t2 - t1))
 
     def insert_nidFS(self, nid, fs):
+        """ @brief      Insert or update the map of filesystems in the db.
+            @details    If the nid has an entry in the database, it will update
+                        the filsystems witch are mounted on this nid.
+                        If the nid has no entrys or didn't exist it will
+                        generate a new entry.
+
+            @param      nid     the node id
+            @param      fs      the filesystem
+        """
         nidFS = self.db['nidFS']  # collection in the database
         try:
             if fs not in self.sharedDict[nid]:
@@ -531,6 +567,15 @@ class Mongo_Conn(object):
             raise e
 
     def insert_jobData(self, jobid, start, end, owner, nids, cmd):
+        """ @brief      Insert Jobdata in the Db.
+            @details    will test if job exist and ad the calc value witch
+                        indicate that this job is not calculated.
+            @param      jobid   ID of the Job
+            @param      start   Unix timestamp of the job start
+            @param      end     Unix timestamp of the job end
+            @param      owner   User ID
+            @param      nids    A list of nids allocaded by this job.
+        """
         cyear = time.localtime(start).tm_year
         jobid = jobid + "-" + str(cyear)
 
@@ -545,16 +590,21 @@ class Mongo_Conn(object):
         # calc 0 job in calculation
         # calc 1 job compleet calculated
 
-        # TODO  erst schauen ob schon drinne, weil jobid ist nicht primary key
-        # in mongo
         if not self.db["jobs"].find_one({"jobid": jobid}):
             self.db["jobs"].insert(obj)
         else:
             print 'duplicated job', jobid
 
     def getFsData(self, collection, tstart, tend):
-        ''' this returns a dic witch includ all document form tstart to tend in
-            the collection 'collection'. '''
+        """ @brief      This gets all 'aggr' values of one filesytem by time
+
+            @param      collection      the filesysem name
+            @param      tstart          start timestamp
+            @param      tend            end timestamp
+            @return     this returns a dic witch includ all document form
+                        tstart to tend in the collection 'collection'
+        """
+
         #t = time.time()
         result = self.db[collection].find(
             {"ts": {"$gte": tstart, "$lt": tend}, "nid": "aggr"})
@@ -574,13 +624,23 @@ class Mongo_Conn(object):
         return returnDict
 
     def getJobsLeft(self):
+        """ @brief      Collect and return info for not calculated jobs
+            @return     A tuple of
+                        (#of job not calculated,
+                            #of jobs witch not ended)
+        """
         jobsRun = self.db['jobs'].find({'calc': -1}).count()
         jobsLeft = self.db['jobs'].find(
             {'calc': -1, 'end': {'$gte': 1}}).count()
         return (jobsLeft, jobsRun)
 
     def oneUncalcJob(self):
-        ''' return one uncalced jobID and set calcstat'''
+        """ @brief      return one uncalced jobID and set calcstat
+            @details    for calculation of a job, this is used to finde
+                        a job that is not calculated. It also update the
+                        job status.
+            @return     A singel Job or None in case of no jobs left to find.
+        """
         db_query = {'calc': -1, 'end': {'$gte': 1}}
         result = self.db['jobs'].find_one(db_query)
         if result:
@@ -591,7 +651,15 @@ class Mongo_Conn(object):
             return None
 
     def selectJobData(self, collection, tstart, tend, nids):
-
+        """ @brief      To get information for a Job
+            @details    Find all information of one Filesystem to a list of nids
+                        between two timestamps.
+            @param      collection  the name of the Filesystem
+            @param      tstart      start timestamp
+            @param      tend        end timesamp
+            @param      nids        list of nid names
+            @return     a python dict {timestamp : {'fs': 'fsname', [...]}, [...]}
+        """
         # find all timestamps between start and end for the nid in nids[]
         db_query = {"ts": {"$gte": tstart, "$lt": tend}, 'nid': {'$in': nids}}
 
@@ -613,7 +681,11 @@ class Mongo_Conn(object):
         return returnDict
 
     def getJobData(self, jobID):
-
+        """ @brief
+            @details
+            @param
+            @return
+        """
         result = self.db['jobs'].find_one({"jobid": jobID})
         # (collection, tstart, tend, nids)
         # print 'jobid', jobID, 'result set', result
