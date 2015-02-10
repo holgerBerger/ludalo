@@ -9,8 +9,8 @@
                 connections and ssh connections to improve the stability and
                 the perfromance.
 
-    @autor      Uwe Schilling uweschilling[at]hlrs.de
-    @autor      Holger Berger (NEC)
+    @author      Uwe Schilling uweschilling[at]hlrs.de
+    @author      Holger Berger (NEC)
 """
 import time
 import lib.database as database

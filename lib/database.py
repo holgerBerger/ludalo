@@ -16,7 +16,7 @@
                 - mysql
                 - sqlite3
 
-    @autor      Uwe Schilling uweschilling[at]hlrs.de
+    @author      Uwe Schilling uweschilling[at]hlrs.de
 """
 import multiprocessing
 import time
