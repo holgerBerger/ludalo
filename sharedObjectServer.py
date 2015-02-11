@@ -36,6 +36,6 @@ class RDict(object):
 class MyManager(BaseManager):
     pass
 MyManager.register('RDict', RDict)
-m = MyManager(address=('', 50000), authkey='abracadabra')
+m = MyManager(address=('', 50000), authkey='ludalo')
 s = m.get_server()
 s.serve_forever()

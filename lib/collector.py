@@ -1,3 +1,19 @@
+""" @brief      Data Collector class with multiprocessing support
+    @details    This modul handles the collection of performance data
+                special class CollectorInserterPair handels the tupple
+                of inserter and collector. ther are to each collector a
+                list of inserters.
+                support for:
+                    - mongo db (full)
+
+                partially support for:
+                    - mysql
+                    - sqlite3
+
+    @author     Uwe Schilling uweschilling[at]hlrs.de
+"""
+
+
 import multiprocessing
 import threading
 import Queue
@@ -6,26 +22,14 @@ import sys
 import time
 import subprocess
 import database
-'''
-
-this modul handles the collection of performance data
-special class CollectorInserterPair handels the tupple of inserter and
-collector. ther are to each collector a list of inserters.
-
-support for:
-- mongo db (full)
-
-partially support for:
-- mysql
-- sqlite3
-
-
-'''
 
 
 class CollectorInserterPair(object):
 
-    """docstring for CollectorInserterPair"""
+    """ @brief      This class connectes a collector with inserters
+        @details    To hold reference of this tuple is this class necessery.
+                    it also provides funktions to controle this processes.
+    """
 
     def __init__(self, ssh, cfg, numberOfInserterPerDatabase, sharedDict):
         super(CollectorInserterPair, self).__init__()
@@ -43,7 +47,7 @@ class CollectorInserterPair(object):
         self.cfg = cfg
         self.numberOfInserterPerDatabase = numberOfInserterPerDatabase
 
-        # all inserter are in this list. more than one inserter per collctor
+        # all inserter are in this list. more than one inserter per collector
         self.inserterList = []
 
         self.sharedDict = sharedDict
@@ -101,6 +105,8 @@ class CollectorInserterPair(object):
 class AsynchronousFileReader(threading.Thread):
 
     '''
+    based on
+    http://stefaanlippens.net/python-asynchronous-subprocess-pipe-reading
     Helper class to implement asynchronous reading of a file
     in a separate thread. Pushes read lines on a queue to
     be consumed in another thread.

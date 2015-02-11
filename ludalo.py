@@ -42,12 +42,19 @@ def mainCollector(cfg):
     import lib.collector as collector
     import datetime
     import json
-    from multiprocessing import Manager
+    from multiprocessing.managers import BaseManager
+
+    # setup for shared object
+    class MyManager(BaseManager):
+        pass
+    MyManager.register('RDict')
+    m = MyManager(address=('localhost', 50000), authkey='ludalo')
+    m.connect()
+    sharedDict = m.RDict()
 
     # setup
     collectInfo = open('collector.cfg', 'r')
     ips = json.load(collectInfo)
-    sharedDict = Manager().dict()
 
     numberOfInserterPerDatabase = cfg.numberOfInserterPerDatabase   # or more?
     sleepingTime = cfg.sleepTime

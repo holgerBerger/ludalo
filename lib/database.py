@@ -511,7 +511,8 @@ class Mongo_Conn(object):
         dbNidFS = self.db['nidFS']
         result = dbNidFS.find()
         for item in result:
-            self.sharedDict[item['nid']] = item['fs']
+            #self.sharedDict[item['nid']] = item['fs']
+            self.sharedDict.put(item['nid'], item['fs'])
 
     def insert_performance(self, objlist):
         """ @brief      Insert an all objects form a list into the DB.
@@ -549,14 +550,16 @@ class Mongo_Conn(object):
         """
         nidFS = self.db['nidFS']  # collection in the database
         try:
-            if fs not in self.sharedDict[nid]:
-                self.sharedDict[nid].append(fs)
+            if fs not in self.sharedDict.get(nid):
+                fslist = self.sharedDict.get(nid)
+                fslist.append(fs)
+                self.sharedDict.put(nid, fslist)
                 nidFS.update(
-                    {'nid': nid}, {'nid': nid, 'fs': self.sharedDict[nid]})
+                    {'nid': nid}, {'nid': nid, 'fs': self.sharedDict.get(nid)})
 
         except KeyError:
             print 'insert new fs (', fs, ') to nid (', nid, ')'
-            self.sharedDict[nid] = [fs]
+            self.sharedDict.put(nid, [fs])
             obj = {'nid': nid, 'fs': [fs]}
             nidFS.update({'nid': nid}, obj, upsert=True)
 
@@ -790,12 +793,15 @@ class Mongo_Conn(object):
 class DatabaseConfigurator(object):
 
     """ @brief      This class handles the configparser
-        @details
-        @param
-        @return
+        @details    Databas login and other setup configurations provided
+                    from the user are parsed by this class and provide this
+                    informations to the software.
     """
 
     def __init__(self, cfgFile):
+        """ @brief      clas init
+            @param      cfgFile     path to the config file.
+        """
         super(DatabaseConfigurator, self).__init__()
         import sys
         from ConfigParser import ConfigParser
@@ -886,6 +892,10 @@ class DatabaseConfigurator(object):
         f.write(cfgString)
 
     def getNewDB_Mongo_Conn(self, sharedDict):
+        """ @brief      build a MongoDB connection from the user config
+            @param      sharedDict      shared memory for information sharing
+            @return     \em Mongo_Conn  as db connection
+        """
         if self.cfg.has_section(self.sectionMongo):
             if self.cfg.getboolean(self.sectionMongo, 'aktiv'):
                 # host, port, dbname
@@ -898,6 +908,10 @@ class DatabaseConfigurator(object):
             print 'No connection MongoDB configered!'
 
     def getNewDB_MySQL_Conn(self):
+        """ @brief      build a MySQL connection from the user config
+            @param      sharedDict      shared memory for information sharing
+            @return     \em MySQL_Conn  as db connection
+        """
         # configuration has mysql
         if self.cfg.has_section(self.sectionMySQL):
             # mysql set to aktiv
@@ -917,6 +931,10 @@ class DatabaseConfigurator(object):
             print 'No connection MySQL configered!'
 
     def getNewDB_SQLight_Conn(self):
+        """ @brief      build a sqlite3 connection from the user config
+            @param      sharedDict      shared memory for information sharing
+            @return     \em SQLight_Conn  as db connection
+        """
         # configuration has sqligth
         if self.cfg.has_section(self.sectionSQLight):
             # sqligth set to aktiv
