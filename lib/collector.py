@@ -88,7 +88,7 @@ class CollectorInserterPair(object):
         if self.comQueue.qsize() < 128:
             self.pipeIn.send(insertTimestamp)
         else:
-            print self.name, 'queue size is to large, mayby the db server is down. Skip frame:', insertTimestamp
+            print 'queue size is to large, mayby the db server is down. Skip frame:', insertTimestamp
 
     def shutdown(self):
         print self.name, 'sending shutdown'
@@ -114,7 +114,7 @@ class AsynchronousFileReader(threading.Thread):
         self._queue = queue
 
     def run(self):
-        '''The body of the tread: read lines and decode json
+        '''The body of the thread: read lines and decode json
         then put them on the queue.'''
         # print 'AsynchronousFileReader RUN','pid',os.getpid(),self.name,
         # 'ppid',os.getppid(),'tid',gettid()
@@ -125,7 +125,7 @@ class AsynchronousFileReader(threading.Thread):
                 # print "inserted into queue:" ,line
                 t1 = time.time()
                 self._queue.put(json.loads(line))
-                print 'json decode time:', time.time() - t1
+                # print 'json decode time:', time.time() - t1
             except Exception, e:
                 # print "inserted into queue:" ,line
                 self._queue.put(line)
