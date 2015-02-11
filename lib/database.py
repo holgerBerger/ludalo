@@ -178,7 +178,7 @@ class DatabaseInserter(multiprocessing.Process):
                     resource_values, fs_name, s_type)
 
                 insert_me.append(ins)
-        print 'time to bild inserter object:', time.time() - t1
+        print 'time to build inserter object:', time.time() - t1
         # Insert data Obj
 
         t1 = time.time()
