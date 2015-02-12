@@ -1,8 +1,8 @@
-'''
-Created on 27.06.2014
+""" @brief          Class to analyze jobs
+    @deprecated     Not longer in use Created on 27.06.2014
+    @author         uwe.schilling[at]hlrs.de
+"""
 
-@author: uwe
-'''
 import sys
 import matplotlib.pyplot as plt
 

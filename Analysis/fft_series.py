@@ -1,24 +1,16 @@
-'''
-Created on 07.03.2014
+""" @brief          Class for fft calculations.
+    @details        Modul to categorize data form jobs. FFT_spectrum is used to
+                    analyse data strucktur. Try with more informations
+                    to categorize jobs.
+    @deprecated     Not longer in use Created on 07.03.2014
+    @author         uwe.schilling[at]hlrs.de
+"""
 
-@author: Uwe Schilling
-
-Modul to categorize data form jobs. FFT_spectrum is used to analyse data
-strucktur. Try with more informations to categorize jobs.
-
-    To Do:
-        - select category or buckets for jobs
-        - try to group simular jobs
-        - analyse behaviar
-        - find bad behaviar
-
-'''
 from scipy import fft, arange
 import numpy as np
 
 
 def get_Spectrum(y, Fs=60.0):
-
     """
     retrun list of tubles with
     [(freq_1, ampli_1), (freq_2, ampli_2), (freq_n, ampli_n)]

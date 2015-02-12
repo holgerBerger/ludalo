@@ -1,13 +1,13 @@
-'''
-Created on 21.03.2014
-
-@author: uwe.schilling[at]hlrs.de
-'''
+""" @brief          Collect all information for one user
+    @deprecated     Not longer in use Created on 24.03.2014
+    @author         uwe.schilling[at]hlrs.de
+"""
 
 from Job import Job
 
 
 class User(object):
+
     '''
     classdocs
     '''

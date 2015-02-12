@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+""" @brief      Collect Job data from
+    @details    This graps the job information form aps and push it
+                to the databas.
+    @author     Holger Berger
+"""
+
 import time
 import pwd
 import _inotify

@@ -1,14 +1,15 @@
-'''
-Created on 24.03.2014
-
-@author: uwe.schilling[at]hlrs.de
-'''
+""" @brief          Collect all information for one job
+    @deprecated     Not longer in use Created on 24.03.2014
+    @author         uwe.schilling[at]hlrs.de
+"""
 
 import time
 from fft_series import get_Spectrum
 import numpy as np
 
+
 class Job(object):
+
     '''
     classdocs
     '''
@@ -48,7 +49,7 @@ class Job(object):
 
     def getDuration(self):
         t_End = self.getEndTime()
-        return  t_End - self.t_Start
+        return t_End - self.t_Start
 
     def isEnded(self):
         if self.t_End < 0:

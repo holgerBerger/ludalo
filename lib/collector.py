@@ -32,6 +32,14 @@ class CollectorInserterPair(object):
     """
 
     def __init__(self, ssh, cfg, numberOfInserterPerDatabase, sharedDict):
+        """ @brief      Init of the Class
+            @details    This part builds the \em DatabaseInserter and the
+                        \em Collector object to start up the programm
+            @param      ssh is the comando to start the remot collecotr
+            @param      cfg \em DatabaseConfigurator object for commutication
+            @param      numberOfInserterPerDatabase info form config file
+            @param      sharedDict shared object
+        """
         super(CollectorInserterPair, self).__init__()
 
         # pipe to send signals to the collector
@@ -62,15 +70,25 @@ class CollectorInserterPair(object):
         self.collector = Collector(self.ssh, self.pipeOut, self.comQueue)
 
     def inserter_is_alive(self):
+        """ @brief      Test if all inserter are up and running
+            @return     True if alive
+                        False if dead
+        """
         for inserter in self.inserterList:
             if not inserter.is_alive():
                 return False
         return True
 
     def collector_is_alive(self):
+        """ @brief      Test if collector is alive
+            @return     True if alive
+                        False if dead
+        """
         return self.collector.is_alive()
 
     def inserter_reconnect(self):
+        """ @brief      Try to remove dead inserters and restarts them
+        """
         # find crashed
         for inserter in self.inserterList[:]:
             if not inserter.is_alive():
@@ -82,6 +100,8 @@ class CollectorInserterPair(object):
                 self.inserterList.append(newInserter)
 
     def collector_reconnect(self):
+        """ @brief      Try to remove dead collecotr and restarts them
+        """
         if not self.collector.is_alive():
             print 'new collector... old is not alive.', self.collector.name
             self.collector.shutdown()
@@ -89,6 +109,10 @@ class CollectorInserterPair(object):
             self.collector = Collector(self.ssh, self.pipeOut, self.comQueue)
 
     def collect(self, insertTimestamp):
+        """ @brief      Sends signal to the collector
+            @details    this triggers the collect signal
+            @param      insertTimestamp the time when collection start
+        """
         if self.comQueue.qsize() < 128:
             self.pipeIn.send(insertTimestamp)
         else:
@@ -104,15 +128,22 @@ class CollectorInserterPair(object):
 
 class AsynchronousFileReader(threading.Thread):
 
-    '''
-    based on
-    http://stefaanlippens.net/python-asynchronous-subprocess-pipe-reading
-    Helper class to implement asynchronous reading of a file
-    in a separate thread. Pushes read lines on a queue to
-    be consumed in another thread.
-    '''
+    """ @brief      This handles the terminal read and the json decode
+        @details    As part of the collecter it runs in the same process as
+                    and decode the json and give it back to the processe via
+                    pipe. \em Collector
+                    Based on:
+                    http://stefaanlippens.net/python-asynchronous-subprocess-pipe-reading
+                    Helper class to implement asynchronous reading of a file
+                    in a separate thread. Pushes read lines on a queue to
+                    be consumed in another thread.
+    """
 
     def __init__(self, fd, queue):
+        """ @brief      Class init
+            @param      fd      stdin or stderror
+            @param      queue   write back queue
+        """
         assert isinstance(queue, Queue.Queue)
         assert callable(fd.readline)
         threading.Thread.__init__(self)
@@ -120,8 +151,10 @@ class AsynchronousFileReader(threading.Thread):
         self._queue = queue
 
     def run(self):
-        '''The body of the thread: read lines and decode json
-        then put them on the queue.'''
+        """ @brief      Therad run Methode
+            @details    this should run infinetly to read the lines and decode
+                        the json and push the results back in the queue.
+        """
         # print 'AsynchronousFileReader RUN','pid',os.getpid(),self.name,
         # 'ppid',os.getppid(),'tid',gettid()
 
@@ -129,7 +162,7 @@ class AsynchronousFileReader(threading.Thread):
             # if not json print the exeption and the string
             try:
                 # print "inserted into queue:" ,line
-                t1 = time.time()
+                # t1 = time.time()
                 self._queue.put(json.loads(line))
                 # print 'json decode time:', time.time() - t1
             except Exception, e:
@@ -138,13 +171,16 @@ class AsynchronousFileReader(threading.Thread):
                 print e
 
     def eof(self):
-        '''Check whether there is no more content to expect.'''
+        """ @briefCheck whether there is no more content to expect.
+        """
         return not self.is_alive() and self._queue.empty()
 
 
 class DummyCollector(multiprocessing.Process):
 
-    """docstring for DummyCollector"""
+    """ @brief          DummyCollector for db tests.
+        @deprecated     not longer suported
+    """
 
     def __init__(self, ip, sOut, oIn, mds=1, ost=2, nid=10):
         super(DummyCollector, self).__init__()
@@ -210,13 +246,18 @@ class DummyCollector(multiprocessing.Process):
 
 class Collector(multiprocessing.Process):
 
-    '''
-        This class is to manage connections over ssh and copy
-        the real collector to the machines over scp
-        this create 2 more Threads one
-    '''
+    """ @brief      This class is to manage connections over ssh
+        @details    and copy the real collector to the machines over scp
+                    this create 2 more Threads. Stdout and Stderr
+    """
 
     def __init__(self, ip, sOut, queue):
+        """ @brief      Class init
+            @param      ip      ip to remote comuter
+            @param      sOut    Controlling pipe
+            @param      queue   queue to inserter
+            @see        \em CollectorInserterPair
+        """
         super(Collector, self).__init__()
         self.ip = ip
         self.command = ['ssh', '-C', self.ip, '/tmp/collector']
@@ -234,10 +275,15 @@ class Collector(multiprocessing.Process):
         # print 'created', self.name
 
     def run(self):
-        '''
-        Consume standard output and standard error of
-        a subprocess asynchronously without risk on deadlocking.
-        '''
+        """ @brief      Process to handle stdout
+            @details    Consume standard output and standard error of
+                        a subprocess asynchronously without risk on deadlocking.
+                        Wait for pipe to send collect signal form main.
+                        then trigger remot collecotr to send data as json.
+                        get the decoded json from \em AsynchronousFileReader
+                        and push it into the inserter queue. \em DatabaseInserter
+
+        """
 
         # Launch the command as subprocess.
         self.process = subprocess.Popen(
@@ -307,8 +353,13 @@ class Collector(multiprocessing.Process):
         self.process.stderr.close()
 
     def shutdown(self):
+        """ @brief      should shutdown process
+        """
         self.exit.set()
 
     def sendRequest(self):
+        """ @brief      write a linefeed to the stdin to trigger remote
+                        collecotr
+        """
         # getting data form collector
         self.process.stdin.write('\n')

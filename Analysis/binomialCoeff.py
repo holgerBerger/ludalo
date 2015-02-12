@@ -1,16 +1,14 @@
-'''
-Created on 17.02.2014
-
-@author: uwe schilling
-
-For possible filter's use this and choose a length.
-
-'''
+""" @brief      Calculates the binomial coefficient
+    @link       http://en.wikipedia.org/wiki/Binomial_coefficient
+    @author     Uwe Schilling uweschilling[at]hlrs.de
+"""
 
 import time
 
 
 def binomialCoeff(n, k):
+    """ @brief      Calculates the binomial coefficient for n over k
+    """
     result = 1
     for i in range(1, k + 1):
         result = result * (n - i + 1) / i
@@ -18,6 +16,14 @@ def binomialCoeff(n, k):
 
 
 def binArray(binStart):
+    """ @brief      Calculates the binomial coefficient for a array
+        @details    binStart    [binomialCoeff(binStart, 0),
+                                 binomialCoeff(binStart, 1),
+                                 binomialCoeff(binStart, 2),
+                                 ...
+                                 binomialCoeff(binStart, binStart),
+                                ]
+    """
     bioArray = []
     for i in range(0, binStart + 1):
         bioArray.append(binomialCoeff(binStart, i))
