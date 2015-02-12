@@ -512,8 +512,8 @@ class Mongo_Conn(object):
         dbNidFS = self.db['nidFS']
         result = dbNidFS.find()
         for item in result:
-            #self.sharedDict[item['nid']] = item['fs']
-            self.sharedDict.put(item['nid'], item['fs'])
+            self.sDict[item['nid']] = item['fs']
+            #self.sharedDict.put(item['nid'], item['fs'])
 
     def insert_performance(self, objlist):
         """ @brief      Insert an all objects form a list into the DB.
