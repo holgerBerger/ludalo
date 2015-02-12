@@ -482,10 +482,11 @@ class Mongo_Conn(object):
         super(Mongo_Conn, self).__init__()
         try:
             from pymongo import MongoClient
+            import pyshmht
         except Exception, e:
             print 'pleas install pymongo, import failed.'
             raise e
-
+        self.sDict = pyshmht.Cacher(self.sharedDict)
         self.name = 'Mongo_Conn'
         self.sharedDict = sharedDict
         self.lock = multiprocessing.Lock()
@@ -550,16 +551,20 @@ class Mongo_Conn(object):
         """
         nidFS = self.db['nidFS']  # collection in the database
         try:
-            if fs not in self.sharedDict.get(nid):
-                fslist = self.sharedDict.get(nid)
+            if fs not in self.sDict[nid]:
+                fslist = self.sDict[nid]
                 fslist.append(fs)
-                self.sharedDict.put(nid, fslist)
+                self.sDict[nid] = fslist
+                with self.lock:
+                    self.sDict.write_back()
                 nidFS.update(
                     {'nid': nid}, {'nid': nid, 'fs': self.sharedDict.get(nid)})
 
         except KeyError:
             print 'insert new fs (', fs, ') to nid (', nid, ')'
-            self.sharedDict.put(nid, [fs])
+            self.sDict[nid] = [fslist]
+            with self.lock:
+                self.sDict.write_back()
             obj = {'nid': nid, 'fs': [fs]}
             nidFS.update({'nid': nid}, obj, upsert=True)
 

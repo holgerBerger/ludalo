@@ -42,15 +42,9 @@ def mainCollector(cfg):
     import lib.collector as collector
     import datetime
     import json
-    from multiprocessing.managers import BaseManager
-
+    import pyshmht
     # setup for shared object
-    class MyManager(BaseManager):
-        pass
-    MyManager.register('RDict')
-    m = MyManager(address=('localhost', 50000), authkey='ludalo')
-    m.connect()
-    sharedDict = m.RDict()
+    sharedDict = "/dev/shm/ludalosharedDict"
 
     # setup
     collectInfo = open('collector.cfg', 'r')
