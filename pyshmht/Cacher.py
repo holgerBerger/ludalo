@@ -1,12 +1,45 @@
 #!/usr/bin/python
-#coding: utf-8
+# coding: utf-8
+
+"""
+Copyright (c) 2014, Felix021
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+* Neither the name of the {organization} nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+
 
 import marshal
 import HashTable
 
 _debug = False
 
+
 class Cacher(object):
+
     """
     Cacher: wrap HashTable with serializer and write_back mechanism
         if you intend to modify the cache, call write_back() before the program exits
@@ -14,10 +47,11 @@ class Cacher(object):
         notice:
             Cacher tries to simulate dict in most cases, mainly except for:
                 (a) no __iter__, please use foreach instead
-                (b) key should always be a str, where dict allows all hashable objects 
+                (b) key should always be a str, where dict allows all hashable objects
                 (c) no comparation with other 'dict's
             When necessary, you can use .to_dict() to get a real dict object.
     """
+
     def __init__(self, name, capacity=0, force_init=False, serializer=marshal):
         """
         'name'          the path of the file to be 'mmap'ed
@@ -53,7 +87,7 @@ class Cacher(object):
         else:
             del self.d[key]
 
-    def __contains__(self, key): #notice: key will be cached here
+    def __contains__(self, key):  # notice: key will be cached here
         return self.get(key) != None
 
     def get(self, key, default=None):
@@ -80,7 +114,7 @@ class Cacher(object):
         if self.d:
             global _debug
             if not _debug:
-                self.write_back() #commented out for testing
+                self.write_back()  # commented out for testing
             del self.d
             self.d = None
         if self.ht:
@@ -93,6 +127,7 @@ class Cacher(object):
         """
         self.close()
 
+
 def MemCacher(name, capacity=0, force_init=False, serializer=marshal):
     """
     Add an prefix '/dev/shm/' to `name`, so that the file is saved only in memory
@@ -102,17 +137,17 @@ def MemCacher(name, capacity=0, force_init=False, serializer=marshal):
     return Cacher(name, capacity, force_init, serializer)
 
 if __name__ == "__main__":
-    #test cases
+    # test cases
     ht = MemCacher('test.Cacher', 1024, True)
     print 'fd:', ht.ht.fd
 
-    #set
+    # set
     ht['a'] = '1'
     ht['b'] = 2
     c = {'hello': 'world'}
     ht['c'] = c
 
-    #get
+    # get
     print ht['b'] == 2
     print ht['c'] == c
     print ht.get('c') == c
@@ -123,11 +158,11 @@ if __name__ == "__main__":
     except:
         print True
 
-    #contains
+    # contains
     print ('c' in ht) == True
     print ('d' in ht) == False
 
-    #del
+    # del
     del ht['c']
     print ht.get('c') == None
     try:
@@ -157,7 +192,7 @@ if __name__ == "__main__":
 
     print ht.to_dict() == {'a': 'x', 'b': 1000, 'c': c}
 
-    #close
+    # close
     ht.close()
     try:
         ht['a']
@@ -165,7 +200,7 @@ if __name__ == "__main__":
     except:
         print True
 
-    #write_back
+    # write_back
     ht = MemCacher('test.Cacher', 1024, True)
     print 'fd:', ht.ht.fd
     ht['a'] = 1
@@ -173,7 +208,7 @@ if __name__ == "__main__":
     ht['b'] = 2
 
     _debug = True
-    ht.close() #write_back() is called in close() when not debugging
+    ht.close()  # write_back() is called in close() when not debugging
 
     ht = MemCacher('test.Cacher', 1024, False)
     print 'fd:', ht.ht.fd
@@ -185,7 +220,7 @@ if __name__ == "__main__":
         print True
     ht.close()
 
-    #simple performance test
+    # simple performance test
     import time
 
     capacity = 300000

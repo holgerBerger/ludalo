@@ -42,9 +42,12 @@ def mainCollector(cfg):
     import lib.collector as collector
     import datetime
     import json
+    # https://pypi.python.org/pypi/pyshmht
     import pyshmht
     # setup for shared object
     sharedDict = "/dev/shm/ludalosharedDict"
+
+    sharedDictInit = pyshmht.Cacher(sharedDict, capacity=2048)
 
     # setup
     collectInfo = open('collector.cfg', 'r')

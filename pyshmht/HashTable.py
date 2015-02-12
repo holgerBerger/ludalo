@@ -1,16 +1,49 @@
 #!/usr/bin/python
-#coding: utf-8
+# coding: utf-8
+
+"""
+Copyright (c) 2014, Felix021
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+* Neither the name of the {organization} nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
 
 import shmht
 import marshal
 
-#basic wrapper: open, close, get, set, remove, foreach
-#extended wrapper: getobj, setobj, [], to_dict, update
+# basic wrapper: open, close, get, set, remove, foreach
+# extended wrapper: getobj, setobj, [], to_dict, update
+
 
 class HashTable(object):
+
     """
     Basic wrapper for shmht. For more information, see 'help(Cacher)'
     """
+
     def __init__(self, name, capacity=0, force_init=False, serializer=marshal):
         force_init = 1 if force_init else 0
         self.fd = shmht.open(name, capacity, force_init)
@@ -37,6 +70,7 @@ class HashTable(object):
             cb = callback
         else:
             loads = self.loads
+
             def mcb(key, value):
                 return callback(key, loads(value))
             cb = mcb
@@ -70,7 +104,8 @@ class HashTable(object):
 
     def to_dict(self, unserialize=False):
         d = {}
-        def insert(k,v):
+
+        def insert(k, v):
             d[k] = v
         self.foreach(insert, unserialize)
         return d
@@ -87,16 +122,16 @@ class HashTable(object):
 if __name__ == "__main__":
     loads = marshal.loads
     dumps = marshal.dumps
-    #test cases
+    # test cases
     ht = HashTable('/dev/shm/test.HashTable', 1024, 1)
 
-    #set
+    # set
     ht['a'] = '1'
     ht.set('b', '2')
     c = {'hello': 'world'}
     ht.setobj('c', c)
 
-    #get
+    # get
     print ht['b'] == '2'
     print ht['c'] == marshal.dumps(c)
     print ht.getobj('c') == c
@@ -107,11 +142,11 @@ if __name__ == "__main__":
     except:
         print True
 
-    #contains
+    # contains
     print ('c' in ht) == True
     print ('d' in ht) == False
 
-    #del
+    # del
     del ht['c']
     print ht.get('c') == None
     try:
@@ -125,6 +160,7 @@ if __name__ == "__main__":
     print ht.to_dict() == {'a': '1', 'b': '2', 'c': dumps(c)}
 
     s = ''
+
     def cb(key, value):
         global s
         s += key + str(value)
@@ -137,10 +173,10 @@ if __name__ == "__main__":
     ht.foreach(cb, unserialize=True)
     print s == 'a1b2c' + str(c)
 
-    print ht.to_dict() == {'a':dumps(1), 'b':dumps(2), 'c':dumps(c)}
+    print ht.to_dict() == {'a': dumps(1), 'b': dumps(2), 'c': dumps(c)}
     print ht.to_dict(unserialize=True) == {'a': 1, 'b': 2, 'c': c}
 
-    #close
+    # close
     ht.close()
     try:
         ht['a']
@@ -148,12 +184,12 @@ if __name__ == "__main__":
     except:
         print True
 
-    #simple performance test
+    # simple performance test
     import time
 
     capacity = 300000
 
-    #write_through
+    # write_through
     ht = HashTable('/dev/shm/test.HashTable', capacity, True)
 
     begin_time = time.time()
@@ -172,4 +208,3 @@ if __name__ == "__main__":
     print capacity / (end_time - begin_time), 'iops @ get'
 
     ht.close()
-
