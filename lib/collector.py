@@ -31,7 +31,7 @@ class CollectorInserterPair(object):
                     it also provides funktions to controle this processes.
     """
 
-    def __init__(self, ssh, cfg, numberOfInserterPerDatabase, sharedDict):
+    def __init__(self, ssh, cfg, numberOfInserterPerDatabase, sharedDict=None):
         """ @brief      Init of the Class
             @details    This part builds the \em DatabaseInserter and the
                         \em Collector object to start up the programm
@@ -63,7 +63,7 @@ class CollectorInserterPair(object):
         # generate inserter's
         for x in xrange(0, self.numberOfInserterPerDatabase):
             nIns = database.DatabaseInserter(
-                self.comQueue, self.cfg, self.sharedDict)
+                self.comQueue, self.cfg)
             self.inserterList.append(nIns)
 
         # generate collector

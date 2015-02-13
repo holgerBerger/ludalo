@@ -41,8 +41,11 @@ class DatabaseInserter(multiprocessing.Process):
                     \em multiprocessing.Manager modul.
     """
 
-    def __init__(self, comQueue, cfg, sharedDict):
+    def __init__(self, comQueue, cfg, sharedDict=None):
         """ @brief      Class inti with first database connection
+            @param      comQueue
+            @param      cfg
+            @param      sharedDict
         """
         super(DatabaseInserter, self).__init__()
         self.sharedDict = sharedDict
@@ -52,7 +55,7 @@ class DatabaseInserter(multiprocessing.Process):
         # use this to end job from outside!
         self.exit = multiprocessing.Event()
         try:
-            self.db = self.cfg.getNewDB_Mongo_Conn(self.sharedDict)
+            self.db = self.cfg.getNewDB_Mongo_Conn()
             # start the thread and begin to insert if entries in the queue
             self.start()
         except:
@@ -482,11 +485,11 @@ class Mongo_Conn(object):
         super(Mongo_Conn, self).__init__()
         try:
             from pymongo import MongoClient
-            import pyshmht
+            #import pyshmht
         except Exception, e:
             print 'pleas install pymongo, import failed.'
             raise e
-        self.sDict = pyshmht.Cacher(self.sharedDict)
+        #self.sDict = pyshmht.Cacher(self.sharedDict)
         self.name = 'Mongo_Conn'
         self.sharedDict = sharedDict
         self.lock = multiprocessing.Lock()
@@ -502,6 +505,7 @@ class Mongo_Conn(object):
 
         # get fs map
         if self.sharedDict is not None:
+            self.sharedDict = {}
             self.getFSmap()
 
     def getFSmap(self):
@@ -512,7 +516,7 @@ class Mongo_Conn(object):
         dbNidFS = self.db['nidFS']
         result = dbNidFS.find()
         for item in result:
-            self.sDict[item['nid']] = item['fs']
+            self.sharedDict[item['nid']] = item['fs']
             #self.sharedDict.put(item['nid'], item['fs'])
 
     def insert_performance(self, objlist):
@@ -551,20 +555,17 @@ class Mongo_Conn(object):
         """
         nidFS = self.db['nidFS']  # collection in the database
         try:
-            if fs not in self.sDict[nid]:
-                fslist = self.sDict[nid]
+            if fs not in self.sharedDict[nid][:]:
+                fslist = self.sharedDict[nid]
                 fslist.append(fs)
-                self.sDict[nid] = fslist
-                with self.lock:
-                    self.sDict.write_back()
+                self.sharedDict[nid] = fslist
                 nidFS.update(
-                    {'nid': nid}, {'nid': nid, 'fs': self.sharedDict.get(nid)})
+                    {'nid': nid}, {'nid': nid, 'fs': self.sharedDict[nid]})
 
         except KeyError:
             print 'insert new fs (', fs, ') to nid (', nid, ')'
-            self.sDict[nid] = [fslist]
-            with self.lock:
-                self.sDict.write_back()
+            self.sharedDict[nid] = [fs]
+
             obj = {'nid': nid, 'fs': [fs]}
             nidFS.update({'nid': nid}, obj, upsert=True)
 
@@ -896,7 +897,7 @@ class DatabaseConfigurator(object):
         f = open(defaultCfgFile, 'w')
         f.write(cfgString)
 
-    def getNewDB_Mongo_Conn(self, sharedDict):
+    def getNewDB_Mongo_Conn(self, sharedDict=None):
         """ @brief      build a MongoDB connection from the user config
             @param      sharedDict      shared memory for information sharing
             @return     \em Mongo_Conn  as db connection
@@ -908,7 +909,7 @@ class DatabaseConfigurator(object):
                 port = self.cfg.getint(self.sectionMongo, 'port')
                 dbname = self.cfg.get(self.sectionMongo, 'dbname')
                 # do stuff
-                return Mongo_Conn(host, port, dbname, sharedDict)
+                return Mongo_Conn(host, port, dbname)
         else:
             print 'No connection MongoDB configered!'
 

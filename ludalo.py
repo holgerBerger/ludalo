@@ -43,11 +43,11 @@ def mainCollector(cfg):
     import datetime
     import json
     # https://pypi.python.org/pypi/pyshmht
-    import pyshmht
+    # import pyshmht
     # setup for shared object
-    sharedDict = "/dev/shm/ludalosharedDict"
+    # sharedDict = "/dev/shm/ludalosharedDict"
 
-    sharedDictInit = pyshmht.Cacher(sharedDict, capacity=2048)
+    # sharedDictInit = pyshmht.Cacher(sharedDict, capacity=2048)
 
     # setup
     collectInfo = open('collector.cfg', 'r')
@@ -60,7 +60,7 @@ def mainCollector(cfg):
     # create collectoer and assert inserter
     for key in ips.keys():
         cip = collector.CollectorInserterPair(
-            ips[key], cfg, numberOfInserterPerDatabase, sharedDict)
+            ips[key], cfg, numberOfInserterPerDatabase)
         CollectorInserter.append(cip)
 
     iteration = 0
