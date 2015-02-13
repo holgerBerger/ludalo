@@ -165,7 +165,7 @@ class DatabaseInserter(multiprocessing.Process):
                                + ' ' + str(resource_values) + ' ' + fs_name, name)
                         self.nidMap[resourceIP] = resourceIP
                         resourceName = resourceIP
-                elif resourceIP is 'aggr':
+                elif resourceIP == 'aggr':
                     pass 
                 else:
                     # cray, non ip case, fill to 5 digits
@@ -541,7 +541,7 @@ class Mongo_Conn(object):
             fslist[obj.fs].append(obj.getMongo_Obj())
 
         sum = 0
-        t1 = time.time()
+        #t1 = time.time()
         for fs in fslist.keys():
 
             # Prevent other threads form execute
@@ -549,8 +549,8 @@ class Mongo_Conn(object):
                 self.db[fs].insert(fslist[fs])
 
             sum += len(fslist[fs])
-        t2 = time.time()
-        print "inserted %d documents into MongoDB (%d inserts/sec)" % (sum, sum / (t2 - t1))
+        #t2 = time.time()
+        #print "inserted %d documents into MongoDB (%d inserts/sec)" % (sum, sum / (t2 - t1))
 
     def insert_nidFS(self, nid, fs):
         """ @brief      Insert or update the map of filesystems in the db.
