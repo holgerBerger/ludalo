@@ -22,6 +22,7 @@ import time
 import re
 import os.path
 from collections import defaultdict
+import traceback
 
 
 class DatabaseInserter(multiprocessing.Process):
@@ -147,14 +148,13 @@ class DatabaseInserter(multiprocessing.Process):
                 resource_values = ost_map[key]
                 sk = key.split('@')
                 resourceIP = sk[0]
-                hostMashine = sk[1]
+                try:
+                	hostMachine = sk[1]
+                except IndexError:
+                        hostMachine = ""
 
-                # resources are digie
-                if 'nid' not in resourceIP:
-                    resourceIP = 'nid' + resourceIP
-
-                # appendens for cray or other systems:
-                if not self.cfg.postfix:
+                # ip case
+                if '.' in resourceIP:
 
                     # take name from nidMap if no name take ip
                     try:
@@ -165,10 +165,17 @@ class DatabaseInserter(multiprocessing.Process):
                                + ' ' + str(resource_values) + ' ' + fs_name, name)
                         self.nidMap[resourceIP] = resourceIP
                         resourceName = resourceIP
+                elif resourceIP == 'aggr':
+                    pass 
                 else:
-                    while len(resourceIP) > 5:
-                        resourceIP = '0' + resourceIP
-                    resourceIP = resourceIP + hostMashine
+                    # cray, non ip case, fill to 5 digits
+                    try:
+                    	resourceIP = "nid%5.5d%s" % (int(resourceIP),hostMachine)
+                    except Exception, e:
+                        print "resourceIP:",resourceIP
+                        print repr(e)
+                        traceback.print_exc()
+                 	
 
                 # except Exception, e:
                     # print repr(e)
@@ -219,11 +226,14 @@ class DatabaseInserter(multiprocessing.Process):
             # print '    ', self.name, 'Inserter inserting object'
             try:
                 self.insert(insertObject)
-            except Exception:
+            except Exception, e:
                 self.comQueue.put(insertObject)
                 printstring = ('could not insert object to db,' +
                                ' put it back to queue. Queue length:')
                 print printstring, self.comQueue.qsize()
+                print repr(e)
+                print traceback.print_exc()
+                
 
         print 'exit inserter', self.name
 
@@ -504,7 +514,7 @@ class Mongo_Conn(object):
         self.collectionJobs = self.db['jobs']
 
         # get fs map
-        if self.sharedDict is not None:
+        if self.sharedDict is None:
             self.sharedDict = {}
             self.getFSmap()
 
@@ -540,8 +550,7 @@ class Mongo_Conn(object):
 
             sum += len(fslist[fs])
         #t2 = time.time()
-        # print "inserted %d documents into MongoDB (%d inserts/sec)" % (sum,
-        # sum / (t2 - t1))
+        #print "inserted %d documents into MongoDB (%d inserts/sec)" % (sum, sum / (t2 - t1))
 
     def insert_nidFS(self, nid, fs):
         """ @brief      Insert or update the map of filesystems in the db.
@@ -555,7 +564,7 @@ class Mongo_Conn(object):
         """
         nidFS = self.db['nidFS']  # collection in the database
         try:
-            if fs not in self.sharedDict[nid][:]:
+            if fs not in self.sharedDict[nid]:
                 fslist = self.sharedDict[nid]
                 fslist.append(fs)
                 self.sharedDict[nid] = fslist
@@ -572,6 +581,7 @@ class Mongo_Conn(object):
         except Exception, e:
             # if somthing else is wrong
             print repr(e)
+            traceback.print_exc()
             raise e
 
     def insert_jobData(self, jobid, start, end, owner, nids, cmd):
@@ -810,7 +820,7 @@ class DatabaseConfigurator(object):
         """
         super(DatabaseConfigurator, self).__init__()
         import sys
-        from ConfigParser import ConfigParser
+        from ConfigParser import ConfigParser, NoOptionError
 
         self.cfgFile = cfgFile
         self.defaultCfgFile = 'default.cfg'
@@ -856,7 +866,10 @@ class DatabaseConfigurator(object):
             self.replace = self.cfg.get('replacePattern', 'replace')
 
         if self.cfg.has_section('batchsystem'):
-            self.postfix = self.cfg.get('batchsystem', 'postfix')
+            try:
+            	self.postfix = self.cfg.get('batchsystem', 'postfix')
+            except NoOptionError:
+                self.postfix = None
 
     def writeDefaultConfig(self, defaultCfgFile):
         cfgString = ('[MongoDB]' + '\n' +
