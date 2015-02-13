@@ -1,4 +1,5 @@
-""" @brief      Data Collector class with multiprocessing support
+""" @package    lib.collector
+    @brief      Data Collector class with multiprocessing support
     @details    This modul handles the collection of performance data
                 special class CollectorInserterPair handels the tupple
                 of inserter and collector. ther are to each collector a

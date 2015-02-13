@@ -1,4 +1,5 @@
-""" @brief      This is the main function of the ludalo project.
+""" @package    ludalo
+    @brief      This is the main function of the ludalo project.
 
     @details    The ludalo (Lustre data logger) project is a project
                 at the HRLS to store lustre perfromance data in a databese
