@@ -56,7 +56,7 @@ class DatabaseInserter(multiprocessing.Process):
         # use this to end job from outside!
         self.exit = multiprocessing.Event()
         try:
-            self.db = self.cfg.getNewDB_Mongo_Conn()
+            self.db = self.cfg.getNewDB_Mongo_Conn(self.sharedDict)
             # start the thread and begin to insert if entries in the queue
             self.start()
         except:
@@ -124,7 +124,7 @@ class DatabaseInserter(multiprocessing.Process):
         data = jsonDict[1]
         insert_me = []
 
-        t1 = time.time()
+        # t1 = time.time()
 
         # Split the json into data obj
         for base in data.keys():
@@ -149,9 +149,9 @@ class DatabaseInserter(multiprocessing.Process):
                 sk = key.split('@')
                 resourceIP = sk[0]
                 try:
-                	hostMachine = sk[1]
+                    hostMachine = sk[1]
                 except IndexError:
-                        hostMachine = ""
+                    hostMachine = ""
 
                 # ip case
                 if '.' in resourceIP:
@@ -166,16 +166,16 @@ class DatabaseInserter(multiprocessing.Process):
                         self.nidMap[resourceIP] = resourceIP
                         resourceName = resourceIP
                 elif resourceIP == 'aggr':
-                    pass 
+                    pass
                 else:
                     # cray, non ip case, fill to 5 digits
                     try:
-                    	resourceIP = "nid%5.5d%s" % (int(resourceIP),hostMachine)
+                        resourceIP = "nid%5.5d%s" % (
+                            int(resourceIP), hostMachine)
                     except Exception, e:
-                        print "resourceIP:",resourceIP
+                        print "resourceIP:", resourceIP
                         print repr(e)
                         traceback.print_exc()
-                 	
 
                 # except Exception, e:
                     # print repr(e)
@@ -188,12 +188,12 @@ class DatabaseInserter(multiprocessing.Process):
                     resource_values, fs_name, s_type)
 
                 insert_me.append(ins)
-        print 'time to build inserter object:', time.time() - t1
+        # print 'time to build inserter object:', time.time() - t1
         # Insert data Obj
 
-        t1 = time.time()
+        #t1 = time.time()
         self.db.insert_performance(insert_me)
-        print 'time to insert:', time.time() - t1
+        #print 'time to insert:', time.time() - t1
 
     def run(self):
         """ @brief      Run this as its owen process.
@@ -233,7 +233,6 @@ class DatabaseInserter(multiprocessing.Process):
                 print printstring, self.comQueue.qsize()
                 print repr(e)
                 print traceback.print_exc()
-                
 
         print 'exit inserter', self.name
 
@@ -550,7 +549,8 @@ class Mongo_Conn(object):
 
             sum += len(fslist[fs])
         #t2 = time.time()
-        #print "inserted %d documents into MongoDB (%d inserts/sec)" % (sum, sum / (t2 - t1))
+        # print "inserted %d documents into MongoDB (%d inserts/sec)" % (sum,
+        # sum / (t2 - t1))
 
     def insert_nidFS(self, nid, fs):
         """ @brief      Insert or update the map of filesystems in the db.
@@ -867,7 +867,7 @@ class DatabaseConfigurator(object):
 
         if self.cfg.has_section('batchsystem'):
             try:
-            	self.postfix = self.cfg.get('batchsystem', 'postfix')
+                self.postfix = self.cfg.get('batchsystem', 'postfix')
             except NoOptionError:
                 self.postfix = None
 
@@ -922,7 +922,7 @@ class DatabaseConfigurator(object):
                 port = self.cfg.getint(self.sectionMongo, 'port')
                 dbname = self.cfg.get(self.sectionMongo, 'dbname')
                 # do stuff
-                return Mongo_Conn(host, port, dbname)
+                return Mongo_Conn(host, port, dbname, sharedDict)
         else:
             print 'No connection MongoDB configered!'
 

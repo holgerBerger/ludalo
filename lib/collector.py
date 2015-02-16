@@ -64,7 +64,7 @@ class CollectorInserterPair(object):
         # generate inserter's
         for x in xrange(0, self.numberOfInserterPerDatabase):
             nIns = database.DatabaseInserter(
-                self.comQueue, self.cfg)
+                self.comQueue, self.cfg, self.sharedDict)
             self.inserterList.append(nIns)
 
         # generate collector
