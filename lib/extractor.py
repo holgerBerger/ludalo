@@ -1,7 +1,11 @@
-'''
-    this modul should handel all db extraktion and the posible prints.
-    another task of this modul is to generate pngs of the fs and jobs.
-'''
+""" @package    extractor
+    @brief      This modul extract data form the database
+    @details    to do this it tackts fs or job infrormations and print
+                the information into a png or write the static details back
+                to the database.
+    @author     Uwe Schilling uweschilling[at]hlrs.de
+"""
+
 
 import numpy as np
 import time
@@ -12,7 +16,9 @@ import Analysis.plotGraph as graph
 
 class DataCollection(object):
 
-    """docstring for DataCollection"""
+    """ @brief      This is the data holding class
+        @details    to store the data from the databas in a working dataset
+    """
 
     def __init__(self, name):
         super(DataCollection, self).__init__()
