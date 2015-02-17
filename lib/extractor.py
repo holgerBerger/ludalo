@@ -18,9 +18,21 @@ class DataCollection(object):
 
     """ @brief      This is the data holding class
         @details    to store the data from the databas in a working dataset
+                    self.values is a numpy array with:
+                    [0 ts,  (Timestamp)
+                     1 rb,  (read byte)
+                     2 rio, (read operation)
+                     3 wb,  (write byte)
+                     4 wio, (write operation)
+                     5 mdo  (metadata operation)]
+                    the return arrays are always
+                    [1, 2, 3, 4] for average and so on...
     """
 
     def __init__(self, name):
+        """ @brief      calss init
+            @param      name of fs or job
+        """
         super(DataCollection, self).__init__()
         self.name = name
         self.values = np.zeros((0, 6))
@@ -32,7 +44,11 @@ class DataCollection(object):
         self.timeStampSet = set()
 
     def append(self, ts, valueString):
-        ''' ts as int values as sting eg 1, 2, 3, 4 or 1 2 3 4 '''
+        """ @brief      this appends a data set to the existing set
+            @param      ts              the timestamp of the data set
+            @param      valueString     data string with 4 values
+        """
+
         # build a array from the timestamp
         nString = [ts]
         nStringWithNoTime = np.array([0])
@@ -67,6 +83,10 @@ class DataCollection(object):
         self.timeStampSet.add(ts)
 
     def appendMDT(self, ts, value):
+        """ @brief      Append meta data operations
+            @param      ts      timestamp
+            @param      value   amount of mdo in the interval
+        """
         appArray = np.array([0, 0, 0, 0, 0, value[0]])
         appArrayTs = np.array([ts, 0, 0, 0, 0, value[0]])
 
@@ -90,6 +110,9 @@ class DataCollection(object):
         self.timeStampSet.add(ts)
 
     def getDuration(self):
+        """ @brief      this calaulates the time between ther first timestamp and the last ts.
+            @return     duration of the dataset
+        """
         if len(self.values[:, 0]) > 1:
             d = max(self.values[:, 0]) - min(self.values[:, 0])
             return d.item(0)
@@ -97,6 +120,9 @@ class DataCollection(object):
             return 0
 
     def getAverage(self):
+        """ @brief      calclulates the average values oven all values
+            @return     average array of the dataset
+        """
         a = np.average(self.values[:, 1])
         b = np.average(self.values[:, 2])
         c = np.average(self.values[:, 3])
@@ -104,6 +130,9 @@ class DataCollection(object):
         return [a, b, c, d]
 
     def getStd(self):
+        """ @brief      Compute the standard deviation 
+            @return     array of the dataset
+        """
         a = np.std(self.values[:, 1])
         b = np.std(self.values[:, 2])
         c = np.std(self.values[:, 3])
@@ -111,6 +140,9 @@ class DataCollection(object):
         return [a, b, c, d]
 
     def getVar(self):
+        """ @brief      Compute the variance
+            @return     array of the dataset
+        """
         a = np.var(self.values[:, 1])
         b = np.var(self.values[:, 2])
         c = np.var(self.values[:, 3])
@@ -118,6 +150,9 @@ class DataCollection(object):
         return [a, b, c, d]
 
     def getMean(self):
+        """ @brief      Compute the arithmetic mean
+            @return     array of the dataset
+        """
         a = np.mean(self.values[:, 1])
         b = np.mean(self.values[:, 2])
         c = np.mean(self.values[:, 3])
@@ -125,6 +160,9 @@ class DataCollection(object):
         return [a, b, c, d]
 
     def getMedian(self):
+        """ @brief      Compute the median
+            @return     array of the dataset
+        """
         a = np.median(self.values[:, 1])
         b = np.median(self.values[:, 2])
         c = np.median(self.values[:, 3])
@@ -132,6 +170,9 @@ class DataCollection(object):
         return [a, b, c, d]
 
     def getTotal(self):
+        """ @brief      Compute the sum over the dataset
+            @return     array of the dataset
+        """
         a = np.sum(self.values[:, 1])
         b = np.sum(self.values[:, 2])
         c = np.sum(self.values[:, 3])
@@ -139,6 +180,9 @@ class DataCollection(object):
         return [a, b, c, d]
 
     def getQuartil(self):
+        """ @brief      Compute the 3 quartils (25, 50, 75)
+            @return     array of the dataset
+        """
         a = self.values[:, 1]
         b = self.values[:, 2]
         c = self.values[:, 3]
@@ -172,6 +216,10 @@ class DataCollection(object):
         return self.quantil(0.75, npArray)
 
     def quantil(self, p, InArray):
+        """ @brief      Compute the median
+            @details    due to a bug in numpy and sipy this is reimplemented
+            @return     array of the dataset
+        """
         # if inArray len = 0 return
         if len(InArray) < 1:
             print '  ', 'quantil get empty array!!'
@@ -193,6 +241,14 @@ class DataCollection(object):
             return retValue
 
     def calcAll(self):
+        """ @brief      this calcs all and save it as class variables
+            @details    self.quartil = self.getQuartil()
+                        self.mean = self.getMean()
+                        self.var = self.getVar()
+                        self.std = self.getStd()
+                        self.average = self.getAverage()
+                        self.duration = self.getDuration()
+        """
         self.total = self.getTotal()
         # median of np.matrix is broken #4301 29.10.2014
         # self.getMedian = self.getMedian()
@@ -205,7 +261,11 @@ class DataCollection(object):
         self.duration = self.getDuration()
 
     def get_png(self):
-
+        """ @brief      print a png
+            @details    
+            @param
+            @return
+        """
         timestamps = self.values[:, 0]
         rio = self.values[:, 1]
         rbs = self.values[:, 2]
@@ -239,6 +299,11 @@ class DataCollection(object):
         pass
 
     def saveJob(self, db):
+        """ @brief      
+            @details
+            @param
+            @return
+        """
         jobID, fs = self.name.split('@')
         stats = (self.total, self.quartil, self.mean, self.var,
                  self.std, self.average, self.duration)
