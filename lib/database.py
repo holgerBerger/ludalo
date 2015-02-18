@@ -83,7 +83,7 @@ class DatabaseInserter(multiprocessing.Process):
                 for l in f:
                     if not l.startswith('#'):
                         sp = l.rstrip().split()
-                        if len(sp) <= 2:
+                        if len(sp) < 2:
                             continue
                         ip = sp[0]
                         name = sp[1]
@@ -166,11 +166,11 @@ class DatabaseInserter(multiprocessing.Process):
                         self.nidMap[resourceIP] = resourceIP
                         resourceName = resourceIP
                 elif resourceIP == 'aggr':
-                    pass
+                    resourceName = resourceIP
                 else:
                     # cray, non ip case, fill to 5 digits
                     try:
-                        resourceIP = "nid%5.5d%s" % (
+                        resourceName = "nid%5.5d%s" % (
                             int(resourceIP), hostMachine)
                     except Exception, e:
                         print "resourceIP:", resourceIP
