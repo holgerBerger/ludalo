@@ -183,9 +183,19 @@ class DatabaseInserter(multiprocessing.Process):
                 # nid fs map append
                 self.db.insert_nidFS(resourceName, fs_name)
 
+                # prevent longs in resource_values
+                value_list = []
+                for item in resource_values:
+                    nItem = int(item)
+                    if type(nItem) is int:
+                        value_list.append(nItem)
+                    else:
+                        print """reciving item is no int!!!
+                                 item (ts, name, resourceName, fs_name, s_type, resource_values)""", nItem, '(', insertTimestamp, name, resourceName, resource_values, fs_name, s_type, resource_values, ')'
+
                 ins = PerformanceData(
                     insertTimestamp, name, resourceName,
-                    resource_values, fs_name, s_type)
+                    value_list, fs_name, s_type)
 
                 insert_me.append(ins)
         # print 'time to build inserter object:', time.time() - t1
